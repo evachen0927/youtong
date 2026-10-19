@@ -32,3 +32,11 @@ function legendIntoSheet(sheetId,items){const sh=document.querySelector('#'+shee
 const REPORTED_HINT=()=>[{html:`<i style="--c:${REPORTED}"></i>`,t:'已回報滿'}];
 // 上方浮動 UI 的底部位置（地圖 padding 用，確保最近的桶與光圈不被遮住）
 function topUIBottom(){let b=0;document.querySelectorAll('.roles,.top>*,.infochip,.leaflet-top .lgd,.prog,.tchip').forEach(e=>{const r=e.getBoundingClientRect();if(r.height&&r.bottom<innerHeight/2)b=Math.max(b,r.bottom)});return b}
+
+// 交通站點標記（無外框實心小圖示，16px，比垃圾桶小，不搶焦點）：YouBike＝赭黃圓底單車、公車站＝石板藍圓角方底公車
+const ST_COLOR={yb:'#a07d3e',bus:'#5b6f9c'};
+const _stIco={};
+function stationIcon(k){if(_stIco[k])return _stIco[k];const c=ST_COLOR[k],s=16;
+  const g=k==='yb'?`<circle cx="8" cy="8" r="8" fill="${c}"/><circle cx="5" cy="9.6" r="2.2" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="11" cy="9.6" r="2.2" fill="none" stroke="#fff" stroke-width="1.3"/><path d="M5 9.6L7.2 6.2H10L11 9.6M7.2 6.2L8.4 9.6" fill="none" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>`
+    :`<rect x="0" y="0" width="16" height="16" rx="4.5" fill="${c}"/><rect x="4" y="3.4" width="8" height="8" rx="1.8" fill="#fff"/><rect x="5.1" y="4.6" width="5.8" height="2.6" rx=".6" fill="${c}"/><rect x="4.8" y="11.6" width="1.8" height="1.6" rx=".6" fill="#fff"/><rect x="9.4" y="11.6" width="1.8" height="1.6" rx=".6" fill="#fff"/>`;
+  return _stIco[k]=L.divIcon({className:'stico',iconSize:[s,s],iconAnchor:[s/2,s/2],html:`<svg width="${s}" height="${s}" viewBox="0 0 16 16" aria-hidden="true">${g}</svg>`})}

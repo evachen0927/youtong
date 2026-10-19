@@ -43,3 +43,17 @@ const isMobile=()=>matchMedia('(max-width:760px)').matches;
 function sheetH(){const p=document.querySelector('.panel');return isMobile()&&p?p.getBoundingClientRect().height:0}
 function focusAt(map,latlng,zoom){map.setView(latlng,zoom,{animate:false});const h=sheetH();if(h)map.panBy([0,h/2],{animate:false})}
 function fitTo(map,pts,maxZoom){map.fitBounds(pts,{paddingTopLeft:[40,40],paddingBottomRight:[40,40+sheetH()],maxZoom})}
+// ===== 重設成原始狀態：清除本站寫入的所有 localStorage／sessionStorage =====
+// 明確列表（config.storageKeys＋清潔隊頁 UI 狀態），另外清掉所有「有桶_」「debug松_」開頭的鍵（含舊版）
+const APP_KEYS=[...Object.values((window.CONFIG&&CONFIG.storageKeys)||{}),'有桶_crew_ui_v2','有桶_fc_ui'];
+const APP_PREFIXES=['有桶_','debug松_'];
+function resetAppState(){for(const S of [localStorage,sessionStorage]){const ks=[];for(let i=0;i<S.length;i++)ks.push(S.key(i));
+  for(const k of ks)if(APP_KEYS.includes(k)||APP_PREFIXES.some(p=>k.startsWith(p)))S.removeItem(k)}}
+const resetToDefault=()=>{resetAppState();location.replace(location.pathname)}; // 回到不帶參數的預設網址
+if(new URLSearchParams(location.search).get('reset')==='1')resetToDefault(); // ?reset=1：不跳確認，直接清除（示範前用）
+document.addEventListener('DOMContentLoaded',()=>{const sh=document.querySelector('#infoSheet .sh, #menuSheet .sh');if(!sh||sh.querySelector('#resetAll'))return;
+  const b=document.createElement('button');b.id='resetAll';b.type='button';b.textContent='重設成原始狀態';
+  b.style.cssText='display:block;width:100%;min-height:var(--touch);margin:16px 0 4px;border:0;border-radius:var(--r-sm);background:var(--gray-1);color:var(--ink);font:600 15px var(--font);cursor:pointer';
+  b.onclick=()=>{if(confirm('會清除所有回報與紀錄，確定？'))resetToDefault()};
+  const p=document.createElement('p');p.textContent='清除本機所有回報、校正與方案紀錄，回到預設畫面。';p.style.cssText='margin:0 0 8px;font:400 12px var(--font);color:var(--mute)';
+  sh.append(b,p)});

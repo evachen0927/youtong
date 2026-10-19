@@ -52,3 +52,7 @@ button,input,select,textarea,optgroup{font-family:inherit}
 .num,.prog .no,.dist b,.lgd,.hs .ev b,.stat b,.sumr b,.big,.cmp td{font-variant-numeric:tabular-nums}
 .lgd.static{box-shadow:none;background:var(--surface-2);max-width:none;padding:10px 12px;gap:8px 14px;font-size:13px}
 .lgd.lhint{flex-wrap:nowrap;padding:4px 10px;max-width:none}
+
+/* 資料說明 i：所有頁面固定在最右上角 */
+#infoBtn.ibtn,#menu.ibtn{position:fixed!important;top:calc(10px + env(safe-area-inset-top))!important;right:12px!important;left:auto!important;margin:0!important;z-index:1200}
+.stico{background:none;border:0;opacity:.92}.stico svg{display:block}

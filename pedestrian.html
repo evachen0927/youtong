@@ -89,7 +89,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   </div>
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
-<div class="crow" id="crow" style="gap:5px"><button class="lchip on" data-ly="lyYb" aria-pressed="true"><i style="--c:#d9a441"></i>YouBike</button><button class="lchip on" data-ly="lyBus" aria-pressed="true"><i style="--c:#8a84c9"></i>公車站</button><div class="seg2" id="seg" role="group" aria-label="情境"><button data-m="before" class="on">現況</button><button data-m="after">改善後</button></div><span class="lgd lhint" id="rhint"></span></div>
+<div class="crow" id="crow" style="gap:5px"><button class="lchip on" data-ly="lyYb" aria-pressed="true"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip on" data-ly="lyBus" aria-pressed="true"><i style="--c:#5b6f9c"></i>公車站</button><div class="seg2" id="seg" role="group" aria-label="情境"><button data-m="before" class="on">現況</button><button data-m="after">改善後</button></div><span class="lgd lhint" id="rhint"></span></div>
 <section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/logo.svg" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <div class="adv" id="adv" hidden><div class="sh" role="dialog" aria-label="更多">
@@ -138,8 +138,8 @@ function pinIcon(b,ev,near){const st=binState(b.id,ev),f=st?0:Math.round(fillOf(
 function drawBins(){binL.clearLayers();const bd=map.getBounds().pad(.3),ev=getEvents(),nid=primary()&&primary().f.id;
   for(const f of shown())if(bd.contains([f.la,f.lo])){const near=f.id===nid;
     L.marker([f.la,f.lo],{icon:pinIcon(f,ev,near),zIndexOffset:near?900:0,keyboard:false,title:f.addr}).on('click',()=>focusBin(f)).addTo(binL)}}
-function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.circleMarker([f.la,f.lo],{renderer:ren,radius:3,stroke:false,fillColor:color,fillOpacity:.5}).bindPopup(pop(f)).addTo(layer)}
-function redraw(){drawBins();drawPts(ybL,D.yb,'#d9a441',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'#8a84c9',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`);drawChange()}
+function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.marker([f.la,f.lo],{icon:stationIcon(color),keyboard:false,zIndexOffset:-500}).bindPopup(pop(f)).addTo(layer)}
+function redraw(){drawBins();drawPts(ybL,D.yb,'yb',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'bus',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`);drawChange()}
 function drawChange(){chgL.clearLayers();if(mode!=='after'||!scen)return;
   if(scen.moved){L.marker(scen.moved.from,{icon:L.divIcon({className:'',html:'<b style="color:#646b70;font-size:18px;text-shadow:0 0 3px #fff">✕</b>',iconSize:[18,18]})}).addTo(chgL);L.polyline([scen.moved.from,scen.moved.to],{color:'#7b5cc4',dashArray:'8 6',weight:3}).addTo(chgL)}
   for(const b of binsAfter)if(upg.has(b.id))L.circleMarker([b.la,b.lo],{radius:16,color:'#7b5cc4',weight:2,fill:false,interactive:false}).addTo(chgL)}

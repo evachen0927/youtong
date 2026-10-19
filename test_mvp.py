@@ -57,6 +57,15 @@ with sync_playwright() as p:
     print(name,'清潔隊',a0.replace('\n',' '),'→',a1.replace('\n',' '),'→ 復原',a2.replace('\n',' '),'| 完成卡',pg.locator('#card .done').count()>0)
     pg.click('#backBtn');pg.wait_for_selector('#card[data-state=A]');print(name,'返回 A',pg.inner_text('#cardTitle'))
     assert pg.locator('.roles a[href="index.html"]').count()>0;print(name,'行車路網',pg.inner_text('#sum').replace('\n',' '))
+    # 重設：先有回報 → 資料說明裡的重設鈕（confirm）→ 狀態清空；再測 ?reset=1
+    pg.evaluate("addEvent({bin:'B0001',kind:'full',level:100,by:'行人'})");n0=pg.evaluate("getEvents().length")
+    pg.click('#infoBtn');pg.once('dialog',lambda d:d.accept());pg.click('#resetAll');pg.wait_for_load_state();pg.wait_for_timeout(800)
+    left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");ui=pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')||'{}')");print(name,'重設前事件',n0,'重設後殘留鍵',left,'事件',pg.evaluate("getEvents().length"),'校正',pg.evaluate("FC.state()"),'crew ui',ui.get('state'),'url',pg.url.split('/')[-1])
+    assert n0>0 and set(left)<={'有桶_crew_ui_v2'} and ui.get('state','A')=='A' and pg.evaluate("getEvents().length")==0 and pg.evaluate("Object.keys(FC.state().cal).length")==0 and '?' not in pg.url  # 清潔隊頁載入時會重新寫入預設 UI 狀態
+    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.evaluate("addEvent({bin:'B0002',kind:'full',level:100,by:'行人'});SC.save({hotspotId:'x',option:'A'})")
+    pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_timeout(800)
+    left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");print(name,'?reset=1 殘留鍵',left);assert left==[]
+    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.click('#menu');assert pg.locator('#menuSheet #resetAll').count()==1;pg.click('#menuSheet [data-close]')
     pg.goto(B+'crew-route.html');pg.wait_for_selector('#card',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
     print(name,'ERRORS',errs);ok&=not errs;c.close()
   br.close()

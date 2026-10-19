@@ -32,7 +32,7 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 <div class="ftop"><button class="fab ibtn" id="menu" aria-label="資料說明">i</button></div>
 <div id="map"></div>
 <aside class="panel"><button class="handle" aria-label="展開面板"></button>
-<div class="lychips" id="lychips" role="group" aria-label="圖層"><button class="lchip on" data-ly="yb" aria-pressed="true"><i style="--c:#d9a441"></i>YouBike</button><button class="lchip on" data-ly="bus" aria-pressed="true"><i style="--c:#8a84c9"></i>公車站</button></div>
+<div class="lychips" id="lychips" role="group" aria-label="圖層"><button class="lchip on" data-ly="yb" aria-pressed="true"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip on" data-ly="bus" aria-pressed="true"><i style="--c:#5b6f9c"></i>公車站</button></div>
 <div id="home">
  <section class="insight" id="insight"></section>
  <h3 class="sec">示範區 <span id="areaName"></span>・查核優先序</h3>
@@ -77,9 +77,9 @@ cards.innerHTML=CONFIG.headline.items.map(i=>`<div class="stat"><b>${i.value}</b
 const fmt=n=>n.toLocaleString('zh-TW');
 function drawBase(bins){baseL.clearLayers();
   L.rectangle(CONFIG.demoArea.bounds,{color:'#646b70',weight:1.2,dashArray:'6',fill:false,interactive:false}).addTo(baseL);
-  for(const s of D.bus)if(LY.bus&&map.getBounds().pad(.5).contains([s.la,s.lo]))L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#8a84c9',fillOpacity:.4}).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
+  for(const s of D.bus)if(LY.bus&&map.getBounds().pad(.5).contains([s.la,s.lo]))(map.getZoom()>=16?L.marker([s.la,s.lo],{icon:stationIcon('bus'),keyboard:false,zIndexOffset:-500}):L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#5b6f9c',fillOpacity:.45})).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
   for(const s of D.yb){if(!LY.yb||!map.getBounds().pad(.5).contains([s.la,s.lo]))continue;const r=s.act?Math.max(3,Math.sqrt(s.act)/22):3;
-    L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#d9a441',fillOpacity:.5}).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
+    (map.getZoom()>=16?L.marker([s.la,s.lo],{icon:stationIcon('yb'),keyboard:false,zIndexOffset:-400}):L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#a07d3e',fillOpacity:.5})).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
   for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk',iconSize:[10,10]})}).bindPopup(`◆ 場域線索：${v.addr}`).addTo(baseL);
   const z=map.getZoom(),vb=map.getBounds().pad(.3);
   for(const b of bins){if(z>=15&&!b.moved){if(vb.contains([b.la,b.lo]))L.marker([b.la,b.lo],{icon:PL_BIN[z>=16?0:1],keyboard:false}).bindPopup(`🗑 ${b.addr}${b.c>1?`<br>此處重疊 ${b.c} 列清冊（5 m 內）`:''}`).addTo(baseL)}
@@ -140,8 +140,8 @@ Promise.all([loadCore(),RT.load('walk').catch(()=>null)]).then(([d,w])=>{SC.walk
   lyAnc.onchange=()=>lyAnc.checked?ancL.addTo(map):ancL.remove();
   const cnt={};D.street.forEach(b=>cnt[b.d]=(cnt[b.d]||0)+1);const ds=['士林區','中正區','內湖區','萬華區','信義區','松山區','大安區','中山區','文山區','大同區','南港區','北投區'];const mx=Math.max(...Object.values(cnt));
   bars.innerHTML=ds.map(n=>`<div class="bar"><span>${n.replace('區','')}</span><i class="${['北投區','南港區'].includes(n)?'gap':''}" style="width:${Math.max(1,(cnt[n]||0)/mx*100)}%"></i><span>${cnt[n]||0}${['北投區','南港區'].includes(n)?' ⚠️':''}</span></div>`).join('');
-  legend(map,[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'查核優先序站點'},{c:'#646b70',t:'門檻範圍',shape:'ring'}]);
-  legendIntoSheet('menuSheet',[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'查核優先序站點'},{c:'#646b70',t:'門檻範圍',shape:'ring'}]);
+  legend(map,[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#a07d3e',t:'YouBike（大小＝借還量）'},{c:'#5b6f9c',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'查核優先序站點'},{c:'#646b70',t:'門檻範圍',shape:'ring'}]);
+  legendIntoSheet('menuSheet',[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#a07d3e',t:'YouBike（大小＝借還量）'},{c:'#5b6f9c',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'查核優先序站點'},{c:'#646b70',t:'門檻範圍',shape:'ring'}]);
   home();map.on('moveend',()=>drawBase(cur!==null&&opt==='C'&&cur.E.binsC?cur.E.binsC:D.street));
   const q=new URLSearchParams(location.search);if(q.has('hotspot'))open(HS[+q.get('hotspot')]);
 }).catch(e=>toast('資料載入失敗：'+e.message));
