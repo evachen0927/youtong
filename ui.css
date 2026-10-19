@@ -60,3 +60,14 @@ button,input,select,textarea,optgroup{font-family:inherit}
 .roles .wm{background:none!important;box-shadow:none!important;border:0;padding:0 2px!important;min-width:0;filter:drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 0 2px rgba(255,255,255,.9))}
 .roles .wm img{width:28px;height:28px}
 @media (max-width:760px){.roles{gap:8px}.roles a{min-width:50px;padding:0 10px}}
+/* 直式 logo：標誌在上、「有桶」在下（HTML 系統字），比 44px 切換器大；不包底，白色柔光。切換器對齊標誌中心 */
+:root{--row2:80px}
+.roles{align-items:flex-start}
+.roles .wm{flex-direction:column;gap:1px;height:auto!important;margin-top:2px}
+.roles .wm img{width:40px!important;height:40px!important}
+.roles .wm .wt{display:block!important;font:700 13px/1.15 var(--font);color:#2b2b2b;letter-spacing:1px}
+@media (min-width:761px){:root{--row2:92px}.roles .wm{margin-top:-2px}.roles .wm img{width:48px!important;height:48px!important}.roles .wm .wt{font-size:15px}}
+/* 第二列浮動 UI 移到 logo 下方 */
+.crow{top:calc(var(--row2) + env(safe-area-inset-top))!important}
+html body .top{padding-top:calc(var(--row2) + env(safe-area-inset-top))!important}
+@media (max-width:760px){.lychips{top:var(--row2)!important}.leaflet-bottom.leaflet-left{top:calc(var(--row2) + 2px)!important}}
