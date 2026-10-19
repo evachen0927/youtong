@@ -6,7 +6,7 @@ bbox=(W-dlo,S-dla,E+dlo,N+dla)
 ox.settings.useful_tags_way=list(ox.settings.useful_tags_way)+['foot','access','motor_vehicle']
 import networkx as nx
 bad=lambda d,kind:(str(d.get('access'))in('private','no')and not(kind=='walk'and str(d.get('foot'))in('yes','designated')))or(kind=='walk'and str(d.get('foot'))=='no')or(kind=='drive'and str(d.get('motor_vehicle'))=='no')
-for kind,geom in (('walk',False),('drive',True)):
+for kind,geom in (('drive',True),):  # 步行路網改由 build_walk_city.py 產生（全臺北市）
     G=ox.graph_from_xml(f'/workspace/raw/{kind}.osm',bidirectional=(kind=='walk'),simplify=False,retain_all=True)
     G.remove_edges_from([(u,v,k) for u,v,k,d in G.edges(keys=True,data=True) if bad(d,kind)])
     G=ox.truncate.truncate_graph_bbox(G,bbox)

@@ -1,21 +1,18 @@
 // 方案引擎：A 維持現況 / B 原位改善（模擬）/ C 同桶數挪一處。共用於規劃頁與行人頁。
 const SC={};
 SC.inArea=(la,lo)=>{const[[a,b],[c,d]]=CONFIG.demoArea.bounds;return la>=a&&la<=c&&lo>=b&&lo<=d};
-// 最近桶距離：示範區內且路網已載入 → 步行路網距離（OSM）；否則直線。回傳 [m, bin, 'walk'|'line']
+// 最近桶距離：全臺北市步行路網距離（OSM，多源 Dijkstra）；點無法對應路網（離路 >150m）或路網未載入 → 直線並標示。回傳 [m, bin, 'walk'|'line']
 SC.walk=null;SC.WALK_LIMIT_M=3000;
-SC.nearestDist=(p,bins)=>{let m=1e9,bi=null;
-  if(SC.walk&&SC.inArea(p.la,p.lo)){const g=SC.walk,sp=RT.snap(g,p.la,p.lo);if(sp){const D=RT.from(g,sp[0],SC.WALK_LIMIT_M).dist;
-    for(const b of bins){const sb=RT.snap(g,b.la,b.lo);const d=sb&&isFinite(D[sb[0]])?D[sb[0]]+sp[1]+sb[1]:null;if(d!=null&&d<m){m=d;bi=b}}
-    if(bi)return[m,bi,'walk']}}
-  for(const b of bins){const d=hav(p.la,p.lo,b.la,b.lo);if(d<m){m=d;bi=b}}return[m,bi,'line']};
+SC.nearestDist=(p,bins)=>{if(SC.walk){const r=RT.nearestWalk(SC.walk,p,bins);if(r)return[r[0],r[1],'walk']}
+  let m=1e9,bi=null;for(const b of bins){const d=hav(p.la,p.lo,b.la,b.lo);if(d<m){m=d;bi=b}}return[m,bi,'line']};
 SC.median=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):0};
 // stations: [{t:'yb'|'bus',la,lo,act,routes,name}] in demo area; bins: [{id,la,lo}] street bins
 SC.metrics=(stations,bins)=>{const ds=stations.map(s=>SC.nearestDist(s,bins)[0]);
   return{n:stations.length,over100:ds.filter(d=>d>100).length,over200:ds.filter(d=>d>200).length,median:SC.median(ds),ds,
     actServed100:stations.reduce((a,s,i)=>a+(ds[i]<=100?(s.act||0):0),0),routesServed100:stations.reduce((a,s,i)=>a+(ds[i]<=100?(s.routes||0):0),0)}};
-// 查核優先序＝借還量 ×（直線距離 − 門檻）。與研究 repo 一致用直線距離；步行距離只當輔助顯示
+// 查核優先序＝借還量 ×（步行距離 − 門檻）。距離一律為步行路網距離（無法對應路網時才用直線）
 SC.lineNearest=(p,bins)=>{let m=1e9,bi=null;for(const b of bins){const d=hav(p.la,p.lo,b.la,b.lo);if(d<m){m=d;bi=b}}return[m,bi]};
-SC.hotspots=(stations,bins,thr=CONFIG.hotspot.gapThresholdM)=>stations.filter(s=>s.t==='yb'&&s.act).map(s=>{const[d,b]=SC.lineNearest(s,bins);return{...s,nb:d,nbBin:b,gap:s.act*Math.max(0,d-thr)}})
+SC.hotspots=(stations,bins,thr=CONFIG.hotspot.gapThresholdM)=>stations.filter(s=>s.t==='yb'&&s.act).map(s=>{const[d,b,k]=SC.nearestDist(s,bins);return{...s,nb:d,nbBin:b,nbKind:k,gap:s.act*Math.max(0,d-thr)}})
   .filter(h=>h.nb>thr).sort((a,b)=>b.gap-a.gap);
 SC.walkNearest=(p,bins)=>{const r=SC.nearestDist(p,bins);return r[2]==='walk'?r[0]:null};
 SC.demandAround=(b,stations)=>stations.reduce((a,s)=>a+(s.t==='yb'&&hav(b.la,b.lo,s.la,s.lo)<=CONFIG.scenarioC.demandRadiusM?(s.act||0):0),0);
