@@ -42,8 +42,8 @@ window.CONFIG={
     routineClears:['08:00','12:00','16:00'], // 假設：例行巡查清運 3 次（官方每日 3–6 次的下限）；預測從最近一次例行清運起累積
     depot:null,                  // 清潔隊出發點 [lat,lng]；null = 示範區中心
     threshold:70, routeOrder:'tiered', // 'tiered'＝第 1 層必清（下次例行清運或收班前會滿）→ 第 2 層其餘達門檻，層內行車路網最近鄰；'drive-nn'；'priority'
-    demoTime:{day:'we',time:'19:00'}, // 示範：週六傍晚（收班後）
-    demoLinks:[{day:'we',time:'15:30',label:'週六 15:30'},{day:'we',time:'19:00',label:'週六 19:00'}] // 抽屜預設；平日 10:00 基準用深連結 ?fc=1&day=wk&t=10:00
+    demoTime:{day:'we',time:'15:30'}, // 示範：週六 15:30（對照平日 10:00）
+    demoLinks:[{day:'wk',time:'10:00',label:'平日 10:00'},{day:'we',time:'15:30',label:'週六 15:30'}] // 抽屜預設：示範對照 ≥100% 桶數（平日 10:00＝2、週六 15:30＝6）
   },
   storageKeys:{scenario:'debug松_scenario_v2',events:'debug松_events_v1',forecast:'有桶_forecast_v1'}
 };
