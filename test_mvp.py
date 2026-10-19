@@ -22,6 +22,7 @@ with sync_playwright() as p:
     for o in ('A','B1','B2','C'):
       pg.click(f'[data-o="{o}"]');pg.wait_for_timeout(300)
     print(name,'B2 標籤',pg.locator('#optDesc .tag').count()>0 or True)
+    wrow=pg.inner_text('.cmp tr:has-text("熱點到最近桶的步行距離")').replace('\n',' ');print(name,'步行距離列',wrow);assert '桶位不變' in wrow
     print(name,'比較表',pg.inner_text('.cmp').replace('\n',' | ').replace('\t',' '))
     print(name,'建議',[t for t in pg.inner_text('#detail').split('\n') if any(k in t for k in ('★','C 移出','不製造','C 不可行'))])
     pg.click('[data-o="C"]');pg.click('#adopt');pg.wait_for_timeout(600)
