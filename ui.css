@@ -79,3 +79,4 @@ html body .top{padding-top:calc(var(--row2) + env(safe-area-inset-top))!importan
 .roles .wm img{width:34px!important;height:34px!important;margin:-3px 0 -2px}
 .roles .wm .wt{color:#fff!important;font:700 12px/1.1 var(--font)!important;letter-spacing:1px}
 @media (min-width:761px){.roles .wm{width:56px;height:64px!important;border-radius:16px;margin-top:-2px}.roles .wm img{width:40px!important;height:40px!important}.roles .wm .wt{font-size:14px!important}}
+.meta .rep{display:inline-flex;align-items:center;min-height:23px}/* 與 .stchip 同高，回報後卡片不跳動 */
