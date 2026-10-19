@@ -17,7 +17,8 @@
   --bg:#ffffff;--surface:#ffffff;--surface-2:#f6f7f6;--map-bg:#f2f2f0;--scrim:#0000004d;
   --shadow-1:0 1px 3px #0000001f;--shadow-2:0 6px 24px #0000001f,0 1px 3px #00000014;
   --r:16px;--r-sm:12px;--touch:44px;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  /* 唯一字體：iOS 系統字（不載入任何 webfont）；字重只用 400/500/600/700 */
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang TC","Helvetica Neue","Heiti TC","Microsoft JhengHei",sans-serif;
   /* 舊變數對應（common.css 相容） */
   --accent:var(--brand);--accent-l:var(--brand-soft);--warn:var(--fill-mid);--bad:var(--reported)
 }

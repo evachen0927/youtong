@@ -4,7 +4,7 @@
 .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:10px 0}.seg button{flex:1;border:0;background:#fff;padding:10px 4px;font-size:13px;font-family:inherit;cursor:pointer}.seg button.on{background:var(--accent);color:#fff;font-weight:600}
 .tag{font-size:11px;padding:1px 6px;border-radius:6px;background:#eef1f3;color:var(--mute);margin-left:4px}.tag.sim{background:#f3e8ff;color:#7b3fbf}.tag.est{background:#e8f0fe;color:#2a5fc1}
 .back{border:0;background:none;color:var(--accent);font-size:14px;padding:0;margin-bottom:8px;cursor:pointer;font-family:inherit}
-.vmk{width:9px!important;height:9px!important;background:#7b5cc4;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#646b70;font-weight:900;font-size:20px;text-shadow:0 0 3px #fff}.ftop{position:absolute;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:8px;pointer-events:none}
+.vmk{width:9px!important;height:9px!important;background:#7b5cc4;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#646b70;font-weight:700;font-size:20px;text-shadow:0 0 3px #fff}.ftop{position:absolute;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:8px;pointer-events:none}
 
 .ftop .role{font-size:12px;color:var(--mute);background:#ffffffd9;padding:4px 10px;border-radius:999px}
 .mk.hot{background:var(--ink);box-shadow:0 0 0 2px #fff,0 1px 4px #0003;border:0}
@@ -23,7 +23,7 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 .stat{border:0;background:var(--surface-2);border-radius:var(--r)}.card{border-radius:var(--r)}
 @media (min-width:1024px){.panel{width:40%;min-width:420px;padding:72px 32px 32px}}
 @media (min-width:761px) and (max-width:1023px){main{flex-direction:column}#map{flex:none;height:52vh}.panel{width:auto;border-left:0;border-top:1px solid var(--line);flex:1;padding:20px 24px 32px}}
-@media (max-width:760px){.ftop{right:12px}.ftop #menu{margin-left:auto}.leaflet-bottom.leaflet-left{top:64px;bottom:auto}.app main{padding-bottom:0}.panel{bottom:0;height:50%}.insight .big{font-size:36px}}
+@media (max-width:760px){.leaflet-bottom.leaflet-left .lgd{display:none}.ftop{right:12px}.ftop #menu{margin-left:auto}.leaflet-bottom.leaflet-left{top:64px;bottom:auto}.app main{padding-bottom:0}.panel{bottom:0;height:50%}.insight .big{font-size:36px}}
 </style></head>
 <body><div class="app"><main>
 <div class="ftop"><button class="fab" id="menu" aria-label="選單">⋯</button></div>
@@ -122,6 +122,7 @@ Promise.all([loadCore(),RT.load('walk').catch(()=>null)]).then(([d,w])=>{SC.walk
   const cnt={};D.street.forEach(b=>cnt[b.d]=(cnt[b.d]||0)+1);const ds=['士林區','中正區','內湖區','萬華區','信義區','松山區','大安區','中山區','文山區','大同區','南港區','北投區'];const mx=Math.max(...Object.values(cnt));
   bars.innerHTML=ds.map(n=>`<div class="bar"><span>${n.replace('區','')}</span><i class="${['北投區','南港區'].includes(n)?'gap':''}" style="width:${Math.max(1,(cnt[n]||0)/mx*100)}%"></i><span>${cnt[n]||0}${['北投區','南港區'].includes(n)?' ⚠️':''}</span></div>`).join('');
   legend(map,[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'缺口熱點'},{c:'#646b70',t:'100 m 範圍',shape:'ring'}]);
+  legendIntoSheet('menuSheet',[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'缺口熱點'},{c:'#646b70',t:'100 m 範圍',shape:'ring'}]);
   home();map.on('moveend',()=>drawBase(cur!==null&&opt==='C'&&cur.E.binsC?cur.E.binsC:D.street));
   const q=new URLSearchParams(location.search);if(q.has('hotspot'))open(HS[+q.get('hotspot')]);
 }).catch(e=>toast('資料載入失敗：'+e.message));

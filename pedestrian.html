@@ -114,7 +114,8 @@ roleSwitch('pedestrian.html'); // 導覽列放在「更多」面板內
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);
-legend(map,[...BIN_LEGEND(),{c:'var(--brand)',t:'你的位置'}],'topleft');
+legend(map,REPORTED_HINT(),'topleft')._container.classList.add('hint');
+legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:'var(--brand)',t:'你的位置'}]);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 document.getElementById('map').classList.add('desat');
 const ren=L.canvas({padding:.3});
@@ -172,11 +173,11 @@ function render(fit){
   </div>
   ${N?`<button class="next" data-next="${N.f.id}"><span>下一個</span><span class="t"><b>${N.f.addr}</b></span><span>${fmtM(N.d)}・${mins(N)} 分${N.w?'':'（直線）'} ›</span></button>`:''}`;
   redraw();
-  if(fit){const ch=list.getBoundingClientRect().height;map.fitBounds([pos,[p.la,p.lo]],{paddingTopLeft:[48,90],paddingBottomRight:[48,ch+40],maxZoom:17})}
+  if(fit){const ch=list.getBoundingClientRect().height;map.fitBounds([pos,[p.la,p.lo]],{paddingTopLeft:[48,topUIBottom()+36],paddingBottomRight:[48,ch+44],maxZoom:17})}
 }
 let where='定位中…';
 function setPos(p,label){pos=p;where=label;dumped=false;if(me)me.remove();me=L.marker(p,{icon:L.divIcon({className:'me'}),zIndexOffset:1000,interactive:false}).addTo(map);render(true)}
-function focusBin(f){sel=f.id;dumped=false;render(false);const ch=list.getBoundingClientRect().height;map.panTo(map.unproject(map.project([f.la,f.lo]).add([0,ch/2-40])))}
+function focusBin(f){sel=f.id;dumped=false;render(false);const ch=list.getBoundingClientRect().height;map.panTo(map.unproject(map.project([f.la,f.lo]).add([0,(ch-topUIBottom())/2])))}
 list.onclick=e=>{
   const fb=e.target.closest('[data-full]');if(fb){addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});toast('已回報，清潔隊頁面會看到 🙏');dumped=false;sel=null;render(false);return}
   if(e.target.closest('#doneBtn')){dumped=true;render(false);return}

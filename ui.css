@@ -6,7 +6,7 @@ html,body{font-family:var(--font)}
 .fab{flex:none;width:var(--touch);height:var(--touch);border:0;border-radius:50%;background:var(--surface);box-shadow:var(--shadow-1);font:600 20px/1 var(--font);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;pointer-events:auto;text-decoration:none}
 .pillbtn{display:inline-flex;align-items:center;gap:6px;height:var(--touch);padding:0 14px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);font:500 14px/1 var(--font);color:var(--ink);cursor:pointer;pointer-events:auto;white-space:nowrap}
 .infochip{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 10px;border:0;border-radius:999px;background:#ffffffe6;box-shadow:var(--shadow-1);font:500 12px/1 var(--font);color:var(--mute);cursor:pointer;pointer-events:auto}
-.infochip::before{content:"i";display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--gray-2);color:var(--ink-2);font:700 10px/1 Georgia,serif}
+.infochip::before{content:"i";display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--gray-2);color:var(--ink-2);font:700 10px/1 var(--font)}
 .sim{font-size:.82em;color:var(--faint);margin-left:2px;font-weight:400}.sim::before{content:"＊"}
 /* 抽屜 */
 .sheet{position:fixed;inset:0;z-index:2500;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
@@ -42,3 +42,10 @@ html,body{font-family:var(--font)}
 .roles a.on{background:var(--ink);color:#fff;font-weight:700}
 .roles .seg3{min-height:var(--touch);box-sizing:border-box}
 @media (min-width:761px){.roles .wm{display:inline-flex}}
+/* 字體統一：表單元件、Leaflet 控制項／彈窗／版權列都用同一個 --font */
+button,input,select,textarea,optgroup{font-family:inherit}
+.leaflet-container,.leaflet-container .leaflet-control,.leaflet-popup-content,.leaflet-tooltip,.leaflet-control-attribution{font-family:var(--font)!important}
+.leaflet-control-zoom a,.leaflet-container a.leaflet-popup-close-button{font-family:var(--font)!important;font-weight:400}
+.num,.prog .no,.dist b,.lgd,.hs .ev b,.stat b,.sumr b,.big,.cmp td{font-variant-numeric:tabular-nums}
+.lgd.static{box-shadow:none;background:var(--surface-2);max-width:none;padding:10px 12px;gap:8px 14px;font-size:13px}
+.lgd.hint{flex-wrap:nowrap;padding:4px 10px;max-width:none}

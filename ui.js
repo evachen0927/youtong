@@ -25,3 +25,10 @@ const ROLES=[['pedestrian.html','行人'],['crew.html','清潔隊'],['index.html
 function roleSwitch(active,host){const n=document.createElement('nav');n.className='roles'+(host?'':' fixed');n.setAttribute('aria-label','切換角色（示範導覽）');
   n.innerHTML='<span class="wm">有桶</span><span class="seg3">'+ROLES.map(r=>`<a href="${r[0]}"${r[0]===active?' class="on" aria-current="page"':''}>${r[1]}</a>`).join('')+'</span>';
   host?host.prepend(n):document.body.appendChild(n);return n}
+// 圖例：完整版放在「資料說明」抽屜頂端；地圖上只留一行提示
+const legendHTML=items=>`<div class="lgd static">${items.map(i=>`<span>${i.html||`<i class="${i.shape||'dot'}" style="--c:${i.c}"></i>`}${i.t}</span>`).join('')}</div>`;
+function legendIntoSheet(sheetId,items){const sh=document.querySelector('#'+sheetId+' .sh'),hd=sh&&sh.querySelector('.hd');if(!hd)return;
+  const d=document.createElement('div');d.innerHTML='<h3>圖例</h3>'+legendHTML(items);hd.after(...d.childNodes)}
+const REPORTED_HINT=()=>[{html:binIconSVG(0,'reported').html.replace('width="28" height="34"','width="12" height="15"'),t:'紅色＝有人回報滿了'}];
+// 上方浮動 UI 的底部位置（地圖 padding 用，確保最近的桶與光圈不被遮住）
+function topUIBottom(){let b=0;document.querySelectorAll('.roles,.top>*,.infochip,.leaflet-top .lgd,.prog,.tchip').forEach(e=>{const r=e.getBoundingClientRect();if(r.height&&r.bottom<innerHeight/2)b=Math.max(b,r.bottom)});return b}

@@ -93,7 +93,8 @@ roleSwitch('crew.html');
 const C=CONFIG.forecast,LSU='有桶_crew_ui_v2',AMT=[['empty','空',0],['half','半',50],['full','滿',100],['overflow','溢出',120]];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const map=quietMap(CONFIG.demoArea.center,15),binL=L.layerGroup().addTo(map),rtL=L.layerGroup().addTo(map);
-legend(map,[...RAMP_LEGEND,{c:css('--ink-2'),t:'站序',shape:'line'}],'topleft');
+legend(map,[{html:'<b style="font-weight:600">滿度</b>',t:''},...RAMP_LEGEND],'topleft')._container.classList.add('hint');
+legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:css('--ink-2'),t:'站序',shape:'line'}]);
 const q=new URLSearchParams(location.search),ui=JSON.parse(localStorage.getItem(LSU)||'{}');
 let P=[],E=[],route=[],state='A',gen=0;const depot=C.depot||CONFIG.demoArea.center;
 const day=()=>document.querySelector('[name=fcd]:checked').value,T=()=>+fcT.value;
@@ -108,9 +109,9 @@ function nnDrive(sel){const left=[...sel],out=[];let cur=depot;while(left.length
 function plan(){const st=FC.state();E=FC.evaluate(P,day(),T(),st);const sel=E.filter(e=>e.fill>=+th.value);route=DR&&C.routeOrder!=='priority'?nnDrive(sel):sel;gen=Date.now()}
 const legKm=()=>{let km=0,c0=depot;for(const e of route){km+=dd(c0,[e.b.la,e.b.lo]);c0=[e.b.la,e.b.lo]}return km};
 function cardH(){return card.getBoundingClientRect().height}
-function fitTop(n=3){const pts=route.slice(0,n).map(e=>[e.b.la,e.b.lo]);if(!pts.length){map.fitBounds(CONFIG.demoArea.bounds,{paddingTopLeft:[20,110],paddingBottomRight:[20,cardH()+20]});return}
+function fitTop(n=3){const pts=route.slice(0,n).map(e=>[e.b.la,e.b.lo]);if(!pts.length){map.fitBounds(CONFIG.demoArea.bounds,{paddingTopLeft:[20,topUIBottom()+24],paddingBottomRight:[20,cardH()+20]});return}
   if(state==='B'){const ci=curIdx();if(ci>=0){const b=route[ci].b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot;pts.length=0;pts.push(prev,[b.la,b.lo])}}
-  map.fitBounds(pts,{paddingTopLeft:[50,110],paddingBottomRight:[50,cardH()+30],maxZoom:17})}
+  map.fitBounds(pts,{paddingTopLeft:[50,topUIBottom()+30],paddingBottomRight:[50,cardH()+30],maxZoom:17})}
 function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=doneSet(),ci=curIdx(),ids=new Set(route.map(e=>e.b.id)),small=map.getZoom()<15;
   for(const e of E)if(!ids.has(e.b.id)){const f=Math.round(e.fill);L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev),small),title:`${e.b.addr}・預測 ${f}%`}).addTo(binL)}
   if(route.length){L.polyline(DR?route.reduce((a,e,i)=>{const p=i?[route[i-1].b.la,route[i-1].b.lo]:depot;return a.concat(RT.path(DR,p,[e.b.la,e.b.lo]))},[]):[depot,...route.map(e=>[e.b.la,e.b.lo])],{color:css('--ink-2'),weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
