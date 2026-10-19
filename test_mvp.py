@@ -42,7 +42,7 @@ with sync_playwright() as p:
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
     # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回
     pg.goto(B+'crew.html?fc=1&day=we&t=15:30');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)
-    sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3>=1 and '必清' in sA and '週六 15:30' in pg.inner_text('#tChip')
+    assert pg.inner_text('#thV')=='快滿了以上' and '溢出' not in pg.content();sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3>=1 and '必清' in sA and '週六 15:30' in pg.inner_text('#tChip')
     vis=pg.evaluate("(()=>{const r=card.getBoundingClientRect();return route.slice(0,3).every(e=>{const p=map.latLngToContainerPoint([e.b.la,e.b.lo]);return (p.y<r.top||p.x<r.left)&&p.y>0&&p.x>0&&p.x<innerWidth})})()");print(name,'前 3 站在卡片上方',vis);assert vis
     if name=='mobile':
         h=pg.evaluate("card.getBoundingClientRect().height/innerHeight");print(name,'卡片高度比例',round(h,2));assert h<=0.401
