@@ -1,6 +1,6 @@
 // ===== 有桶・設計共用（design-owned；common.js 由工程維護，這裡只做視覺層）=====
 // 滿度色階：一條固定冷→暖色階，三個角色頁面共用（值見 tokens.css）
-const RAMP={low:'#8cc9a8',mid:'#e8b931',high:'#d9731f',over:'#a8501a'};
+const RAMP={low:'#8cc9a8',mid:'#e8b931',high:'#d9731f',over:'#d9731f'};
 const REPORTED='#e2574c'; // 只用於「被回報滿了」
 // 地圖不再有「溢出」狀態：<70% low、70–99% mid、≥100% high；over 參數保留相容但忽略。RAMP.over 只給收運量按鈕等非地圖用途。
 const rampColor=(f,over)=>f>=100?RAMP.high:f>=70?RAMP.mid:RAMP.low;
