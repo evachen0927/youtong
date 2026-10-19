@@ -1,10 +1,9 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css">
+<title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css"><link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="ui.css">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
-:root{--accent:#0f9d76;--accent-l:#e7f5f0;--ink:#1c1f21;--mute:#5f666b;--line:#eceeef;--gen:#3b3734;--rec:#2f6fde;--r:16px;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+:root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
 html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2}
 #map{position:fixed;inset:0;background:#f2f2f0;z-index:0}
 #map.desat .leaflet-tile-pane{filter:grayscale(1) contrast(.62) brightness(1.2);opacity:.8}
@@ -23,7 +22,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 /* 底部：最近垃圾桶卡片 */
 #list{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:#fff;border-radius:var(--r);box-shadow:0 6px 24px #0000001f,0 1px 3px #00000014;padding:16px 16px 14px;max-width:520px;margin:0 auto}
 .k{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);min-height:20px}
-.k .brandm{font-weight:700;color:var(--accent);letter-spacing:.5px}
+.k .brandm{font-weight:700;color:var(--ink);letter-spacing:.5px}
 .k #where{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .k .loc{width:44px;height:44px;margin:-12px -8px -12px 0;border:0;background:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .cat{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:4px 10px 4px 8px;border-radius:999px;background:#f3f3f1;color:var(--ink)}
@@ -50,7 +49,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .pin .w svg{display:block}
 .pin .bar{width:22px;height:5px;margin:1px auto 0;border-radius:3px;background:#e2e3e3;overflow:hidden}
 .pin .bar i{display:block;height:100%}
-.pin.near .halo{position:absolute;left:4px;top:3px;width:24px;height:24px;border-radius:50%;box-shadow:0 0 0 7px #0f9d7626}
+.pin.near .halo{position:absolute;left:4px;top:3px;width:24px;height:24px;border-radius:50%;box-shadow:0 0 0 7px #1c1f211a}
 .me{width:18px!important;height:18px!important;margin:-9px 0 0 -9px!important;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 8px #0f9d7629}
 /* 更多（進階）面板 */
 .adv{position:fixed;inset:0;z-index:2500;background:#0000004d;display:flex;align-items:flex-end}
@@ -67,6 +66,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .adv label.ck{min-height:44px}
 .adv .b{flex:none;width:100%}
 .toast{top:calc(70px + env(safe-area-inset-top));bottom:auto!important}
+.leaflet-top.leaflet-left{top:calc(60px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:250px}
 @media (min-width:761px){#list{left:auto;right:16px;bottom:16px;width:380px}.top{right:auto;width:520px}}
 </style></head>
 <body>
@@ -84,7 +84,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 
 <div class="adv" id="adv" hidden><div class="sh" role="dialog" aria-label="更多">
   <div class="hd"><b>有桶・更多</b><button class="icon-btn" id="advClose" aria-label="關閉" style="box-shadow:none;background:#f3f3f1;font-size:16px">✕</button></div>
-  <header></header>
+  <h3>示範導覽・切換角色</h3><div class="rolenav"><header></header></div>
   <h3>規劃情境比較（模擬）</h3>
   <div class="seg" id="seg"><button data-m="before" class="on">調整前</button><button data-m="after">調整後</button></div>
   <div id="delta"></div>
@@ -98,12 +98,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <div class="foot">垃圾桶位置為臺北市行人專用清潔箱街道清冊（2026-09-30）。官方清冊<b>沒有收受類別欄位</b>，一般垃圾／資源回收為依桶編號產生的<b>示意資料</b>；滿度為模擬值，行人回報會覆蓋。「調整後」套用規劃頁採用的方案（模擬情境，非實際設置）。距離為直線距離，步行時間以 ×1.3 繞行係數、每分鐘 80 公尺估算。</div>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="bin-category.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="bin-category.js"></script><script src="ui.js"></script>
 <script>
 nav('pedestrian.html'); // 導覽列放在「更多」面板內
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);
+legend(map,[{c:'var(--brand)',t:'你的位置'},{html:'<b style="font-weight:600">滿度</b>',t:''},...RAMP_LEGEND],'topleft');
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 document.getElementById('map').classList.add('desat');
 const ren=L.canvas({padding:.3});
@@ -125,15 +126,15 @@ const iconCache={};
 function pinIcon(b,ev,near){const cat=binCategory(b).cat,showBar=map.getZoom()>=16||near,f=showBar?fillOf(b.id,ev):-1,fq=f<0?-1:Math.round(f/10)*10;
   const key=cat+'|'+fq+'|'+(near?1:0);
   return iconCache[key]||(iconCache[key]=L.divIcon({className:'pin'+(near?' near':''),iconSize:[32,48],iconAnchor:[16,39],
-    html:`<div class="w">${near?'<span class="halo"></span>':''}${pinSVG(cat)}${f>=0?`<div class="bar"><i style="width:${Math.max(8,fq)}%;background:${fillColor(fq)}"></i></div>`:''}</div>`}))}
+    html:`<div class="w">${near?'<span class="halo"></span>':''}${pinSVG(cat)}${f>=0?`<div class="bar"><i style="width:${Math.max(8,fq)}%;background:${rampColor(fq)}"></i></div>`:''}</div>`}))}
 function drawBins(){binL.clearLayers();const bd=map.getBounds().pad(.3),ev=getEvents(),nid=primary()&&primary().f.id;
   for(const f of shown())if(bd.contains([f.la,f.lo])){const near=f.id===nid;
     L.marker([f.la,f.lo],{icon:pinIcon(f,ev,near),zIndexOffset:near?900:0,keyboard:false,title:f.addr}).on('click',()=>focusBin(f)).addTo(binL)}}
 function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.circleMarker([f.la,f.lo],{renderer:ren,radius:4,stroke:false,fillColor:color,fillOpacity:.8}).bindPopup(pop(f)).addTo(layer)}
-function redraw(){drawBins();drawPts(ybL,D.yb,'#e8a33a',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'#8a7fd0',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`);drawChange()}
+function redraw(){drawBins();drawPts(ybL,D.yb,'#d9a441',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'#8a84c9',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`);drawChange()}
 function drawChange(){chgL.clearLayers();if(mode!=='after'||!scen)return;
-  if(scen.moved){L.marker(scen.moved.from,{icon:L.divIcon({className:'',html:'<b style="color:#e5484d;font-size:18px;text-shadow:0 0 3px #fff">✕</b>',iconSize:[18,18]})}).addTo(chgL);L.polyline([scen.moved.from,scen.moved.to],{color:'#0f9d76',dashArray:'8 6',weight:3}).addTo(chgL)}
-  for(const b of binsAfter)if(upg.has(b.id))L.circleMarker([b.la,b.lo],{radius:16,color:'#7b3fbf',weight:2,fill:false,interactive:false}).addTo(chgL)}
+  if(scen.moved){L.marker(scen.moved.from,{icon:L.divIcon({className:'',html:'<b style="color:#e2574c;font-size:18px;text-shadow:0 0 3px #fff">✕</b>',iconSize:[18,18]})}).addTo(chgL);L.polyline([scen.moved.from,scen.moved.to],{color:'#7b5cc4',dashArray:'8 6',weight:3}).addTo(chgL)}
+  for(const b of binsAfter)if(upg.has(b.id))L.circleMarker([b.la,b.lo],{radius:16,color:'#7b5cc4',weight:2,fill:false,interactive:false}).addTo(chgL)}
 map.on('moveend',redraw);
 
 // ---- 最近的桶 ----
@@ -143,7 +144,7 @@ function nextOf(p){return nearestN(shown()).find(t=>!p||t.f.id!==p.f.id)||null}
 const ago=ts=>{const m=Math.round((Date.now()-ts)/60000);return m<1?'剛剛':m<60?m+' 分鐘前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前'};
 function catBadge(b){const c=binCategory(b).cat;const dots=c==='both'?`<i style="background:var(--gen)"></i><i style="background:var(--rec)"></i>`:`<i style="background:${BIN_CAT[c].color}"></i>`;return `<span class="cat">${dots}${BIN_CAT[c].label}</span>`}
 function freshness(b,ev){const last=ev.filter(e=>e.bin===b.id).slice(-1)[0],f=fillOf(b.id,ev);
-  const bar=`<span class="fb"><i style="width:${Math.max(6,f)}%;background:${fillColor(f)}"></i></span>`;
+  const bar=`<span class="fb"><i style="width:${Math.max(6,f)}%;background:${rampColor(f)}"></i></span>`;
   if(last)return `<span>${bar}${last.kind==='full'?'滿了':last.kind==='clear'?'已清運':f+'%'}・${ago(last.ts)}${last.by}回報</span>`;
   return `<span>${bar}滿度 ${f}%・模擬值，非即時</span>`}
 function render(fit){

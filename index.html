@@ -1,11 +1,17 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>規劃｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css">
+<title>規劃｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css"><link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="ui.css">
 <style>.cmp{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}.cmp th,.cmp td{padding:8px 4px;border-bottom:1px solid var(--line);text-align:right}.cmp th:first-child,.cmp td:first-child{text-align:left;color:var(--mute);font-weight:400}.cmp th{font-size:12px}.cmp th.rec{color:var(--accent)}.cmp .good{color:var(--accent);font-weight:700}
 .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:10px 0}.seg button{flex:1;border:0;background:#fff;padding:10px 4px;font-size:13px;font-family:inherit;cursor:pointer}.seg button.on{background:var(--accent);color:#fff;font-weight:600}
 .tag{font-size:11px;padding:1px 6px;border-radius:6px;background:#eef1f3;color:var(--mute);margin-left:4px}.tag.sim{background:#f3e8ff;color:#7b3fbf}.tag.est{background:#e8f0fe;color:#2a5fc1}
 .back{border:0;background:none;color:var(--accent);font-size:14px;padding:0;margin-bottom:8px;cursor:pointer;font-family:inherit}
-.vmk{width:10px!important;height:10px!important;background:#7b3fbf;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#e5484d;font-weight:900;font-size:20px;text-shadow:0 0 3px #fff}</style></head>
-<body><div class="app"><header></header><main>
+.vmk{width:9px!important;height:9px!important;background:#7b5cc4;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#e2574c;font-weight:900;font-size:20px;text-shadow:0 0 3px #fff}.ftop{position:absolute;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:8px;pointer-events:none}
+.ftop .wm{display:inline-flex;align-items:center;height:44px;padding:0 16px;border-radius:999px;background:#fff;box-shadow:var(--shadow-1);font-weight:700;font-size:16px;letter-spacing:.5px}
+.ftop .role{font-size:12px;color:var(--mute);background:#ffffffd9;padding:4px 10px;border-radius:999px}
+.mk.hot{background:var(--ink);box-shadow:0 0 0 2px #fff,0 1px 4px #0003;border:0}
+.app main{height:100dvh}
+</style></head>
+<body><div class="app"><main>
+<div class="ftop"><span class="wm">有桶</span><span class="role">規劃</span><button class="fab" id="menu" aria-label="選單">⋯</button></div>
 <div id="map"></div>
 <aside class="panel"><button class="handle" aria-label="展開面板"></button>
 <div id="home">
@@ -22,10 +28,18 @@
 <div id="detail" hidden></div>
 <div class="foot">交通活動量是人流的推估，不等於垃圾量。距離為直線距離，不是步行距離。B 方案的滿溢時數為模擬值。方案定義依研究團隊「A 現況／B 原位改善／C 同桶數微調一處」。</div>
 </aside></main></div>
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script>
+<div class="sheet" id="menuSheet" hidden><div class="sh" role="dialog" aria-label="選單">
+  <div class="hd"><b>有桶</b><button class="x" data-close aria-label="關閉">✕</button></div>
+  <h3>示範導覽・切換角色</h3><div class="rolenav"><header></header></div>
+  <h3>資料說明</h3>
+  <ul><li><b>真實資料</b>：垃圾桶位置（臺北市行人專用清潔箱街道清冊，2026-09-30）、YouBike 站點與 2026-07 借還次數、公車站位、景點商圈場域線索（2026-08-18）。</li>
+  <li><b>推估</b>：借＋還次數與停靠路線數只是人流的代理指標，不等於垃圾量；距離皆為直線距離。</li>
+  <li><b>模擬</b>（標 <span class="sim"></span>）：B 方案容量／清運參數與滿溢時數、本工具的方案建議規則，皆為可調整的假設。</li></ul>
+</div></div>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="ui.js"></script>
 <script>
-nav('index.html');sheet();
-const map=baseMap(CONFIG.demoArea.center,CONFIG.demoArea.zoom),ren=L.canvas({padding:.3});
+nav('index.html');sheet();menu.onclick=()=>sheetOpen('menuSheet');
+const map=quietMap(CONFIG.demoArea.center,CONFIG.demoArea.zoom),ren=L.canvas({padding:.3});
 const baseL=L.layerGroup().addTo(map),hotL=L.layerGroup().addTo(map),chgL=L.layerGroup().addTo(map),ancL=L.layerGroup();
 let D,ST,HS,cur=null,opt='A';const curH=()=>cur;
 document.querySelectorAll('.thr').forEach(e=>e.textContent=CONFIG.hotspot.gapThresholdM);
@@ -33,14 +47,14 @@ hTitle.textContent=CONFIG.headline.title;hCaveat.textContent=CONFIG.headline.cav
 cards.innerHTML=CONFIG.headline.items.map(i=>`<div class="stat"><b>${i.value}</b><span>${i.label}</span></div>`).join('');
 const fmt=n=>n.toLocaleString('zh-TW');
 function drawBase(bins){baseL.clearLayers();
-  L.rectangle(CONFIG.demoArea.bounds,{color:'#0f9d76',weight:1.5,dashArray:'6',fill:false,interactive:false}).addTo(baseL);
-  for(const s of D.bus)if(map.getBounds().pad(.5).contains([s.la,s.lo]))L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#2a7de1',fillOpacity:.5}).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
+  L.rectangle(CONFIG.demoArea.bounds,{color:'#646b70',weight:1.2,dashArray:'6',fill:false,interactive:false}).addTo(baseL);
+  for(const s of D.bus)if(map.getBounds().pad(.5).contains([s.la,s.lo]))L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#8a84c9',fillOpacity:.55}).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
   for(const s of D.yb){if(!map.getBounds().pad(.5).contains([s.la,s.lo]))continue;const r=s.act?Math.max(3,Math.sqrt(s.act)/22):3;
-    L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#f5a623',fillOpacity:.75}).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
+    L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#d9a441',fillOpacity:.7}).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
   for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk',iconSize:[10,10]})}).bindPopup(`◆ 場域線索：${v.addr}`).addTo(baseL);
-  for(const b of bins)L.circleMarker([b.la,b.lo],{renderer:ren,radius:b.moved?8:5,color:'#fff',weight:1.5,fillColor:b.moved?'#0f9d76':'#3c4650',fillOpacity:.95}).bindPopup(`🗑 ${b.addr}`).addTo(baseL)}
+  for(const b of bins)L.circleMarker([b.la,b.lo],{renderer:ren,radius:b.moved?8:5,color:'#fff',weight:1.5,fillColor:b.moved?'#7b5cc4':'#3f4549',fillOpacity:.95}).bindPopup(`🗑 ${b.addr}`).addTo(baseL)}
 function home(){cur=null;detail.hidden=true;document.getElementById('home').hidden=false;chgL.clearLayers();drawBase(D.street);drawHot()}
-function drawHot(){hotL.clearLayers();HS.slice(0,CONFIG.hotspot.maxList).forEach((h,i)=>L.marker([h.la,h.lo],{icon:L.divIcon({className:'mk',html:i+1,iconSize:[26,26]}),zIndexOffset:800}).on('click',()=>open(h)).addTo(hotL))}
+function drawHot(){hotL.clearLayers();HS.slice(0,CONFIG.hotspot.maxList).forEach((h,i)=>L.marker([h.la,h.lo],{icon:L.divIcon({className:'mk hot',html:i+1,iconSize:[26,26]}),zIndexOffset:800}).on('click',()=>open(h)).addTo(hotL))}
 function open(h){cur=h;const saved=SC.load();const E=SC.evaluate(h,ST,D.street);h.E=E;opt=(saved&&saved.hotspotId===h.id)?saved.option:E.rec;
   document.getElementById('home').hidden=true;detail.hidden=false;render();focusAt(map,[h.la,h.lo],16);
   const p=document.querySelector('.panel');p.classList.remove('min');p.scrollTop=0}
@@ -69,12 +83,12 @@ function render(){const h=cur,E=h.E,A=E.A,C=E.C,saved=SC.load();
   adopt.onclick=()=>{SC.save({hotspotId:h.id,hotspotName:h.name,option:opt,ts:Date.now(),moved:opt==='C'&&E.donor?{id:E.donor.b.id,from:[E.donor.b.la,E.donor.b.lo],to:[h.la+0.00008,h.lo+0.00008]}:null,upgraded:opt==='B'?E.B.bins.map(b=>b.id):[]});toast('已採用 '+OPT_NAME[opt]);render()};
   draw()}
 function draw(){const h=cur,E=h.E;chgL.clearLayers();drawBase(opt==='C'&&E.binsC?E.binsC:D.street);
-  L.circle([h.la,h.lo],{radius:100,color:'#e5484d',weight:1.5,dashArray:'4',fillOpacity:.05,interactive:false}).addTo(chgL);
-  if(opt==='B')for(const b of E.B.bins)L.circleMarker([b.la,b.lo],{radius:13,color:'#7b3fbf',weight:3,fill:false}).bindTooltip('容量↑ 清運↑（模擬）',{permanent:true,direction:'top',offset:[0,-10]}).addTo(chgL);
+  L.circle([h.la,h.lo],{radius:100,color:'#e2574c',weight:1.5,dashArray:'4',fillOpacity:.05,interactive:false}).addTo(chgL);
+  if(opt==='B')for(const b of E.B.bins)L.circleMarker([b.la,b.lo],{radius:13,color:'#7b5cc4',weight:3,fill:false}).bindTooltip('容量↑ 清運↑（模擬）',{permanent:true,direction:'top',offset:[0,-10]}).addTo(chgL);
   if(opt==='C'&&E.donor){const f=[E.donor.b.la,E.donor.b.lo],t=[h.la+0.00008,h.lo+0.00008];
     L.marker(f,{icon:L.divIcon({className:'xmk',html:'✕',iconSize:[20,20]})}).bindTooltip('移出',{permanent:true,direction:'left'}).addTo(chgL);
-    L.polyline([f,t],{color:'#0f9d76',weight:3,dashArray:'8 6'}).addTo(chgL);
-    L.circleMarker(t,{radius:13,color:'#0f9d76',weight:3,fill:false}).bindTooltip('移入',{permanent:true,direction:'right'}).addTo(chgL);
+    L.polyline([f,t],{color:'#7b5cc4',weight:3,dashArray:'8 6'}).addTo(chgL);
+    L.circleMarker(t,{radius:13,color:'#7b5cc4',weight:3,fill:false}).bindTooltip('移入',{permanent:true,direction:'right'}).addTo(chgL);
     fitTo(map,[f,t,[h.la,h.lo]],17)}}
 loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];
   ST=[...D.yb,...D.bus].filter(s=>SC.inArea(s.la,s.lo));
@@ -83,10 +97,11 @@ loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];
   hot.onclick=e=>{const c=e.target.closest('[data-i]');if(c)open(HS[+c.dataset.i])};
   vs.innerHTML=CONFIG.compare.map((c,i)=>{const s=D.yb.find(x=>x.name===c.name);if(!s)return'';const[d]=SC.nearestDist(s,D.street);return `<div class="row" style="flex-wrap:nowrap;padding:6px 0;${i?'border-top:1px solid var(--line)':''}"><div style="flex:1"><div class="t" style="font-weight:600;font-size:14px">${c.label}｜${s.name}</div><div class="m" style="color:var(--mute);font-size:13px">借＋還 ${fmt(s.act||0)}・最近桶 ${fmtM(d)}</div></div><button class="btn sm" data-vs="${i}">前往 ›</button></div>`}).join('')+'<p class="sub" style="margin:6px 0 0">活動量最高的站附近已有桶；缺口指數同時看活動量與距離。</p>';
   vs.onclick=e=>{const b=e.target.closest('[data-vs]');if(!b)return;const c=CONFIG.compare[+b.dataset.vs],s=D.yb.find(x=>x.name===c.name);const[d,bn]=SC.nearestDist(s,D.street);open({...s,nb:d,nbBin:bn,gap:(s.act||0)*Math.max(0,d-CONFIG.hotspot.gapThresholdM)})};
-  loadJSON('anchors.json').then(A=>{for(const a of A)if(a.lat)L.circleMarker([a.lat,a.lon],{radius:7,color:'#c2410c',weight:2,fillColor:'#fb923c',fillOpacity:.8}).bindPopup(`🔶 研究錨點 ${a.id}<br><b>${a.name}</b><br>2026-07 活動量 ${fmt(a.activity_2026_07)}（全市第 ${a.city_rank}）<br>研究註記最近清冊 ${a.research_nearest_bin_m}m<br>${a.research_next_step}`).addTo(ancL)});
+  loadJSON('anchors.json').then(A=>{for(const a of A)if(a.lat)L.circleMarker([a.lat,a.lon],{radius:7,color:'#fff',weight:2,fillColor:'#c8743a',fillOpacity:.9}).bindPopup(`🔶 研究錨點 ${a.id}<br><b>${a.name}</b><br>2026-07 活動量 ${fmt(a.activity_2026_07)}（全市第 ${a.city_rank}）<br>研究註記最近清冊 ${a.research_nearest_bin_m}m<br>${a.research_next_step}`).addTo(ancL)});
   lyAnc.onchange=()=>lyAnc.checked?ancL.addTo(map):ancL.remove();
   const cnt={};D.street.forEach(b=>cnt[b.d]=(cnt[b.d]||0)+1);const ds=['士林區','中正區','內湖區','萬華區','信義區','松山區','大安區','中山區','文山區','大同區','南港區','北投區'];const mx=Math.max(...Object.values(cnt));
   bars.innerHTML=ds.map(n=>`<div class="bar"><span>${n.replace('區','')}</span><i class="${['北投區','南港區'].includes(n)?'gap':''}" style="width:${Math.max(1,(cnt[n]||0)/mx*100)}%"></i><span>${cnt[n]||0}${['北投區','南港區'].includes(n)?' ⚠️':''}</span></div>`).join('');
+  legend(map,[{c:'#3f4549',t:'清冊垃圾桶'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'缺口熱點'},{c:'#e2574c',t:'100 m 範圍',shape:'ring'}]);
   home();map.on('moveend',()=>drawBase(cur!==null&&opt==='C'&&cur.E.binsC?cur.E.binsC:D.street));
   const q=new URLSearchParams(location.search);if(q.has('hotspot'))open(HS[+q.get('hotspot')]);
 }).catch(e=>toast('資料載入失敗：'+e.message));
