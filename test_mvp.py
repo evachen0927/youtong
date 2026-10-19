@@ -86,10 +86,17 @@ with sync_playwright() as p:
     pg.click('[data-reason="household"]');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].reason")=='household' and pg.get_attribute('[data-reason="household"]','aria-pressed')=='true' and pg.locator('#needNote').count()==0
     # 其他：展開單行輸入（16px、maxlength 40、placeholder）＋送出 44px；可留空送出；存檔前裁 40 字
     pg.click('[data-reason="other"]');pg.wait_for_timeout(300);ni=pg.locator('#needNote')
-    assert ni.is_visible() and ni.get_attribute('maxlength')=='40' and ni.get_attribute('placeholder')=='例：狗便、菸蒂' and pg.evaluate("parseFloat(getComputedStyle(needNote).fontSize)")>=16 and pg.locator('#needNoteSend').bounding_box()['height']>=44
+    assert ni.is_visible() and ni.get_attribute('maxlength')=='40' and ni.get_attribute('placeholder')=='例：大型廢棄物、狗便' and pg.evaluate("parseFloat(getComputedStyle(needNote).fontSize)")>=16 and pg.locator('#needNoteSend').bounding_box()['height']>=44
     if name=='mobile':pg.wait_for_timeout(400);pg.screenshot(path='/workspace/ped_other_input_390.png')
+    pg.fill('#needNote','字'*29);assert pg.locator('#noteCnt').is_hidden();pg.fill('#needNote','字'*31);assert pg.inner_text('#noteCnt')=='31/40' and pg.locator('#noteCnt').is_visible();pg.fill('#needNote','')
+    # 模擬鍵盤：visualViewport 變小 → 卡片頂端不高於頂列底邊，內容在卡片內捲動
+    kb=pg.evaluate("""(()=>{const vh=Math.round(innerHeight*.45);Object.defineProperty(window,'visualViewport',{configurable:true,value:{height:vh,offsetTop:0,addEventListener(){}}});needNote.focus({preventScroll:true});kbFit();
+      const L=list.getBoundingClientRect(),bar=document.querySelector('.roles').getBoundingClientRect().bottom,i=needNote.getBoundingClientRect();return {vh,top:L.top,bottom:L.bottom,bar,scroll:list.scrollHeight>list.clientHeight,ov:getComputedStyle(list).overflowY,inTop:i.top,inBot:i.bottom}})()""")
+    print(name,'鍵盤模擬',kb);assert kb['top']>=kb['bar'] and kb['bottom']<=kb['vh'] and kb['ov']=='auto' and kb['inTop']>=kb['top'] and kb['inBot']<=kb['bottom'],kb
+    if name=='mobile':pg.wait_for_timeout(300);pg.screenshot(path='/workspace/ped_kb_small.png')
+    pg.evaluate("delete window.visualViewport;kbFit();list.style.bottom='';list.style.maxHeight='';list.style.overflowY=''")
     vis=pg.evaluate("(()=>{const r=needNote.getBoundingClientRect(),v=window.visualViewport;return r.top>=0&&r.bottom<=(v?v.height+v.offsetTop:innerHeight)})()");assert vis
-    pg.click('#needNoteSend');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].note")==None and pg.locator('#noteDone').count()==1  # 留空也能送出
+    pg.click('#needNoteSend');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].note")==None and pg.inner_text('#noteDone')=='✓ 已送出說明' and pg.evaluate("(()=>{const c=getComputedStyle(noteDone);return [c.color,c.fontWeight]})()")==['rgb(28, 31, 33)','600']  # 留空也能送出
     pg.evaluate("setNeedNote(getNeeds()[0].id,'x'.repeat(50))");assert pg.evaluate("getNeeds()[0].note.length")==40
     pg.click('[data-reason="household"]');pg.click('[data-reason="other"]');pg.wait_for_timeout(200);pg.fill('#needNote','<img src=x onerror=alert(1)>');pg.click('#needNoteSend');pg.wait_for_timeout(200)
     assert pg.evaluate("getNeeds()[0]")['note']=='<img src=x onerror=alert(1)>' and pg.evaluate("getNeeds()[0].reason")=='other'
@@ -103,7 +110,10 @@ with sync_playwright() as p:
     dot=pg.evaluate("getComputedStyle(document.querySelector('[data-ly=need] i')).backgroundColor");mk=pg.locator('.needmk');bb=mk.first.bounding_box();bg=pg.evaluate("getComputedStyle(document.querySelector('.needmk')).backgroundColor");print(name,'需求點',mk.count(),bb['width'],dot,bg);assert mk.count()==1 and 10<=bb['width']<=12 and dot==bg=='rgb(122, 92, 196)'
     assert pg.evaluate("getComputedStyle(document.querySelector('#thrSeg button.on')).backgroundColor")=='rgb(43, 51, 51)' and min(pg.evaluate("[...document.querySelectorAll('#thrSeg button')].map(b=>b.getBoundingClientRect().height)"))>=44
     pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆（其他 1）',nn
-    dlg=[];dh=lambda d:(dlg.append(d.message),d.dismiss());pg.on('dialog',dh);pg.click('#needOther summary');pg.wait_for_timeout(500)
+    dlg=[];dh=lambda d:(dlg.append(d.message),d.dismiss());pg.on('dialog',dh);sm=pg.locator('#needOther summary');assert sm.inner_text().strip().endswith('其他說明（1）') and sm.bounding_box()['height']>=44 and pg.evaluate("getComputedStyle(document.querySelector('#needOther summary'),'::before').content")=='"▸"'
+    pg.click('#needOther summary');pg.wait_for_timeout(500);assert pg.evaluate("getComputedStyle(document.querySelector('#needOther summary'),'::before').content")=='"▾"'
+    ff=pg.evaluate("[getComputedStyle(document.querySelector('#needOther summary')).fontFamily,getComputedStyle(document.querySelector('#needOther li')).fontFamily,getComputedStyle(document.documentElement).getPropertyValue('--font').trim()]");assert ff[0]==ff[1] and ff[0].replace(' ','')==ff[2].replace(' ',''),ff
+    ind=pg.evaluate("document.querySelector('#needOther li').getBoundingClientRect().left-document.querySelector('#needNear').getBoundingClientRect().left");assert ind>=16,ind
     li=pg.locator('#needOther li').all_inner_texts();print(name,'其他說明',li);assert li==['<img src=x onerror=alert(1)>'] and pg.locator('#needOther img').count()==0 and not dlg and pg.evaluate("document.querySelectorAll('#detail img[src=x]').length")==0
     pg.remove_listener('dialog',dh)
     if name=='mobile':pg.screenshot(path='shot_planner_need_mobile.png')
