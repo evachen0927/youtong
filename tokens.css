@@ -11,7 +11,7 @@
   /* 類別（只在有真實類別資料時使用） */
   --cat-general:#3b3734;--cat-recycle:#2f6fde;
   /* 其他圖層：交通站點、方案 */
-  --pt-youbike:#a07d3e;--pt-bus:#5b6f9c;--scenario:#7b5cc4;--scenario-soft:#efeafb;
+  --pt-youbike:#a07d3e;--pt-bus:#5b6f9c;--scenario:#2b3333;--scenario-soft:#eef0f0;--venue:#1f8fa3; /* 紫色只給民眾回報需求（--need，圓點）；場域線索／備用垃圾桶＝--venue 青色菱形；方案變更＝ink */
   /* 中性灰 */
   --ink:#1c1f21;--ink-2:#3f4549;--mute:#646b70;--faint:#9aa0a4;--line:#eceeef;--gray-1:#f4f5f5;--gray-2:#e7e9ea;--ink-strong:#2b3333;--need:#7a5cc4;
   /* 表面 */

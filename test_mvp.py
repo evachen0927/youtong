@@ -10,6 +10,7 @@ with sync_playwright() as p:
     c=br.new_context(**opt,locale='zh-TW')  # 不給定位權限 → 測試 fallback 台北市政府
     pg=c.new_page();errs=[];pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000)
+    assert pg.inner_text('#needCard').replace('\n',' ')=='民眾回報需求 尚無回報' and pg.evaluate("getComputedStyle(document.querySelector('.vmk')).backgroundColor")=='rgb(31, 143, 163)'  # 場域線索＝--venue 青色
     print(name,'設點規劃 熱點數',pg.locator('#hot .card').count(),'| #1',pg.locator('#hot .card').first.inner_text().replace('\n',' '))
     pg.screenshot(path=f'shot_planner_{name}.png')
     pg.click('#how summary');print(name,'怎麼算的',pg.inner_text('#formula')[:30],'|',pg.inner_text('#sens').replace('\n',' '))
@@ -115,7 +116,13 @@ with sync_playwright() as p:
     assert pg.locator('#need.far #needBtn').count()==1 and '最近的桶要走' in q and '需要這裡多一個嗎？' in q
     pg.screenshot(path=f'shot_pedestrian_need_{name}.png')
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);lt=pg.inner_text('[data-ly="need"]');print(name,'規劃圖層',lt);assert '1 筆' in lt and pg.get_attribute('[data-ly="need"]','aria-pressed')=='true'
-    dot=pg.evaluate("getComputedStyle(document.querySelector('[data-ly=need] i')).backgroundColor");mk=pg.locator('.needmk');bb=mk.first.bounding_box();bg=pg.evaluate("getComputedStyle(document.querySelector('.needmk')).backgroundColor");print(name,'需求點',mk.count(),bb['width'],dot,bg);assert mk.count()==1 and 10<=bb['width']<=12 and dot==bg=='rgb(122, 92, 196)'
+    nc=pg.inner_text('#needCard').replace('\n',' ');print(name,'需求小卡',nc);assert nc=='民眾回報需求 1 筆 其他 1'
+    if name=='mobile':pg.locator('#needCard').scroll_into_view_if_needed();pg.screenshot(path='/workspace/planner_need_card.png')
+    pg.click('#needCard');pg.wait_for_timeout(1200);fly=pg.evaluate("[NEED_FLY,[getNeeds()[0].la,getNeeds()[0].lo],map.getZoom()]");assert fly[0]==fly[1] and fly[2]==17,fly
+    an=pg.evaluate("getComputedStyle(document.querySelector('.needmk'),'::after').animationName");pg.emulate_media(reduced_motion='reduce');an2=pg.evaluate("getComputedStyle(document.querySelector('.needmk'),'::after').animationName");pg.emulate_media(reduced_motion='no-preference');assert an=='needPulse' and an2=='none',(an,an2)
+    h0n=pg.evaluate("HS.map(h=>h.name)");pg.evaluate("(()=>{addNeed(HS[0].la,HS[0].lo);renderHot()})()");tg=pg.locator('#hot .card').first.locator('.tag.need');assert tg.inner_text()=='民眾回報 1' and pg.evaluate("HS.map(h=>h.name)")==h0n and pg.evaluate("getComputedStyle(document.querySelector('#hot .tag.need')).backgroundColor")=='rgb(122, 92, 196)'
+    pg.evaluate("(()=>{localStorage.setItem('有桶_needs_v1',JSON.stringify(getNeeds().slice(0,1)));renderHot();renderNeedCard();drawBase(D.street)})()")
+    dot=pg.evaluate("getComputedStyle(document.querySelector('[data-ly=need] i')).backgroundColor");mk=pg.locator('.needmk');bb=mk.first.bounding_box();bg=pg.evaluate("getComputedStyle(document.querySelector('.needmk')).backgroundColor");print(name,'需求點',mk.count(),bb['width'],dot,bg);assert mk.count()==1 and 13<=bb['width']<=15 and dot==bg=='rgb(122, 92, 196)'
     assert pg.evaluate("getComputedStyle(document.querySelector('#thrSeg button.on')).backgroundColor")=='rgb(43, 51, 51)' and min(pg.evaluate("[...document.querySelectorAll('#thrSeg button')].map(b=>b.getBoundingClientRect().height)"))>=44
     pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆（其他 1）',nn
     dlg=[];dh=lambda d:(dlg.append(d.message),d.dismiss());pg.on('dialog',dh);sm=pg.locator('#needOther summary');assert sm.inner_text().strip().endswith('其他說明（1）') and sm.bounding_box()['height']>=44 and pg.evaluate("getComputedStyle(document.querySelector('#needOther summary'),'::before').content")=='"▸"'
