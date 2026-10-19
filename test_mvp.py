@@ -72,7 +72,7 @@ with sync_playwright() as p:
     pg.screenshot(path=f'shot_pedestrian_need_{name}.png')
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);lt=pg.inner_text('[data-ly="need"]');print(name,'規劃圖層',lt);assert '1 筆' in lt and pg.get_attribute('[data-ly="need"]','aria-pressed')=='true'
     dot=pg.evaluate("getComputedStyle(document.querySelector('[data-ly=need] i')).backgroundColor");mk=pg.locator('.needmk');bb=mk.first.bounding_box();bg=pg.evaluate("getComputedStyle(document.querySelector('.needmk')).backgroundColor");print(name,'需求點',mk.count(),bb['width'],dot,bg);assert mk.count()==1 and 10<=bb['width']<=12 and dot==bg=='rgb(122, 92, 196)'
-    assert pg.evaluate("getComputedStyle(document.querySelector('#thrSeg button.on')).backgroundColor")=='rgb(43, 51, 51)'
+    assert pg.evaluate("getComputedStyle(document.querySelector('#thrSeg button.on')).backgroundColor")=='rgb(43, 51, 51)' and min(pg.evaluate("[...document.querySelectorAll('#thrSeg button')].map(b=>b.getBoundingClientRect().height)"))>=44
     pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆'
     if name=='mobile':pg.screenshot(path='shot_planner_need_mobile.png')
     pg.evaluate("(()=>{const n=getNeeds()[0];addNeed(n.la+0.0006,n.lo);addNeed(n.la,n.lo+0.0007)})()");pg.click('#bk');pg.evaluate("map.setView([getNeeds()[0].la,getNeeds()[0].lo],14)");pg.wait_for_timeout(600)
@@ -128,6 +128,7 @@ with sync_playwright() as p:
     pg.goto(B+'crew.html?reset=1');pg.wait_for_url('**/crew.html');pg.goto(B+'crew.html?fc=1&day=wk&t=08:30');pg.wait_for_selector('#card[data-state=A]',timeout=20000);pg.wait_for_timeout(600)
     pg.click('#menu');pg.click('#thSeg label:has([value="100"])');pg.wait_for_timeout(400);pg.click('#setSheet [data-close]')
     cb=pg.inner_text('#card');print(name,'空狀態 reset 後 平日08:30',cb.replace('\n',' ')[:60]);assert pg.inner_text('#cardEmpty')=='目前沒有滿溢的桶' and pg.inner_text('#cardCount')=='43 桶中列入 0 桶';assert '目前沒有滿溢的桶' in cb and '43 桶中列入 0 桶' in cb and pg.locator('#cardTitle').count()==0 and '必清 0 站' not in cb
+    hi=pg.evaluate("[...document.querySelectorAll('.leaflet-marker-pane [fill]')].filter(e=>/d9731f|fill-high/i.test(e.getAttribute('fill'))).length");print(name,'08:30 地圖滿溢色桶數',hi);assert hi==0  # 地圖與卡片同一判斷（≥100）
     pg.click('#toNear');pg.wait_for_timeout(500);assert pg.locator('#cardTitle').count()==1 and pg.evaluate("document.querySelector('[name=thr][value=\"70\"]').checked") and pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')).th")==70
     # 剛例行清運、沒有要清的桶：平日 07:00 → 05:00 已例行清運；「調整時間」開時間設定
     pg.goto(B+'crew.html?fc=1&day=wk&t=07:00');pg.wait_for_selector('#card[data-state=A] #cardEmpty',timeout=20000);pg.wait_for_timeout(400)

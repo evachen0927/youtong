@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020m"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020m"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020m"><link rel="stylesheet" href="tokens.css?v=20261020m"><link rel="stylesheet" href="ui.css?v=20261020m">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020n"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020n"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020n"><link rel="stylesheet" href="tokens.css?v=20261020n"><link rel="stylesheet" href="ui.css?v=20261020n">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
@@ -93,7 +93,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020m"></script><script src="common.js?v=20261020m"></script><script src="ui.js?v=20261020m"></script><script src="bin-icons.js?v=20261020m"></script><script src="forecast.js?v=20261020m"></script><script src="routing.js?v=20261020m"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020n"></script><script src="common.js?v=20261020n"></script><script src="ui.js?v=20261020n"></script><script src="bin-icons.js?v=20261020n"></script><script src="forecast.js?v=20261020n"></script><script src="routing.js?v=20261020n"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
@@ -125,7 +125,7 @@ function fitTop(n=3){const pts=route.slice(0,n).map(e=>[e.b.la,e.b.lo]);if(!pts.
   if(state==='B'){const ci=curIdx();if(ci>=0){const b=route[ci].b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot;pts.length=0;pts.push(prev,[b.la,b.lo])}}
   map.fitBounds(pts,{paddingTopLeft:[50,topUIBottom()+30],paddingBottomRight:innerWidth>760?[card.getBoundingClientRect().width+50,40]:[50,cardH()+30],maxZoom:17})}
 function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=doneSet(),ci=curIdx(),ids=new Set(route.map(e=>e.b.id)),small=map.getZoom()<15;
-  for(const e of E)if(!ids.has(e.b.id)){const f=Math.round(e.fill);L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev),small),title:`${e.b.addr}・預測${rampState(f).t}`}).addTo(binL)}
+  for(const e of E)if(!ids.has(e.b.id)){const f=Math.floor(e.fill);/* 不四捨五入：99.7% 不能畫成「滿溢」（卡片與選站用同一時間、同一個 ≥100 判斷）*/L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev),small),title:`${e.b.addr}・預測${rampState(f).t}`}).addTo(binL)}
   if(route.length){L.polyline(DR?route.reduce((a,e,i)=>{const p=i?[route[i-1].b.la,route[i-1].b.lo]:depot;return a.concat(RT.path(DR,p,[e.b.la,e.b.lo]))},[]):[depot,...route.map(e=>[e.b.la,e.b.lo])],{color:css('--ink-2'),weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
     L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點',interactive:false}).addTo(rtL);
     route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:i<3&&state==='A'?28:24;

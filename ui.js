@@ -27,7 +27,7 @@ const REPORTED_LEGEND={c:REPORTED,t:'紅色＝已被回報滿了'};
 // 角色切換（示範導覽）：常駐分段控制「行人｜清潔隊｜設點規劃」；host 給定時放進該容器，否則固定在左上
 const ROLES=[['pedestrian.html','行人'],['crew.html','清潔隊'],['index.html','設點規劃']];
 function roleSwitch(active,host){const n=document.createElement('nav');n.className='roles'+(host?'':' fixed');n.setAttribute('aria-label','切換角色（示範導覽）');
-  n.innerHTML='<span class="wm"><img src="assets/logo.svg?v=20261020m" alt="有桶" width="52" height="52"></span><span class="seg3">'+ROLES.map(r=>`<a href="${r[0]}"${r[0]===active?' class="on" aria-current="page"':''}>${r[1]}</a>`).join('')+'</span>';
+  n.innerHTML='<span class="wm"><img src="assets/logo.svg?v=20261020n" alt="有桶" width="52" height="52"></span><span class="seg3">'+ROLES.map(r=>`<a href="${r[0]}"${r[0]===active?' class="on" aria-current="page"':''}>${r[1]}</a>`).join('')+'</span>';
   host?host.prepend(n):document.body.appendChild(n);return n}
 // 圖例：完整版放在「資料說明」抽屜頂端；地圖上只留一行提示
 const legendHTML=items=>`<div class="lgd static">${items.map(i=>`<span>${i.html||`<i class="${i.shape||'dot'}" style="--c:${i.c}"></i>`}${i.t}</span>`).join('')}</div>`;
