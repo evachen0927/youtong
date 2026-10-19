@@ -122,7 +122,7 @@ function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=d
   if(route.length){L.polyline(DR?route.reduce((a,e,i)=>{const p=i?[route[i-1].b.la,route[i-1].b.lo]:depot;return a.concat(RT.path(DR,p,[e.b.la,e.b.lo]))},[]):[depot,...route.map(e=>[e.b.la,e.b.lo])],{color:css('--ink-2'),weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
     L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點',interactive:false}).addTo(rtL);
     route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:i<3&&state==='A'?28:24;
-      L.marker([e.b.la,e.b.lo],{zIndexOffset:cur?1000:ok?0:600-i,title:e.b.addr,icon:L.divIcon({className:'stopw',iconSize:[s,s],html:`<div class="stop${ok?' ok':''}${cur?' cur':''}${e.must&&!ok?' must':''}" style="width:${s}px;height:${s}px;background:${rampColor(e.fill,e.fill>100)}">${ok?'✓':i+1}</div>`})}).addTo(rtL)})}
+      L.marker([e.b.la,e.b.lo],{zIndexOffset:cur?1000:ok?0:600-i,title:e.b.addr,icon:L.divIcon({className:'stopw',iconSize:[s,s],html:`<div class="stop${ok?' ok':''}${cur?' cur':''}${e.must&&!ok?' must':''}" style="width:${s}px;height:${s}px;background:${rampColor(e.fill,e.fill>100)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${ok?'✓':i+1}</div>`})}).addTo(rtL)})}
   const nd=route.filter(e=>done.has(e.b.id)).length;
   prog.innerHTML=route.length?`<span class="no">${nd} / ${route.length}</span><span class="tr"><i style="width:${nd/route.length*100}%"></i></span><small>${CONFIG.demoArea.name}</small>`:`<small>${CONFIG.demoArea.name}・無站點</small>`;
   tChip.textContent=`🕒 ${dayName(day())} ${FC.fmt(T())} ▾`;
@@ -133,7 +133,7 @@ function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=d
   allClear.disabled=!(state==='B'&&ci>=0);renderCard(ev,done,ci);renderLists()}
 function renderCard(ev,done,ci){card.dataset.state=state;const k=day(),t=FC.fmt(T()),st=FC.state();
   if(state==='A'){const nM=route.filter(e=>e.must).length,nR=route.length-nM;
-    const li=(e,i)=>`<li><span class="n${e.must?' must':''}" style="background:${rampColor(e.fill)}">${i+1}</span><span class="t"><b>${e.b.addr}</b><span>預計滿 ${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}${e.must?' <span class="flag must">必清</span>':''}${st.cal[e.b.id]?' <span class="flag cal">已校正</span>':''}</span></span><span class="p">${Math.round(e.fill)}%</span></li>`;
+    const li=(e,i)=>`<li><span class="n${e.must?' must':''}" style="background:${rampColor(e.fill)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${i+1}</span><span class="t"><b>${e.b.addr}</b><span>預計滿 ${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}${e.must?' <span class="flag must">必清</span>':''}${st.cal[e.b.id]?' <span class="flag cal">已校正</span>':''}</span></span><span class="p">${Math.round(e.fill)}%</span></li>`;
     cardBody.innerHTML=`<div class="k"><span class="lbl" id="cardTitle">必清 ${nM} 站・順路 ${nR} 站</span></div>
      <div class="small" id="crewSub">給領班的參考排序，全部為模擬</div>
      ${route.length?`<ol class="top3" id="mustList">${route.map((e,i)=>e.must?li(e,i):'').join('')}</ol>${nR?`<div class="subh">順路</div><ol class="top3" id="wayList">${route.map((e,i)=>e.must?'':li(e,i)).join('')}</ol>`:''}
