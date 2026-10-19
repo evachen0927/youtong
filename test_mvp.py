@@ -12,11 +12,14 @@ with sync_playwright() as p:
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000)
     print(name,'規劃 熱點數',pg.locator('#hot .card').count(),'| #1',pg.locator('#hot .card').first.inner_text().replace('\n',' '))
     pg.screenshot(path=f'shot_planner_{name}.png')
+    pg.check('#lyAnc');pg.wait_for_timeout(300)
+    for i in (0,1):
+      pg.locator(f'[data-vs="{i}"]').click();pg.wait_for_selector('.cmp');print(name,'比較卡',i,pg.locator('#detail p.sub').first.inner_text(),'| 建議',[t for t in pg.inner_text('#detail').split('\n') if '★' in t]);pg.click('#bk');pg.wait_for_timeout(200)
     pg.locator('#hot .card').first.click();pg.wait_for_selector('.cmp')
     for o in 'ABC':
       pg.click(f'[data-o="{o}"]');pg.wait_for_timeout(300)
     print(name,'比較表',pg.inner_text('.cmp').replace('\n',' | ').replace('\t',' '))
-    print(name,'建議',[t for t in pg.inner_text('#detail').split('\n') if '★ 本工具' in t or 'C 移出' in t])
+    print(name,'建議',[t for t in pg.inner_text('#detail').split('\n') if any(k in t for k in ('★','C 移出','不製造','C 不可行'))])
     pg.click('[data-o="C"]');pg.click('#adopt');pg.wait_for_timeout(600)
     pg.screenshot(path=f'shot_planner_compare_{name}.png')
     pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)

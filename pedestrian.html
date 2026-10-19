@@ -43,7 +43,7 @@ function render(fit){
    <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><span class="num">${i+1}</span><div style="flex:1"><div class="t">${p.addr}${p.moved?' <span class="pill ok">方案 C 移入</span>':''}${mode==='after'&&upg.has(p.id)?' <span class="pill">容量↑ 模擬</span>':''}</div>
    <div class="m">${p.d}・${fmtM(t.d)}・步行約 ${walkMin(t.d)} 分・填充度 ${fillPill(f)}<span style="font-size:11px">（模擬）</span></div></div></div>
    ${sel===p.id?`<div class="row" style="margin-top:12px"><a class="btn sm pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">Google Maps 導航</a><button class="btn sm" data-full="${p.id}">回報：這個垃圾桶滿了</button></div>`:''}</div>`}).join('');
-  if(fit)map.fitBounds([pos,...T.slice(0,3).map(t=>[t.f.la,t.f.lo])],{padding:[50,50],maxZoom:17});
+  if(fit)fitTo(map,[pos,...T.slice(0,3).map(t=>[t.f.la,t.f.lo])],17);
 }
 function focusBin(f){sel=f.id;map.setView([f.la,f.lo],Math.max(map.getZoom(),17));render(false)}
 list.onclick=e=>{const fb=e.target.closest('[data-full]');if(fb){addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});toast('已回報，清潔隊頁面會看到 🙏');render(false);return}
@@ -54,7 +54,7 @@ function locate(){where.textContent='定位中…';let done=false;const once=(p,
   if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>once([p.coords.latitude,p.coords.longitude],'你的目前位置'),()=>once(TPE_MAIN,`未允許定位，已改用${TPE_NAME}（可點地圖改位置）`),{timeout:5000,enableHighAccuracy:true});else once(TPE_MAIN,`不支援定位，已改用${TPE_NAME}`)}
 document.getElementById('locate').onclick=locate;
 hotBtn.onclick=()=>{if(scen)setPos([scen.hotLa,scen.hotLo].every(Boolean)?[scen.hotLa,scen.hotLo]:scen.moved?scen.moved.to:CONFIG.demoArea.center,'熱點：'+scen.hotspotName)};
-loadCore().then(d=>{D=d;binsBefore=D.street;
+loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];binsBefore=D.street;
   const ST=[...D.yb,...D.bus].filter(s=>SC.inArea(s.la,s.lo)),HS=SC.hotspots(ST,D.street);
   scen=SC.load();
   if(!scen&&HS.length){const h=HS[0],E=SC.evaluate(h,ST,D.street),o=E.rec;scen={hotspotId:h.id,hotspotName:h.name,option:o,auto:true,moved:o==='C'&&E.donor?{id:E.donor.b.id,from:[E.donor.b.la,E.donor.b.lo],to:[h.la+0.00008,h.lo+0.00008]}:null,upgraded:o==='B'?E.B.bins.map(b=>b.id):[]}}

@@ -14,6 +14,8 @@
  <h3>示範區：<span id="areaName"></span> 缺口熱點</h3>
  <p class="sub">YouBike 站「最近街道清冊垃圾桶 &gt; <span class="thr"></span>m」，依 <b>缺口指數 = 活動量 × (距離 − <span class="thr"></span>m)</b> 排序。活動量為 2026-07 借＋還次數<span class="tag est">推估人流</span>。點一個熱點比較 A/B/C。</p>
  <div id="hot"></div>
+ <h3>人流高 ≠ 缺口大</h3><div class="card" id="vs"></div>
+ <label class="ck"><input type="checkbox" id="lyAnc"> 🔶 研究團隊觀察錨點（39 處，每區活動量前 3）</label>
  <h3>各行政區街道清冊點位</h3><div id="bars"></div>
  <div class="note">⚠️ 北投區街道清冊 0 列、南港區 4 列：<b>資料缺漏，非實際覆蓋率</b>。場域線索（紫色菱形，130 點）是場所約略位置，不計入桶數。</div>
 </div>
@@ -24,8 +26,8 @@
 <script>
 nav('index.html');sheet();
 const map=baseMap(CONFIG.demoArea.center,CONFIG.demoArea.zoom),ren=L.canvas({padding:.3});
-const baseL=L.layerGroup().addTo(map),hotL=L.layerGroup().addTo(map),chgL=L.layerGroup().addTo(map);
-let D,ST,HS,cur=null,opt='A';
+const baseL=L.layerGroup().addTo(map),hotL=L.layerGroup().addTo(map),chgL=L.layerGroup().addTo(map),ancL=L.layerGroup();
+let D,ST,HS,cur=null,opt='A';const curH=()=>cur;
 document.querySelectorAll('.thr').forEach(e=>e.textContent=CONFIG.hotspot.gapThresholdM);
 hTitle.textContent=CONFIG.headline.title;hCaveat.textContent=CONFIG.headline.caveat;areaName.textContent=CONFIG.demoArea.name;
 cards.innerHTML=CONFIG.headline.items.map(i=>`<div class="stat"><b>${i.value}</b><span>${i.label}</span></div>`).join('');
@@ -38,11 +40,11 @@ function drawBase(bins){baseL.clearLayers();
   for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk',iconSize:[10,10]})}).bindPopup(`◆ 場域線索：${v.addr}`).addTo(baseL);
   for(const b of bins)L.circleMarker([b.la,b.lo],{renderer:ren,radius:b.moved?8:5,color:'#fff',weight:1.5,fillColor:b.moved?'#0f9d76':'#3c4650',fillOpacity:.95}).bindPopup(`🗑 ${b.addr}`).addTo(baseL)}
 function home(){cur=null;detail.hidden=true;document.getElementById('home').hidden=false;chgL.clearLayers();drawBase(D.street);drawHot()}
-function drawHot(){hotL.clearLayers();HS.slice(0,CONFIG.hotspot.maxList).forEach((h,i)=>L.marker([h.la,h.lo],{icon:L.divIcon({className:'mk',html:i+1,iconSize:[26,26]}),zIndexOffset:800}).on('click',()=>open(i)).addTo(hotL))}
-function open(i){cur=i;const h=HS[i];const saved=SC.load();const E=SC.evaluate(h,ST,D.street);h.E=E;opt=(saved&&saved.hotspotId===h.id)?saved.option:E.rec;
-  document.getElementById('home').hidden=true;detail.hidden=false;render();map.setView([h.la,h.lo],16);
+function drawHot(){hotL.clearLayers();HS.slice(0,CONFIG.hotspot.maxList).forEach((h,i)=>L.marker([h.la,h.lo],{icon:L.divIcon({className:'mk',html:i+1,iconSize:[26,26]}),zIndexOffset:800}).on('click',()=>open(h)).addTo(hotL))}
+function open(h){cur=h;const saved=SC.load();const E=SC.evaluate(h,ST,D.street);h.E=E;opt=(saved&&saved.hotspotId===h.id)?saved.option:E.rec;
+  document.getElementById('home').hidden=true;detail.hidden=false;render();focusAt(map,[h.la,h.lo],16);
   const p=document.querySelector('.panel');p.classList.remove('min');p.scrollTop=0}
-function render(){const h=HS[cur],E=h.E,A=E.A,C=E.C,saved=SC.load();
+function render(){const h=cur,E=h.E,A=E.A,C=E.C,saved=SC.load();
   const row=(lab,a,b,c,better)=>`<tr><td>${lab}</td><td>${a}</td><td>${b}</td><td class="${better?'good':''}">${c}</td></tr>`;
   const ovA=E.B.ovA.reduce((s,o)=>s+o.overflowH,0),ovB=E.B.ovB.reduce((s,o)=>s+o.overflowH,0);
   detail.innerHTML=`<button class="back" id="bk">← 回熱點清單</button>
@@ -55,31 +57,37 @@ function render(){const h=HS[cur],E=h.E,A=E.A,C=E.C,saved=SC.load();
   ${row('站點到最近桶中位數',Math.round(A.median)+'m',Math.round(A.median)+'m',C?Math.round(C.median)+'m':'—',C&&C.median<A.median)}
   ${row('100m 內有桶的 YouBike 活動量',fmt(A.actServed100),fmt(A.actServed100),C?fmt(C.actServed100):'—',C&&C.actServed100>A.actServed100)}
   ${row('100m 內有桶的公車路線停靠數',fmt(A.routesServed100),fmt(A.routesServed100),C?fmt(C.routesServed100):'—',C&&C.routesServed100>A.routesServed100)}
-  ${row('熱點旁桶每日滿溢時數 <span class="tag sim">模擬</span>',ovA.toFixed(1)+'h',ovB.toFixed(1)+'h',ovA.toFixed(1)+'h',false)}
+  ${row('熱點旁桶每日滿溢時數 <span class="tag sim">假設，可調整</span>',ovA.toFixed(1)+'h',ovB.toFixed(1)+'h',ovA.toFixed(1)+'h',false)}
   </table>
-  ${C?`<p class="sub" style="margin-top:10px">C 移出的桶：${E.donor.b.addr}（周邊 ${CONFIG.scenarioC.demandRadiusM}m 活動量 ${fmt(E.donor.dem)}，為示範區內最低）。原服務區損失：${E.lost.length} 站由「100m 內有桶」變成沒有${E.lost.length?'（'+E.lost.slice(0,3).map(s=>s.name).join('、')+'…）':''}。</p>`:'<p class="sub">熱點附近找不到可移的桶，C 不適用。</p>'}
-  <p class="sub">★ 本工具建議：${OPT_NAME[E.rec]}（規則：熱點 ≤100m 有桶→B；C 能減少無桶站數→C；否則 A）。仍需現勘、步行路徑、權責與清運確認。</p>
+  ${C?`<p class="sub" style="margin-top:10px">C 移出的桶：${E.donor.b.addr}（距熱點 ${fmtM(hav(E.donor.b.la,E.donor.b.lo,h.la,h.lo))}；周邊 ${CONFIG.scenarioC.demandRadiusM}m 活動量 ${fmt(E.donor.dem)}，為 ${CONFIG.scenarioC.donorRadiusM/1000}km 內符合條件者最低）</p>
+   <div class="delta" style="background:var(--accent-l);border-radius:10px;padding:8px 12px;font-size:14px">不製造新缺口：✓ ${E.donor.newGaps.length} 站新增缺口<span class="sub" style="display:block;margin:2px 0 0;font-size:12px">原位置 ${CONFIG.scenarioC.checkRadiusM}m 內沒有站點從「${CONFIG.scenarioC.noNewGapM}m 內有桶」變成沒有</span></div>`
+   :`<div class="note">C 不可行：熱點 ${CONFIG.scenarioC.donorRadiusM/1000}km 內 ${E.pk.cands} 個候選桶，移走任一個都會在原位置附近製造新缺口${E.pk.best?'（最少 '+E.pk.best.newGaps.length+' 站）':''}。</div>`}
+  <p class="sub">★ 本工具建議：${OPT_NAME[E.rec]}<span class="tag sim">假設，可調整</span><br>規則：熱點 ≤${CONFIG.suggestion.bIfBinWithinM}m 有桶→B；C 可行且減少 ≥${CONFIG.suggestion.cMinReduction100} 個 100m 無桶站→C；否則 A。仍需現勘、步行路徑、權責與清運確認。</p>
   <button class="btn pri block" id="adopt">${saved&&saved.hotspotId===h.id&&saved.option===opt?'✓ 已設為採用方案（行人頁「調整後」會使用）':'採用 '+OPT_NAME[opt]+'，給行人頁比較'}</button>`;
-  optDesc.innerHTML={A:'維持現有街道清冊的桶位與容量，作為比較基準。',B:`桶位不動；熱點最近的桶（${E.B.bins[0].addr}）容量 ${CONFIG.scenarioB.baseCapacityL}→${CONFIG.scenarioB.newCapacityL}L、清運 ${CONFIG.scenarioB.baseCollectionsPerDay}→${CONFIG.scenarioB.newCollectionsPerDay} 次/日<span class="tag sim">模擬</span>。實體距離不變。`,C:'總桶數不變；把示範區內「周邊活動量最低」的一個桶挪到這個熱點旁。'}[opt];
+  optDesc.innerHTML={A:'維持現有街道清冊的桶位與容量，作為比較基準。',B:`原位改善：桶位不動；熱點最近的桶（${E.B.bins[0].addr}）<br><b>模擬參數</b>：容量 ${CONFIG.scenarioB.baseCapacityL}→${CONFIG.scenarioB.newCapacityL}L、清運 ${CONFIG.scenarioB.baseCollectionsPerDay}→${CONFIG.scenarioB.newCollectionsPerDay} 次/日；產生量假設每月每 1,000 次借還 → 每日 ${CONFIG.scenarioB.litersPer1000Trips}L<span class="tag sim">假設，可調整</span>。實體距離不變。`,C:'總桶數不變；把示範區內「周邊活動量最低」的一個桶挪到這個熱點旁。'}[opt];
   bk.onclick=home;detail.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{opt=b.dataset.o;render()});
   adopt.onclick=()=>{SC.save({hotspotId:h.id,hotspotName:h.name,option:opt,ts:Date.now(),moved:opt==='C'&&E.donor?{id:E.donor.b.id,from:[E.donor.b.la,E.donor.b.lo],to:[h.la+0.00008,h.lo+0.00008]}:null,upgraded:opt==='B'?E.B.bins.map(b=>b.id):[]});toast('已採用 '+OPT_NAME[opt]);render()};
   draw()}
-function draw(){const h=HS[cur],E=h.E;chgL.clearLayers();drawBase(opt==='C'&&E.binsC?E.binsC:D.street);
+function draw(){const h=cur,E=h.E;chgL.clearLayers();drawBase(opt==='C'&&E.binsC?E.binsC:D.street);
   L.circle([h.la,h.lo],{radius:100,color:'#e5484d',weight:1.5,dashArray:'4',fillOpacity:.05,interactive:false}).addTo(chgL);
   if(opt==='B')for(const b of E.B.bins)L.circleMarker([b.la,b.lo],{radius:13,color:'#7b3fbf',weight:3,fill:false}).bindTooltip('容量↑ 清運↑（模擬）',{permanent:true,direction:'top',offset:[0,-10]}).addTo(chgL);
   if(opt==='C'&&E.donor){const f=[E.donor.b.la,E.donor.b.lo],t=[h.la+0.00008,h.lo+0.00008];
     L.marker(f,{icon:L.divIcon({className:'xmk',html:'✕',iconSize:[20,20]})}).bindTooltip('移出',{permanent:true,direction:'left'}).addTo(chgL);
     L.polyline([f,t],{color:'#0f9d76',weight:3,dashArray:'8 6'}).addTo(chgL);
     L.circleMarker(t,{radius:13,color:'#0f9d76',weight:3,fill:false}).bindTooltip('移入',{permanent:true,direction:'right'}).addTo(chgL);
-    map.fitBounds([f,t,[h.la,h.lo]],{padding:[60,60],maxZoom:17})}}
-loadCore().then(d=>{D=d;
+    fitTo(map,[f,t,[h.la,h.lo]],17)}}
+loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];
   ST=[...D.yb,...D.bus].filter(s=>SC.inArea(s.la,s.lo));
   HS=SC.hotspots(ST,D.street);
   hot.innerHTML=HS.slice(0,CONFIG.hotspot.maxList).map((h,i)=>`<div class="card item" data-i="${i}"><div class="row" style="flex-wrap:nowrap;align-items:flex-start"><span class="num">${i+1}</span><div style="flex:1"><div class="t">${h.name}</div><div class="m">${h.d}・最近桶 ${fmtM(h.nb)}・借＋還 ${fmt(h.act)}</div></div><span class="pill">比較 ›</span></div></div>`).join('')||'<p class="sub">示範區沒有缺口熱點</p>';
-  hot.onclick=e=>{const c=e.target.closest('[data-i]');if(c)open(+c.dataset.i)};
+  hot.onclick=e=>{const c=e.target.closest('[data-i]');if(c)open(HS[+c.dataset.i])};
+  vs.innerHTML=CONFIG.compare.map((c,i)=>{const s=D.yb.find(x=>x.name===c.name);if(!s)return'';const[d]=SC.nearestDist(s,D.street);return `<div class="row" style="flex-wrap:nowrap;padding:6px 0;${i?'border-top:1px solid var(--line)':''}"><div style="flex:1"><div class="t" style="font-weight:600;font-size:14px">${c.label}｜${s.name}</div><div class="m" style="color:var(--mute);font-size:13px">借＋還 ${fmt(s.act||0)}・最近桶 ${fmtM(d)}</div></div><button class="btn sm" data-vs="${i}">前往 ›</button></div>`}).join('')+'<p class="sub" style="margin:6px 0 0">活動量最高的站附近已有桶；缺口指數同時看活動量與距離。</p>';
+  vs.onclick=e=>{const b=e.target.closest('[data-vs]');if(!b)return;const c=CONFIG.compare[+b.dataset.vs],s=D.yb.find(x=>x.name===c.name);const[d,bn]=SC.nearestDist(s,D.street);open({...s,nb:d,nbBin:bn,gap:(s.act||0)*Math.max(0,d-CONFIG.hotspot.gapThresholdM)})};
+  loadJSON('anchors.json').then(A=>{for(const a of A)if(a.lat)L.circleMarker([a.lat,a.lon],{radius:7,color:'#c2410c',weight:2,fillColor:'#fb923c',fillOpacity:.8}).bindPopup(`🔶 研究錨點 ${a.id}<br><b>${a.name}</b><br>2026-07 活動量 ${fmt(a.activity_2026_07)}（全市第 ${a.city_rank}）<br>研究註記最近清冊 ${a.research_nearest_bin_m}m<br>${a.research_next_step}`).addTo(ancL)});
+  lyAnc.onchange=()=>lyAnc.checked?ancL.addTo(map):ancL.remove();
   const cnt={};D.street.forEach(b=>cnt[b.d]=(cnt[b.d]||0)+1);const ds=['士林區','中正區','內湖區','萬華區','信義區','松山區','大安區','中山區','文山區','大同區','南港區','北投區'];const mx=Math.max(...Object.values(cnt));
   bars.innerHTML=ds.map(n=>`<div class="bar"><span>${n.replace('區','')}</span><i class="${['北投區','南港區'].includes(n)?'gap':''}" style="width:${Math.max(1,(cnt[n]||0)/mx*100)}%"></i><span>${cnt[n]||0}${['北投區','南港區'].includes(n)?' ⚠️':''}</span></div>`).join('');
-  home();map.on('moveend',()=>drawBase(cur!==null&&opt==='C'&&HS[cur].E.binsC?HS[cur].E.binsC:D.street));
-  const q=new URLSearchParams(location.search);if(q.has('hotspot'))open(+q.get('hotspot'));
+  home();map.on('moveend',()=>drawBase(cur!==null&&opt==='C'&&cur.E.binsC?cur.E.binsC:D.street));
+  const q=new URLSearchParams(location.search);if(q.has('hotspot'))open(HS[+q.get('hotspot')]);
 }).catch(e=>toast('資料載入失敗：'+e.message));
 </script></body></html>
