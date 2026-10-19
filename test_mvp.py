@@ -48,7 +48,9 @@ with sync_playwright() as p:
     pt=pg.evaluate("(()=>{const t=list.getBoundingClientRect().top;for(const e of document.querySelectorAll('.binmk.oth')){const r=e.getBoundingClientRect();if(r.top>140&&r.bottom<t&&r.left>0&&r.right<innerWidth)return [r.left+r.width/2,r.top+r.height/2]}return null})()");assert pt,'no visible bin'
     (pg.touchscreen.tap if name=='mobile' else pg.mouse.click)(pt[0],pt[1]);pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin===sel&&primary().f.id===sel") and pg.get_attribute('#list .card','data-id')==pg.evaluate("sel")
     if name=='mobile':pg.evaluate("render(true)");pg.wait_for_timeout(400);pg.screenshot(path='/workspace/ped_target_390_v2_other.png')
-    nx=pg.get_attribute('[data-next]','data-next');pg.click('[data-next]');pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin")==nx and pg.get_attribute('#list .card','data-id')==nx;print(name,'下一個 → 目標',pg.inner_text('#tlab'))
+    assert pg.locator('[data-next]').count()==0 and pg.locator('#list .cat').count()==0 and '一般垃圾＋資源回收' not in pg.inner_text('#list')  # 類別標籤、「下一個」已拿掉
+    nx=pg.evaluate("nearestN(shown(),3)[1].f.id");pg.evaluate(f"focusBin(shown().find(b=>b.id==='{nx}'))");pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin")==nx and pg.get_attribute('#list .card','data-id')==nx
+    fit=pg.evaluate("(()=>{const t=list.getBoundingClientRect().top;return routeInfo.pts.every(p=>map.latLngToContainerPoint(p).y<t)||!isMobile()})()");assert fit  # fit 用新的卡片高度
     # 路線只在「你的位置 ↔ 目標」之間：換多個目標（含已回報滿），首點＝你的位置、末點＝目標、沒有點超出步行距離＋容差；點桶不移動你的位置；兩者相距 ≥48px
     p0=pg.evaluate("pos.slice()");ids=pg.evaluate("nearestN(shown(),6).map(t=>t.f.id)");pg.evaluate(f"addEvent({{bin:'{ids[3]}',kind:'full',level:100,by:'行人'}})")
     for bid in ids:
@@ -116,6 +118,9 @@ with sync_playwright() as p:
       rz=pg.evaluate("(()=>{const L=list.getBoundingClientRect(),bar=document.querySelector('.roles').getBoundingClientRect().bottom;return {h:innerHeight,top:L.top,bottom:L.bottom,bar,scroll:list.classList.contains('scroll'),pb:getComputedStyle(list).paddingBottom,ov:getComputedStyle(list).overflowY}})()")
       print(name,'視窗',hgt,rz);assert rz['top']>=rz['bar'] and rz['bottom']<=rz['h'] and rz['scroll'] and rz['pb']=='22px' and rz['ov']=='auto',rz
       if name=='mobile' and hgt==400:pg.screenshot(path='/workspace/ped_kb_resize.png')
+    if name=='mobile':
+      pg.set_viewport_size({'width':320,'height':568});pg.wait_for_timeout(500);pg.evaluate("document.activeElement&&document.activeElement.blur();kbFit()")
+      c3=pg.evaluate("(()=>{const L=list.getBoundingClientRect();return {top:L.top,crow:crow.getBoundingClientRect().bottom,bot:L.bottom,h:innerHeight,ov:getComputedStyle(list).overflowY}})()");print(name,'320x568',c3);assert c3['top']>=c3['crow'] and c3['bot']<=c3['h'] and c3['ov']=='auto',c3
     pg.set_viewport_size(vp0);pg.wait_for_timeout(500);assert pg.evaluate("list.getBoundingClientRect().top>=document.querySelector('.roles').getBoundingClientRect().bottom")
     vis=pg.evaluate("(()=>{const r=needNote.getBoundingClientRect(),v=window.visualViewport;return r.top>=0&&r.bottom<=(v?v.height+v.offsetTop:innerHeight)})()");assert vis
     pg.click('#needNoteSend');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].note")==None and pg.inner_text('#noteDone')=='✓ 已送出說明' and pg.evaluate("(()=>{const c=getComputedStyle(noteDone);return [c.color,c.fontWeight]})()")==['rgb(28, 31, 33)','600']  # 留空也能送出
