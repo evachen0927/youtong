@@ -16,8 +16,8 @@
 | 頁面 | 檔案 | 功能 |
 |---|---|---|
 | 規劃（主頁） | `index.html` | 開場數字（來自 `config.js`）、示範區缺口熱點、點熱點看 A/B/C 指標對照與地圖變化，「採用」後存入 localStorage |
-| 行人 | `pedestrian.html` | 定位（拒絕時改用台北市政府，可點地圖手動設定）、最近 5 個垃圾桶＋Google Maps 步行導航、「調整前／調整後」距離比較、回報「滿了」 |
-| 清潔隊 | `crew.html` | 模擬滿溢告警清單、單筆或一鍵回報已清運（動態路線保留在 `crew-route.html`，預設隱藏；`config.js` 的 `features.crewRouting` 或 `crew.html?route=1` 開啟） |
+| 行人 | `pedestrian.html` | 定位（拒絕時改用示範位置 興雅國中公車站（`config.js > fallbackLocation`），可點地圖手動設定）、最近 5 個垃圾桶＋Google Maps 步行導航、「調整前／調整後」距離比較、回報「滿了」 |
+| 清潔隊 | `crew.html` | 單一頁面：依行政區產生清運順序，逐站回報收運量（空／半滿／滿／溢出）並標記已清運，可復原。舊網址 `crew-route.html` 會自動導向 `crew.html` |
 
 ## 怎麼執行
 ```bash
@@ -26,9 +26,24 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 ```
 純靜態網站（HTML/CSS/原生 JS + Leaflet），沒有後端；所有路徑都是相對路徑，可直接放到 GitHub Pages（repo 根目錄），已附 `.nojekyll`。Leaflet 已放在 `vendor/`，不依賴 CDN；**地圖底圖仍需網路**（OpenStreetMap）。離線備援：`demo-backup.mp4` 示範影片。
 
-開場數字、示範區範圍與方案參數都在 **`config.js`**，改這個檔案即可。
+開場數字、示範區範圍、行人頁示範位置與方案參數都在 **`config.js`**，改這個檔案即可。
 
-重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）。測試：`python test_mvp.py`（Playwright）。
+### 檔案結構
+| 檔案 | 用途 |
+|---|---|
+| `config.js` | 可編輯設定（開場數字、示範區、方案參數、假設） |
+| `common.js` | 資料載入、距離、localStorage 事件、填充度（工程邏輯） |
+| `scenario.js` | A/B/C 方案引擎 |
+| `tokens.css` | 設計 token（顏色、間距、字級） |
+| `ui.css` | 共用元件樣式（⋯ 選單、抽屜、圖例） |
+| `ui.js` | 視覺層：滿度色階 `rampColor()`、去飽和底圖 `quietMap()`、圖例、抽屜 |
+| `bin-category.js`、`bin-icons.js` | 垃圾桶類別與地圖圖示（行人頁） |
+| `common.css` | 舊版共用樣式 |
+
+### localStorage 事件格式
+`{bin, kind:'full'|'level'|'clear', level, by:'行人'|'清潔隊', ts, amount, amountPct}`；清潔隊回報收運量時 `amount` 為 `empty|half|full|overflow`，`amountPct` 對應 0／50／100／120。
+
+重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）。測試：`python test_mvp.py`（Playwright，桌面 1280×800＋手機 390×844）。行人頁的熱點／調整前後在「⋯ 更多」面板（`#more` → `#hotBtn`、`[data-m=after]`，`#advClose` 關閉，`#doneBtn` → `[data-full]` 回報滿了）；清潔隊頁用 `#next [data-amt]` 回報收運量。
 
 ## 資料來源（真實開放資料）
 | 資料 | 來源 | 授權 | 用法 |
@@ -46,11 +61,12 @@ TDX 公車 API 需申請金鑰（未使用）。
 | 項目 | 性質 |
 |---|---|
 | 垃圾桶、YouBike、公車站的位置 | **真實**開放資料（清冊不等於現場完整現況） |
+| 垃圾桶類別（一般垃圾＋資源回收） | **真實（全市一致說明）**：清冊沒有逐桶類別欄位；依環保局全市說明「每組包含一般垃圾箱與資源回收箱各 1 個」（中時 2025-08-17、聯合報報導），行人頁每桶都標一般＋回收，`bin-category.js` 的 `binCategory()` 回傳 `simulated:false`。若日後有逐桶欄位會自動改用 |
 | YouBike 借＋還次數 | **真實**紀錄的彙總，但當作人流時是**推估** |
 | 公車每站停靠路線數 | **推估**（路線數不是上下車人數） |
 | **交通活動量是人流的推估，不等於垃圾量** | — |
-| 垃圾桶填充度、滿溢告警 | **模擬**（依桶編號固定產生；行人回報會覆蓋） |
-| B 方案滿溢時數（容量、清運頻率、每千次借還產生公升數） | **模擬**，參數在 `config.js` |
+| 垃圾桶填充度、滿溢告警 | **模擬**（依桶編號固定產生；行人與清潔隊回報會覆蓋）——目前唯一的模擬資料欄位 |
+| B 方案模擬參數與滿溢假設（容量、清運頻率、每千次借還產生公升數） | **模擬／假設**，參數在 `config.js` |
 | C 方案移桶、行人頁「調整後」 | **情境模擬**，不是實際設置 |
 | 距離 | 直線距離，不是步行距離 |
 

@@ -13,7 +13,7 @@ window.CONFIG={
     caveat:'清冊不等於現場完整現況；北投 0 列、南港 4 列為資料缺漏。'
   },
   demoArea:{name:'公館–大安',bounds:[[25.0075,121.5240],[25.0400,121.5560]],center:[25.0215,121.5380],zoom:15},
-  fallbackLocation:{name:'台北市政府',latlng:[25.0375,121.5637]},
+  fallbackLocation:{name:'興雅國中公車站',latlng:[25.037232,121.568269]}, // 行人頁定位失敗時的示範位置
   hotspot:{gapThresholdM:100, maxList:8},          // 缺口：最近清冊垃圾桶 > 100m
   scenarioB:{ // B 原位改善：模擬參數（假設，可調整）
     baseCapacityL:80, newCapacityL:120,            // 容量（公升）
@@ -24,6 +24,5 @@ window.CONFIG={
   // C：只從熱點 1km 內挑桶；移走後原位置附近（600m 內）不得有站點新增「200m 內無桶」；符合者中挑周邊 200m 活動量最低者
   suggestion:{bIfBinWithinM:100, cMinReduction100:1}, // 建議規則（假設，可調整）：熱點 ≤100m 有桶→B；C 可行且減少 ≥1 個 100m 無桶站→C；否則 A
   compare:[{name:'捷運公館站(2號出口)',label:'人流最高'},{name:'捷運大安站(4號出口)',label:'缺口最大'}], // 「人流高 ≠ 缺口大」比較卡
-  storageKeys:{scenario:'debug松_scenario_v2',events:'debug松_events_v1'},
-  features:{crewRouting:false}                      // 清潔隊動態路線（隱藏；網址加 ?route=1 也可開）
+  storageKeys:{scenario:'debug松_scenario_v2',events:'debug松_events_v1'}
 };

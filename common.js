@@ -1,16 +1,18 @@
 // 共用：導覽列、資料、localStorage、距離、填充度
-const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.0375,121.5637];
-const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'台北市政府';
+const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.037232,121.568269];
+const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'興雅國中公車站';
 const LS_EVENTS=(window.CONFIG&&CONFIG.storageKeys.events)||'debug松_events_v1';
-function nav(active){
+function nav(active){ // 角色切換（渲染在 ⋯ 選單內的 .rolenav）
   const tabs=[['index.html','📊','規劃'],['pedestrian.html','🚶','行人'],['crew.html','🧹','清潔隊']];
-  document.querySelector('header').innerHTML='<div class="brand"><span>有桶</span></div><nav class="tabs">'+tabs.map(t=>`<a href="${t[0]}" class="${t[0]===active?'on':''}"><span>${t[1]}</span>${t[2]}</a>`).join('')+'</nav>';
+  const host=document.querySelector('.rolenav header')||document.querySelector('header');if(!host)return;
+  host.innerHTML='<nav class="tabs">'+tabs.map(t=>`<a href="${t[0]}" class="${t[0]===active?'on':''}"><span>${t[1]}</span>${t[2]}</a>`).join('')+'</nav>';
 }
 function sheet(){ // 手機底部面板：點把手切換大小
   const p=document.querySelector('.panel'),h=p.querySelector('.handle');if(!h)return;
   h.onclick=()=>{if(p.classList.contains('exp')){p.classList.remove('exp');p.classList.add('min')}else if(p.classList.contains('min'))p.classList.remove('min');else p.classList.add('exp')};
 }
-function baseMap(center,zoom){
+function baseMap(center,zoom){ // 優先使用 ui.js 的去飽和底圖
+  if(typeof quietMap==='function'){const m=quietMap(center,zoom);L.control.zoom({position:'topright'}).addTo(m);return m}
   const m=L.map('map',{preferCanvas:true,zoomControl:false}).setView(center,zoom);
   L.control.zoom({position:'topright'}).addTo(m);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
@@ -28,7 +30,7 @@ const getEvents=()=>{try{return JSON.parse(localStorage.getItem(LS_EVENTS))||[]}
 function addEvent(e){const a=getEvents();a.push({...e,ts:Date.now()});localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)))}
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定
 function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin===id){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}
-const fillColor=f=>f>=80?'#e5484d':f>=50?'#e8a317':'#0f9d76';
+const fillColor=f=>typeof rampColor==='function'?rampColor(f):(f>=80?'#e2574c':f>=50?'#e2a33b':'#8aa3a3'); // 色階定義在 ui.js
 const fillPill=f=>`<span class="pill ${f>=80?'full':f>=50?'mid':'ok'}">${f}%</span>`;
 const timeStr=ts=>new Date(ts).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
 

@@ -201,10 +201,8 @@ seg.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;mode=b.dataset
 hotBtn.onclick=()=>{if(scen){adv.hidden=true;sel=null;setPos([scen.hotLa,scen.hotLo].every(Boolean)?[scen.hotLa,scen.hotLo]:scen.moved?scen.moved.to:CONFIG.demoArea.center,'熱點：'+scen.hotspotName)}};
 
 loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];binsBefore=D.street;
-  // 示範位置：興雅國中公車站（市政府東側約 460 m；最近清潔箱 松仁路32號 約 180 m，你的位置不會和桶重疊）
-  const DEMO={name:'興雅國中',la:25.037232,lo:121.568269};
-  const bs=D.bus.filter(s=>s.name===DEMO.name).map(s=>({s,d:hav(DEMO.la,DEMO.lo,s.la,s.lo)})).sort((a,b)=>a.d-b.d)[0];
-  demoLoc=bs&&bs.d<50?{la:bs.s.la,lo:bs.s.lo,name:`${bs.s.name}公車站`}:{la:TPE_MAIN[0],lo:TPE_MAIN[1],name:TPE_NAME};
+  // 示範位置：讀 config.js > fallbackLocation（預設興雅國中公車站，最近清潔箱約 180 m）
+  demoLoc={la:TPE_MAIN[0],lo:TPE_MAIN[1],name:TPE_NAME};
   chips.hidden=!binCatsVaried(D.street); // 全市同為「一般＋回收」→ 篩選無意義，隱藏（逐桶欄位出現時自動顯示）
   const ST=[...D.yb,...D.bus].filter(s=>SC.inArea(s.la,s.lo)),HS=SC.hotspots(ST,D.street);
   scen=SC.load();
