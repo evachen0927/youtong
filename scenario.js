@@ -1,7 +1,13 @@
 // 方案引擎：A 維持現況 / B 原位改善（模擬）/ C 同桶數挪一處。共用於規劃頁與行人頁。
 const SC={};
 SC.inArea=(la,lo)=>{const[[a,b],[c,d]]=CONFIG.demoArea.bounds;return la>=a&&la<=c&&lo>=b&&lo<=d};
-SC.nearestDist=(p,bins)=>{let m=1e9,bi=null;for(const b of bins){const d=hav(p.la,p.lo,b.la,b.lo);if(d<m){m=d;bi=b}}return[m,bi]};
+// 最近桶距離：示範區內且路網已載入 → 步行路網距離（OSM）；否則直線。回傳 [m, bin, 'walk'|'line']
+SC.walk=null;SC.WALK_LIMIT_M=3000;
+SC.nearestDist=(p,bins)=>{let m=1e9,bi=null;
+  if(SC.walk&&SC.inArea(p.la,p.lo)){const g=SC.walk,sp=RT.snap(g,p.la,p.lo);if(sp){const D=RT.from(g,sp[0],SC.WALK_LIMIT_M).dist;
+    for(const b of bins){const sb=RT.snap(g,b.la,b.lo);const d=sb&&isFinite(D[sb[0]])?D[sb[0]]+sp[1]+sb[1]:null;if(d!=null&&d<m){m=d;bi=b}}
+    if(bi)return[m,bi,'walk']}}
+  for(const b of bins){const d=hav(p.la,p.lo,b.la,b.lo);if(d<m){m=d;bi=b}}return[m,bi,'line']};
 SC.median=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):0};
 // stations: [{t:'yb'|'bus',la,lo,act,routes,name}] in demo area; bins: [{id,la,lo}] street bins
 SC.metrics=(stations,bins)=>{const ds=stations.map(s=>SC.nearestDist(s,bins)[0]);

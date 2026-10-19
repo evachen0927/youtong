@@ -59,7 +59,7 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 ### localStorage 事件格式
 `{bin, kind:'full'|'level'|'clear', level, by:'行人'|'清潔隊', ts, amount, amountPct}`；預測調度回報另加 `predPct`（預測滿度）、`calib`（新校正係數）、`fcDay`（wk/we）、`fcMin`（滑桿時間，分鐘）。校正係數另存 `localStorage['有桶_forecast_v1']`；清潔隊回報收運量時 `amount` 為 `empty|half|full|overflow`，`amountPct` 對應 0／50／100／120。
 
-重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）。測試：`python test_mvp.py`（Playwright，桌面 1280×800＋手機 390×844）。行人頁的熱點／調整前後在「⋯ 更多」面板（`#more` → `#hotBtn`、`[data-m=after]`，`#advClose` 關閉，`#doneBtn` → `[data-full]` 回報滿了）；清潔隊頁用 `#next [data-amt]` 回報收運量。
+重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）→ 路網 `python build_roads.py`（osmnx；先以 osmium 從 Geofabrik 臺灣 pbf 擷取示範區並篩選道路，指令見檔頭）。測試：`python test_mvp.py`（Playwright，桌面 1280×800＋手機 390×844）。行人頁的熱點／調整前後在「⋯ 更多」面板（`#more` → `#hotBtn`、`[data-m=after]`，`#advClose` 關閉，`#doneBtn` → `[data-full]` 回報滿了）；清潔隊頁用 `#next [data-amt]` 回報收運量。
 
 ## 資料來源（真實開放資料）
 | 資料 | 來源 | 授權 | 用法 |
@@ -70,6 +70,7 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 | 臺北市公車站位（GetStop） | https://tcgbusfs.blob.core.windows.net/blobbus/GetStop.gz | 政府資料開放授權條款-第1版 | 站位位置、每站停靠路線數 |
 | 鄉鎮市區界（內政部，經 taiwan-atlas 2021.9.20 TopoJSON） | https://cdn.jsdelivr.net/npm/taiwan-atlas/towns-10t.json | 政府資料開放授權條款-第1版（原始資料） | 判定是否在臺北市、各區面積 |
 | 底圖 | © OpenStreetMap contributors | ODbL | 地圖 |
+| 道路路網（步行、行車） | OpenStreetMap，經 Geofabrik `taiwan-261018.osm.pbf`（2026-10-18 資料，單次下載），© OpenStreetMap contributors | ODbL | 示範區外擴 300m，離線預先計算為 `roads_walk.json`（約 587 KB）、`roads_drive.json`（約 225 KB，遵守單行道）；展示時不呼叫任何路徑 API |
 
 TDX 公車 API 需申請金鑰（未使用）。
 
@@ -89,13 +90,17 @@ TDX 公車 API 需申請金鑰（未使用）。
 | 校正係數 | 由清潔隊回報的實際滿度 ÷ 預測滿度，以 EMA（α=0.3）更新；存在 localStorage |
 | B 方案模擬參數與滿溢假設（容量、清運頻率、每千次借還產生公升數） | **模擬／假設**，參數在 `config.js` |
 | C 方案移桶、行人頁「調整後」 | **情境模擬**，不是實際設置 |
-| 距離 | 直線距離，不是步行距離 |
+| 距離 | 示範區內：**步行路網距離**（行人頁、規劃頁缺口與 A/B/C 指標；每分鐘 75 m）與**行車路網距離**（清潔隊路線）；示範區外：直線距離，頁面標「直線距離（示範區外）」。路網為 OSM，可能缺人行穿越道或巷弄細節；垃圾桶以最近路網節點接駁 |
+
+街道清冊 681 列**全部顯示**：先前 5 m 內去重把 17 列併掉（地圖只剩 664 點），已改為每列保留；這 17 列都是地址不同的有效列（例如同一公車站左右側、停車場入口南／北側、動物園站 -1／-2），在地圖上與鄰列重疊，彈出視窗註明「此處重疊 N 列清冊」。無座標錯誤或超出範圍的列。開場數字與規劃頁所有指標只用這 681 列，不與 130 點相加。
 
 已知資料缺漏：北投區街道清冊 0 列、南港區 4 列 →**資料缺漏，非實際覆蓋率**。
 
 ## 熱點與方案的計算方式
 - 示範區：公館–大安矩形（`config.js > demoArea`），YouBike 站＋公車站位。
-- 缺口熱點：YouBike 站最近街道清冊垃圾桶 > 100m，依「缺口指數＝活動量 ×（距離−100m）」排序。研究團隊的錨點則是每區活動量前 3（間隔 ≥300m），兩者並列參考（`anchors.csv`）。
+- 開場數字（`config.js > headline`）：YouBike 1,567／1,821 站、公車 3,000／3,460 站位 100m 內無清冊垃圾桶（示範區內步行、示範區外直線；全直線為 1,546 與 2,983，與 `summary.json` 一致）。
+- 清潔隊路線：選站＝預測 ≥ 門檻；站序＝行車路網距離矩陣上的最近鄰（自出發點），地圖畫實際道路路徑；`config.js > forecast.routeOrder` 可改回 `'priority'`（依預計滿的先後）。
+- 缺口熱點：YouBike 站最近街道清冊垃圾桶（示範區內為步行距離）> 100m，依「缺口指數＝活動量 ×（距離−100m）」排序。研究團隊的錨點則是每區活動量前 3（間隔 ≥300m），兩者並列參考（`anchors.csv`）。
 - 指標（三方案相同）：示範區內 100m／200m 內無桶站數、站點到最近桶中位數、100m 內有桶的 YouBike 活動量與公車停靠路線數，以及熱點旁桶每日滿溢時數（模擬）。C 方案另列「原服務區損失」。
 - 工具建議規則（**假設，可調整**，`config.js > suggestion`）：熱點 100m 內有桶→B；C 可行且至少減少 1 個「100m 內無桶」站→C；否則 A。仍需現勘、步行路徑、權責與清運確認。
 - 滿溢模擬假設（**假設，可調整**，`config.js > scenarioB`）：每月每 1,000 次借還 → 每日產生 5 公升垃圾（另加基本量 5 公升/日）；桶容量 ÷ 每小時產生量 = 裝滿時數，與清運間隔比較得出每日滿溢時數。

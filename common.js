@@ -2,11 +2,6 @@
 const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.037232,121.568269];
 const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'興雅國中公車站';
 const LS_EVENTS=(window.CONFIG&&CONFIG.storageKeys.events)||'debug松_events_v1';
-function nav(active){ // 角色切換（渲染在 ⋯ 選單內的 .rolenav）
-  const tabs=[['index.html','📊','規劃'],['pedestrian.html','🚶','行人'],['crew.html','🧹','清潔隊']];
-  const host=document.querySelector('.rolenav header')||document.querySelector('header');if(!host)return;
-  host.innerHTML='<nav class="tabs">'+tabs.map(t=>`<a href="${t[0]}" class="${t[0]===active?'on':''}"><span>${t[1]}</span>${t[2]}</a>`).join('')+'</nav>';
-}
 function sheet(){ // 手機底部面板：點把手切換大小
   const p=document.querySelector('.panel'),h=p.querySelector('.handle');if(!h)return;
   h.onclick=()=>{if(p.classList.contains('exp')){p.classList.remove('exp');p.classList.add('min')}else if(p.classList.contains('min'))p.classList.remove('min');else p.classList.add('exp')};
@@ -36,7 +31,7 @@ const timeStr=ts=>new Date(ts).toLocaleString('zh-TW',{month:'numeric',day:'nume
 
 // 示範資料：街道清冊垃圾桶（不含場域線索）、示範區站點
 async function loadCore(){const [b,y,s]=await Promise.all(['bins.geojson','youbike.geojson','busstops_taipei.geojson'].map(loadJSON));
-  const street=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district}));
+  const street=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district,c:f.properties.colocated||1}));
   const venue=b.features.filter(f=>f.properties.source==='scenic130').map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district,count:f.properties.count}));
   const yb=y.features.map(f=>({t:'yb',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],act:f.properties.act,dock:f.properties.total,d:f.properties.district,addr:f.properties.address}));
   const bus=s.features.map(f=>({t:'bus',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],routes:f.properties.routes,d:f.properties.district,addr:f.properties.address}));

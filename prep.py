@@ -43,20 +43,31 @@ def addbin(r,src):
     try: lon,lat=float(r['經度'].strip().lstrip('?？')),float(r['緯度'].strip().lstrip('?？'))  # 1 列有多餘 '?' 前綴
     except: stat['bad_'+src]+=1;return
     if not(24.9<lat<25.25 and 121.4<lon<121.7): stat['bad_'+src]+=1;return
+    late=False
     for b in bins:
         bl,ba=b['geometry']['coordinates']
         if abs(ba-lat)<1e-4 and hav(lat,lon,ba,bl)<5:
+            if src=='main' and b['properties']['source'].startswith('main'):
+                # 街道清冊每一列都保留（地址不同的重疊點）；只標記重疊
+                stat['colocated_main']+=1;late=True;break
             stat['dup_'+src]+=1
             if src not in b['properties']['source']: b['properties']['source']+='+'+src
             return
     note=r['備註'].strip();m=re.match(r'(\d+)處',note)
-    bins.append(F(lon,lat,{"id":"","district":r['行政區'].strip().replace('台','臺'),"address":r['地址'].strip(),"note":note,"count":int(m.group(1)) if m else 1,"source":src}))
+    bins.append(F(lon,lat,{"id":"","district":r['行政區'].strip().replace('台','臺'),"address":r['地址'].strip(),"note":note,"count":int(m.group(1)) if m else 1,"source":src,"_late":late}))
 for r in csv.DictReader(open('bins_raw.csv',encoding='big5',errors='replace')): addbin(r,'main')
 for r in csv.DictReader(open('bins130_raw.csv',encoding='big5',errors='replace')): addbin(r,'scenic130')
-for i,b in enumerate(bins):
-    b['properties']['id']='B%04d'%i
+# id 保持舊版穩定：原本保留的列依序 B0000…，原本被 5m 去重吃掉的 17 列接在最後
+order=[b for b in bins if not b['properties']['_late']]+[b for b in bins if b['properties']['_late']]
+for i,b in enumerate(order):
+    b['properties']['id']='B%04d'%i;del b['properties']['_late']
     d=dist_of(*b['geometry']['coordinates'])
     if d and d!=b['properties']['district']: stat['district_mismatch']+=1
+for b in bins:  # 5m 內同清冊列數（地圖重疊點顯示「此處 N 列」）
+    bl,ba=b['geometry']['coordinates']
+    if b['properties']['source'].startswith('main'):
+        b['properties']['colocated']=sum(1 for o in bins if o['properties']['source'].startswith('main') and abs(o['geometry']['coordinates'][1]-ba)<1e-4 and hav(ba,bl,o['geometry']['coordinates'][1],o['geometry']['coordinates'][0])<5)
+bins=order
 print("bins",len(bins),dict(stat),collections.Counter(b['properties']['source'] for b in bins))
 save(bins,'bins.geojson')
 # --- youbike
@@ -81,7 +92,7 @@ save(bs,'busstops.geojson')  # all (incl. New Taipei, district=null)
 tp=[f for f in bs if f['properties']['district']];save(tp,'busstops_taipei.geojson')
 print("bus unique",len(bs),"in Taipei polygon",len(tp))
 # --- hotspot stats
-bp=[(b['geometry']['coordinates'][1],b['geometry']['coordinates'][0]) for b in bins]
+bp=[(b['geometry']['coordinates'][1],b['geometry']['coordinates'][0]) for b in bins if b['properties']['source'].startswith('main')]  # 只用 681 列街道清冊，不與 130 合併
 near=lambda la,lo:min(hav(la,lo,a,b) for a,b in bp)
 rows=[("youbike",f['properties']['name'],f['properties']['district'],*f['geometry']['coordinates'][::-1]) for f in yb]+[("bus",f['properties']['name'],f['properties']['district'],*f['geometry']['coordinates'][::-1]) for f in tp]
 rows=[r+(near(r[3],r[4]),) for r in rows]

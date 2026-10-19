@@ -7,8 +7,8 @@ window.CONFIG={
     items:[
       {value:'681',label:'街道清冊列數（2026-09-30）',note:'資料：臺北市行人專用清潔箱主檔'},
       {value:'130',label:'景點商圈場域線索（另列，不可相加）',note:'2026-08-18'},
-      {value:'1,458',label:'YouBike 站 100m 內無清冊垃圾桶',note:'共 1,821 站；直線距離'},
-      {value:'2,887',label:'公車站 100m 內無清冊垃圾桶',note:'共 3,460 站位（臺北市）'}
+      {value:'1,567',label:'YouBike 站 100m 內無清冊垃圾桶',note:'共 1,821 站（86.1%）；只用 681 列街道清冊；示範區內 276 站用步行路網距離，其餘直線距離（全直線為 1,546，84.9%）'},
+      {value:'3,000',label:'公車站 100m 內無清冊垃圾桶',note:'共 3,460 站位（臺北市，86.7%）；只用 681 列街道清冊；示範區內 238 站位用步行路網距離，其餘直線距離（全直線為 2,983，86.2%）'}
     ],
     caveat:'清冊不等於現場完整現況；北投 0 列、南港 4 列為資料缺漏。'
   },
@@ -42,7 +42,7 @@ window.CONFIG={
     shiftStart:'08:00', shiftEnd:'16:30',
     routineClears:['08:00','12:00','16:00'], // 假設：例行巡查清運 3 次（官方每日 3–6 次的下限）；預測從最近一次例行清運起累積
     depot:null,                  // 清潔隊出發點 [lat,lng]；null = 示範區中心
-    threshold:70,
+    threshold:70, routeOrder:'drive-nn', // 'drive-nn'＝行車路網最近鄰；'priority'＝預測滿的先後
     demoTime:{day:'we',time:'19:00'} // 示範：週六傍晚
   },
   storageKeys:{scenario:'debug松_scenario_v2',events:'debug松_events_v1',forecast:'有桶_forecast_v1'}

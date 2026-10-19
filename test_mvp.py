@@ -52,6 +52,7 @@ with sync_playwright() as p:
     pg.click('#menu');pg.once('dialog',lambda d:d.accept());pg.click('#allClear');pg.wait_for_timeout(300)
     print(name,'清潔隊',a0.replace('\n',' '),'→',a1.replace('\n',' '),'→ 復原',a2.replace('\n',' '),'| 完成卡',pg.locator('#card .done').count()>0)
     pg.click('#backBtn');pg.wait_for_selector('#card[data-state=A]');print(name,'返回 A',pg.inner_text('#cardTitle'))
+    assert pg.locator('.roles a[href="index.html"]').count()>0;print(name,'行車路網',pg.inner_text('#sum').replace('\n',' '))
     pg.goto(B+'crew-route.html');pg.wait_for_selector('#card',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
     print(name,'ERRORS',errs);ok&=not errs;c.close()
   br.close()
