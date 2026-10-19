@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020n"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020n"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020n"><link rel="stylesheet" href="tokens.css?v=20261020n"><link rel="stylesheet" href="ui.css?v=20261020n">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020o"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020o"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020o"><link rel="stylesheet" href="tokens.css?v=20261020o"><link rel="stylesheet" href="ui.css?v=20261020o">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -41,17 +41,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .next b{color:var(--ink);font-weight:600}.next .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .q{margin-top:12px;min-height:calc(15px*1.4 + 8px + 44px)}.q .qt{font:500 15px/1.4 var(--font);color:var(--ink)}
 .q .qb{display:flex;gap:8px;margin-top:8px}.q .qb button{flex:1;height:44px;border:0;border-radius:12px;background:var(--gray-1);color:var(--ink);font:600 15px/1 var(--font);cursor:pointer}
-.q .qd{display:flex;align-items:center;height:44px;margin-top:8px;color:var(--mute);font:400 14px/1.4 var(--font)}
+.q .qd{display:flex;align-items:center;height:44px;margin-top:8px;color:var(--ink);font:600 15px/1.4 var(--font)} /* 與需求回報的感謝行同樣式 */
 .ask{margin-top:12px;padding:12px;border-radius:12px;background:#f6f7f6;font-size:14px}
 .pill.sc{background:#efe9fb;color:#6a3fb5}
 .small{font-size:11px;color:#8a8f92}
 /* 地圖標記：正面垃圾桶 */
 .binmk{background:none;border:0}.binmk .w{position:relative}.binmk .w svg{display:block;position:relative}
 .binmk .halo{position:absolute;left:50%;top:58%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#1c1f2114}
-.binmk.oth{display:flex;align-items:flex-end;justify-content:center}.binmk.oth .w{width:28px;transform-origin:50% 100%;opacity:.5}.binmk.oth.rep .w{opacity:.9}
+.binmk.oth{display:flex;align-items:flex-end;justify-content:center}.binmk.oth .w{width:28px;transform-origin:50% 100%}
 .binmk.tgt{overflow:visible}.binmk.tgt .w{position:relative}
-.binmk.tgt .ring{position:absolute;left:50%;top:56%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;border:3px solid var(--brand);background:#0f9d761f;box-sizing:border-box}
-.binmk.tgt .tlab{position:absolute;left:calc(100% + 6px);top:6px;padding:4px 8px;border-radius:999px;background:var(--surface);color:var(--ink);font:700 13px/1.2 var(--font);white-space:nowrap;box-shadow:var(--shadow-1);border:1.5px solid var(--brand)}
+.binmk.tgt .ring{position:absolute;left:50%;top:56%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;border:3px solid var(--ink-strong);background:none;box-shadow:0 0 0 3px #fffe,0 0 8px 3px #ffffffb3;box-sizing:border-box}
+.binmk.tgt .tlab{position:absolute;left:calc(100% + 6px);top:6px;padding:4px 8px;border-radius:999px;background:var(--surface);color:var(--ink);font:700 13px/1.2 var(--font);white-space:nowrap;border:1.5px solid var(--ink-strong);box-shadow:0 0 0 2px #fffe,var(--shadow-1)}
+.binmk.tgt .tlab.left{left:auto;right:calc(100% + 6px)}
 .pin{background:none;border:0}
 .pin .w{position:relative;width:32px;transform-origin:50% 39px;transition:transform .15s}
 .pin.near .w{transform:scale(1.28)}
@@ -92,7 +93,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
 <div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip" data-ly="lyBus" aria-pressed="false"><i style="--c:#5b6f9c"></i>公車站</button><span class="lgd lhint" id="rhint"></span></div>
-<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020n" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
+<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020o" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <input type="checkbox" id="lyYb" hidden><input type="checkbox" id="lyBus" hidden><!-- 圖層狀態（由上方 chip 切換） -->
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
@@ -109,7 +110,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020n"></script><script src="common.js?v=20261020n"></script><script src="scenario.js?v=20261020n"></script><script src="routing.js?v=20261020n"></script><script src="bin-category.js?v=20261020n"></script><script src="ui.js?v=20261020n"></script><script src="bin-icons.js?v=20261020n"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020o"></script><script src="common.js?v=20261020o"></script><script src="scenario.js?v=20261020o"></script><script src="routing.js?v=20261020o"></script><script src="bin-category.js?v=20261020o"></script><script src="ui.js?v=20261020o"></script><script src="bin-icons.js?v=20261020o"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
@@ -134,7 +135,7 @@ const shown=()=>bins().filter(b=>binAccepts(b,filter));
 const iconCache={};
 const fillKey=(b,ev)=>{const st=binState(b.id,ev);return[st?0:Math.floor(fillOf(b.id,ev)/10)*10,st]};
 // 其他桶：縮小、變淡，但點擊範圍 44×44（已回報滿的紅色保持清楚）
-function pinIcon(b,ev){const[f,st]=fillKey(b,ev),k=map.getZoom()<15?.6:.72,key=f+'|'+st+'|'+k;if(iconCache[key])return iconCache[key];const{html}=binIconSVG(f,st);
+function pinIcon(b,ev){const[f,st]=fillKey(b,ev),k=.8,key=f+'|'+st+'|'+k;if(iconCache[key])return iconCache[key];const{html}=binIconSVG(f,st);
   return iconCache[key]=L.divIcon({className:'binmk oth'+(st?' rep':''),iconSize:[44,44],iconAnchor:[22,36],html:`<div class="w" style="transform:scale(${k})">${html}</div>`})}
 // 目標桶：約 1.5 倍、品牌綠光圈、常駐標籤「最近・N m」（N＝卡片上同一個步行距離）；回報滿的紅色優先（圖示照狀態色）
 function targetIcon(b,ev,lab){const[f,st]=fillKey(b,ev),{w,h,html}=binIconSVG(f,st),k=1.5;
@@ -150,7 +151,12 @@ function drawRoute(P){routeL.clearLayers();routeInfo=null;if(!P||!pos)return;con
   routeInfo={bin:P.f.id,pts:pts||[pos,b],snapped:!!pts}}
 function drawBins(){binL.clearLayers();const bd=map.getBounds().pad(.3),ev=getEvents(),P=primary(),nid=P&&P.f.id;
   for(const f of shown())if(bd.contains([f.la,f.lo])||f.id===nid){const t=f.id===nid;
-    L.marker([f.la,f.lo],{icon:t?targetIcon(f,ev,tgtLabel(P)):pinIcon(f,ev),zIndexOffset:t?900:0,keyboard:false,title:f.addr}).on('click',()=>focusBin(f)).addTo(binL)}}
+    L.marker([f.la,f.lo],{icon:t?targetIcon(f,ev,tgtLabel(P)):pinIcon(f,ev),zIndexOffset:t?900:0,keyboard:false,title:f.addr}).on('click',()=>focusBin(f)).addTo(binL)}
+  placeLabel()}
+// 標籤右側 40px 內有其他標記（桶或你的位置），或太靠近螢幕邊緣 → 改放左側
+function placeLabel(){const lb=document.getElementById('tlab');if(!lb)return;lb.classList.remove('left');const r=lb.getBoundingClientRect(),zone={l:r.right,r:r.right+40,t:r.top-8,b:r.bottom+8};
+  const others=[...document.querySelectorAll('.binmk.oth .w, .leaflet-marker-pane .me')].map(e=>e.getBoundingClientRect());
+  const hit=others.some(o=>o.right>zone.l&&o.left<zone.r&&o.bottom>zone.t&&o.top<zone.b);if(hit||r.right>innerWidth-12)lb.classList.add('left')}
 function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.marker([f.la,f.lo],{icon:stationIcon(color),keyboard:false,zIndexOffset:-500}).bindPopup(pop(f)).addTo(layer)}
 function redraw(){if(!D)return;drawBins();drawPts(ybL,D.yb,'yb',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'bus',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`)}
 map.on('moveend',redraw);
@@ -172,7 +178,7 @@ function render(fit){if(!D)return;try{renderInner(fit)}catch(e){console.error('[
 function renderInner(fit){
   const ev=getEvents();if(!pos)return;
   const P=primary(),N=nextOf(P);
-  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020n" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
+  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020o" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
   if(!P){list.innerHTML=head+`<div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div><div class="acts"><button class="b" data-f="all">看全部</button></div>`+needHTML();redraw();return}
   const p=P.f,cs=binCategory(p).simulated;
   const real=[];if(/家用垃圾/.test(p.note||''))real.push('禁丟家用垃圾');const fr=freshness(p,ev);
@@ -182,7 +188,7 @@ function renderInner(fit){
     <div class="dist"><b>${fmtM(P.d).replace(' ','\u2009')}</b><span>${dlab(P)}</span></div>
     ${fr?`<div class="meta">${fr}</div>`:''}${real.length?`<div class="meta" style="margin-top:2px">${real.join('・')}</div>`:''}
     <div class="acts"><a class="b pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">步行導航</a></div>
-    <div class="q" data-q="${p.id}"><div class="qt">這桶滿了嗎？</div>${asked[p.id]?`<div class="qd">${asked[p.id]==='full'&&SC.inArea(p.la,p.lo)?'謝謝，已通知清潔隊':'謝謝回報'}</div>`:`<div class="qb"><button id="okBtn" data-ok="${p.id}">還能丟</button><button data-full="${p.id}">滿了</button></div>`}</div>
+    <div class="q" data-q="${p.id}"><div class="qt">這桶滿了嗎？</div>${asked[p.id]?`<div class="qd">${asked[p.id]==='full'&&SC.inArea(p.la,p.lo)?'✓ 謝謝，已通知清潔隊':'✓ 謝謝回報'}</div>`:`<div class="qb"><button id="okBtn" data-ok="${p.id}">還能丟</button><button data-full="${p.id}">滿了</button></div>`}</div>
   </div>
   ${N?`<button class="next" data-next="${N.f.id}"><span>下一個</span><span class="t"><b>${N.f.addr}</b></span><span>${fmtM(N.d)}・${mins(N)} 分${N.w?'':'（直線）'} ›</span></button>`:''}${needHTML()}`;
   drawRoute(P);redraw();
@@ -196,7 +202,11 @@ function needHTML(){const NB=nearestN(shown(),1)[0],far=!!(NB&&NB.w&&NB.d>200),n
 function fitTarget(){if(!routeInfo)return;const ch=list.getBoundingClientRect().height,mob=isMobile();
   map.fitBounds(L.latLngBounds(routeInfo.pts),{paddingTopLeft:[mob?40:48,Math.max(topUIBottom(),crow.getBoundingClientRect().bottom)+24],paddingBottomRight:[mob?72:list.getBoundingClientRect().width+64,mob?ch+28:44],maxZoom:18,animate:false})}
 let where='定位中…';
-function setPos(p,label){pos=p;needId=null;where=label;dumped=false;if(me)me.remove();me=L.marker(p,{icon:L.divIcon({className:'me'}),zIndexOffset:1000,interactive:false}).addTo(map);render(true)}
+// 你的位置：品牌綠點（白邊）在路線之上＋定位精度圈；沒有精度值（示範位置、手動設定）時用 ACC_DEFAULT_M
+const ACC_DEFAULT_M=30;let accC=null,acc=ACC_DEFAULT_M;
+function setPos(p,label,accM){pos=p;acc=accM>0?accM:ACC_DEFAULT_M;needId=null;where=label;dumped=false;if(me)me.remove();if(accC)accC.remove();
+  accC=L.circle(p,{radius:acc,color:getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()||'#0f9d76',weight:1,opacity:.5,fillOpacity:.1,interactive:false,className:'acc'}).addTo(map);
+  me=L.marker(p,{icon:L.divIcon({className:'me',iconSize:[18,18]}),zIndexOffset:2000,interactive:false}).addTo(map);render(true)}
 function focusBin(f){sel=f.id;dumped=false;render(true)} // 點地圖上的桶或「下一個」→ 成為目標：標籤、路線、卡片一起更新並重新框住
 list.onclick=e=>{
   const fb=e.target.closest('[data-full]');if(fb){addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});setAsked(fb.dataset.full,'full');sel=fb.dataset.full;render(false);return}
@@ -216,7 +226,7 @@ function fallback(why){const d=demoLoc||{la:TPE_MAIN[0],lo:TPE_MAIN[1],name:TPE_
 function locate(){where='定位中…';const w=document.getElementById('where');if(w)w.textContent=where;let done=false;const once=f=>{if(!done){done=true;try{f()}catch(e){console.error('[有桶] 定位處理失敗',e)}}};
   setTimeout(()=>once(()=>fallback('定位逾時')),6000); // 看門狗：不論定位 API 有沒有回應
   if(!navigator.geolocation)return once(()=>fallback('不支援定位'));
-  try{navigator.geolocation.getCurrentPosition(p=>once(()=>{const q=[p.coords.latitude,p.coords.longitude];if(hav(q[0],q[1],TPE_MAIN[0],TPE_MAIN[1])>30000)fallback('你不在台北');else{sel=null;setPos(q,'你的目前位置')}}),
+  try{navigator.geolocation.getCurrentPosition(p=>once(()=>{const q=[p.coords.latitude,p.coords.longitude];if(hav(q[0],q[1],TPE_MAIN[0],TPE_MAIN[1])>30000)fallback('你不在台北');else{sel=null;setPos(q,'你的目前位置',p.coords.accuracy)}}),
     ()=>once(()=>fallback('未允許定位')),{timeout:5000,enableHighAccuracy:false,maximumAge:60000})}catch(e){once(()=>fallback('不支援定位'))}}
 
 // ---- 資料說明、圖層 chip ----

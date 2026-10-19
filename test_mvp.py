@@ -37,12 +37,16 @@ with sync_playwright() as p:
     tl=pg.inner_text('#tlab');d0=pg.evaluate("Math.round(primary().d)");print(name,'目標標籤',tl,'| 路線',pg.evaluate("[routeInfo.snapped,routeInfo.pts.length]"));assert tl=='最近・%d m'%d0 and ('%d'%d0) in pg.inner_text('.dist') and pg.evaluate("routeInfo.snapped&&routeInfo.bin===primary().f.id")
     tb=pg.locator('.binmk.tgt').bounding_box();ob=pg.locator('.binmk.oth').first.bounding_box();assert pg.locator('.binmk.tgt').count()==1 and tb['height']>=48 and ob['width']>=44 and ob['height']>=44 and pg.locator('.binmk.tgt .ring').count()==1,(tb,ob)
     vis=pg.evaluate("(()=>{const top=list.getBoundingClientRect().top,r=list.getBoundingClientRect();return routeInfo.pts.every(p=>{const q=map.latLngToContainerPoint(p);return q.x>0&&q.x<innerWidth&&q.y>0&&(q.y<top||q.x<r.left)})})()");print(name,'路線在卡片外可見',vis);assert vis
-    if name=='mobile':pg.screenshot(path='/workspace/ped_target_390.png')
+    sty=pg.evaluate("(()=>{const g=e=>getComputedStyle(document.querySelector(e));return [g('.binmk.tgt .ring').borderTopColor,g('.binmk.tgt .ring').borderTopWidth,g('#tlab').borderTopColor,g('.binmk.oth .w').opacity,g('.binmk.oth .w').transform]})()");print(name,'目標樣式',sty);assert sty[:4]==['rgb(43, 51, 51)','3px','rgb(43, 51, 51)','1'] and sty[4].startswith('matrix(0.8,')
+    meb=pg.evaluate("(()=>{const r=document.querySelector('.leaflet-marker-pane .me').getBoundingClientRect();return [r.bottom<list.getBoundingClientRect().top||r.right<list.getBoundingClientRect().left,+getComputedStyle(document.querySelector('.leaflet-marker-pane .me')).zIndex>+getComputedStyle(document.querySelector('.binmk.tgt')).zIndex,acc,+(map.hasLayer(accC)&&accC.getRadius()===acc)]})()");print(name,'你的位置',meb);assert meb==[True,True,30,1]
+    pg.evaluate("(()=>{const P=primary(),q=map.latLngToContainerPoint([P.f.la,P.f.lo]);map.panBy([q.x-(innerWidth-50),0],{animate:false})})()");pg.wait_for_timeout(400);assert 'left' in pg.get_attribute('#tlab','class');pg.evaluate("render(true)");pg.wait_for_timeout(400)
+    if name=='mobile':pg.screenshot(path='/workspace/ped_target_390_v2.png')
     oid=pg.evaluate("(()=>{const P=primary();const o=nearestN(shown(),4).find(t=>t.f.id!==P.f.id);return o.f.id})()");pg.evaluate(f"focusBin(shown().find(b=>b.id==='{oid}'))");pg.wait_for_timeout(400)
     tl2=pg.inner_text('#tlab');print(name,'點其他桶',tl2);assert tl2.startswith('目標・') and pg.evaluate("routeInfo.bin")==oid and pg.get_attribute('#list .card','data-id')==oid and ('%d'%pg.evaluate("Math.round(primary().d)")) in tl2
     pg.evaluate("map.setZoom(16,{animate:false})");pg.wait_for_timeout(500)
     pt=pg.evaluate("(()=>{const t=list.getBoundingClientRect().top;for(const e of document.querySelectorAll('.binmk.oth')){const r=e.getBoundingClientRect();if(r.top>140&&r.bottom<t&&r.left>0&&r.right<innerWidth)return [r.left+r.width/2,r.top+r.height/2]}return null})()");assert pt,'no visible bin'
     (pg.touchscreen.tap if name=='mobile' else pg.mouse.click)(pt[0],pt[1]);pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin===sel&&primary().f.id===sel") and pg.get_attribute('#list .card','data-id')==pg.evaluate("sel")
+    if name=='mobile':pg.evaluate("render(true)");pg.wait_for_timeout(400);pg.screenshot(path='/workspace/ped_target_390_v2_other.png')
     nx=pg.get_attribute('[data-next]','data-next');pg.click('[data-next]');pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin")==nx and pg.get_attribute('#list .card','data-id')==nx;print(name,'下一個 → 目標',pg.inner_text('#tlab'))
     pg.evaluate("drawRoute({...primary(),w:0})");assert pg.evaluate("routeInfo.snapped")==False and pg.evaluate("routeL.getLayers().length")==1  # 無法對應路網 → 虛線直線
     pg.evaluate("sel=null;render(true)");pg.wait_for_timeout(300);assert pg.inner_text('#tlab').startswith('最近・')
@@ -50,7 +54,8 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
     assert pg.locator('#doneBtn').count()==0 and '這桶滿了嗎？' in pg.inner_text('#list')
     h0=pg.locator('.q').bounding_box()['height'];pg.click('[data-full]');pg.wait_for_timeout(300);h1=pg.locator('.q').bounding_box()['height']
-    assert '謝謝，已通知清潔隊' in pg.inner_text('#list') and pg.locator('[data-full]').count()==0 and abs(h1-h0)<1,(h0,h1)
+    assert pg.evaluate("(()=>{const c=getComputedStyle(document.querySelector('.q .qd'));return [c.color,c.fontWeight]})()")==['rgb(28, 31, 33)','600']
+    assert '✓ 謝謝，已通知清潔隊' in pg.inner_text('#list') and pg.locator('[data-full]').count()==0 and abs(h1-h0)<1,(h0,h1)
     assert pg.locator('.binmk.tgt.rep').count()==1 and pg.locator('.binmk.tgt .ring').count()==1 and pg.locator('#tlab').count()==1  # 回報滿：目標圖示仍是紅色（狀態色優先），光圈與標籤保留
     assert '有人回報滿了' in pg.inner_text('#list') and pg.locator('.binmk path[fill="var(--reported)"], .binmk path[fill="#e2574c"]').count()>=1
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
@@ -75,8 +80,8 @@ with sync_playwright() as p:
     assert pg.evaluate("getComputedStyle(document.querySelector('#thrSeg button.on')).backgroundColor")=='rgb(43, 51, 51)' and min(pg.evaluate("[...document.querySelectorAll('#thrSeg button')].map(b=>b.getBoundingClientRect().height)"))>=44
     pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆'
     if name=='mobile':pg.screenshot(path='shot_planner_need_mobile.png')
-    pg.evaluate("(()=>{const n=getNeeds()[0];addNeed(n.la+0.0006,n.lo);addNeed(n.la,n.lo+0.0007)})()");pg.click('#bk');pg.evaluate("map.setView([getNeeds()[0].la,getNeeds()[0].lo],14)");pg.wait_for_timeout(600)
-    cl=pg.evaluate("[...document.querySelectorAll('.needmk')].map(e=>e.innerText)");print(name,'合併',pg.evaluate("getNeeds().length"),'筆 →',cl);assert cl==['3']
+    pg.evaluate("(()=>{const n=getNeeds()[0];addNeed(n.la+0.0006,n.lo);addNeed(n.la,n.lo+0.0007)})()");pg.click('#bk');pg.wait_for_timeout(1200);pg.evaluate("map.stop();map.setView([getNeeds()[0].la,getNeeds()[0].lo],14,{animate:false})");pg.wait_for_timeout(900)
+    cl=pg.evaluate("[...document.querySelectorAll('.needmk')].map(e=>e.innerText)");print(name,'合併',pg.evaluate("[getNeeds().length,map.getZoom(),getNeeds().map(n=>[n.la,n.lo])]"),'筆 →',cl);assert cl==['3']
     pg.evaluate("localStorage.setItem('有桶_needs_v1',JSON.stringify(getNeeds().slice(0,1)))")
     for u in ('pedestrian.html','crew.html','index.html'):
       pg.goto(B+u);pg.wait_for_selector('.roles a');hs=pg.evaluate("[...document.querySelectorAll('.roles a')].map(a=>a.getBoundingClientRect().height)");assert min(hs)>=44,(u,hs)
