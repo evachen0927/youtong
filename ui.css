@@ -56,3 +56,7 @@ button,input,select,textarea,optgroup{font-family:inherit}
 /* 資料說明 i：所有頁面固定在最右上角 */
 #infoBtn.ibtn,#menu.ibtn{position:fixed!important;top:calc(10px + env(safe-area-inset-top))!important;right:12px!important;left:auto!important;margin:0!important;z-index:1200}
 .stico{background:none;border:0;opacity:.92}.stico svg{display:block}
+/* logo 層級：不是按鈕 → 無底無陰影，直接放在地圖上，白色柔光保可讀 */
+.roles .wm{background:none!important;box-shadow:none!important;border:0;padding:0 2px!important;min-width:0;filter:drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 0 2px rgba(255,255,255,.9))}
+.roles .wm img{width:28px;height:28px}
+@media (max-width:760px){.roles{gap:8px}.roles a{min-width:50px;padding:0 10px}}
