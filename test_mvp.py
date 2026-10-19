@@ -55,6 +55,14 @@ with sync_playwright() as p:
     pg.click('#menu');assert pg.locator('#th').count()==0 and pg.locator('#thSeg input').count()==2
     pg.click('#thSeg label:has([value="100"])');pg.wait_for_timeout(400);c100=pg.inner_text('#cnt');t100=pg.inner_text('#cardTitle') if pg.locator('#cardTitle').count() else pg.inner_text('#card')[:40]
     pg.click('#thSeg label:has([value="70"])');pg.wait_for_timeout(400);c70=pg.inner_text('#cnt');pg.click('#setSheet [data-close]');print(name,'清運範圍',c100,'|',t100,'||',c70);assert '%' not in c70 and pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')).th")==70
+    # 空狀態：平日 08:30「只清滿溢」→ 不顯示「必清 0 站」，顯示連結；點連結切回「快滿了以上」
+    pg.click('#tChip');pg.wait_for_timeout(300);pg.click('label:has([name=fcd][value=wk])');pg.eval_on_selector('#fcT',"e=>{e.value=510;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}");pg.wait_for_timeout(400);pg.keyboard.press('Escape')
+    pg.evaluate("th.value=100;replan()");pg.wait_for_timeout(400)
+    cb=pg.inner_text('#card');assert '目前沒有滿溢的桶' in cb and pg.locator('#cardTitle').count()==0 and '43 桶中列入 0 桶' in cb,cb
+    assert pg.locator('#toNear').bounding_box()['height']>=44;pg.click('#toNear');pg.wait_for_timeout(500)
+    assert pg.locator('#cardTitle').count()==1 and pg.evaluate("th.value")==70 and pg.evaluate("document.querySelector('[name=thr][value=\"70\"]').checked") and pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')).th")==70
+    print(name,'空狀態連結 OK',pg.inner_text('#cardTitle'))
+    pg.click('#tChip');pg.wait_for_timeout(300);pg.click('label:has([name=fcd][value=we])');pg.eval_on_selector('#fcT',"e=>{e.value=930;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}");pg.wait_for_timeout(400);pg.keyboard.press('Escape')
     first=pg.evaluate("route[0].b.id");pg.click('#startBtn');pg.wait_for_selector('#card[data-state=B] [data-amt]');print(name,'B 執行',pg.inner_text('#orderNote'))
     if name=='mobile':pg.wait_for_timeout(500);pg.screenshot(path='shot_crew_stateB_mobile.png')
     a0=pg.inner_text('#prog');pg.click('#card [data-amt=half]');pg.wait_for_timeout(300);a1=pg.inner_text('#prog')
@@ -75,6 +83,11 @@ with sync_playwright() as p:
     pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_timeout(800)
     left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");print(name,'?reset=1 殘留鍵',left);assert left==[]
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.click('#menu');assert pg.locator('#menuSheet #resetAll').count()==1;pg.click('#menuSheet [data-close]')
+    # 空狀態重現（?reset=1 之後）：平日 08:30 + 只清滿溢
+    pg.goto(B+'crew.html?reset=1');pg.wait_for_url('**/crew.html');pg.goto(B+'crew.html?fc=1&day=wk&t=08:30');pg.wait_for_selector('#card[data-state=A]',timeout=20000);pg.wait_for_timeout(600)
+    pg.click('#menu');pg.click('#thSeg label:has([value="100"])');pg.wait_for_timeout(400);pg.click('#setSheet [data-close]')
+    cb=pg.inner_text('#card');print(name,'空狀態 reset 後 平日08:30',cb.replace('\n',' ')[:60]);assert '目前沒有滿溢的桶' in cb and '43 桶中列入 0 桶' in cb and pg.locator('#cardTitle').count()==0 and '必清 0 站' not in cb
+    pg.click('#toNear');pg.wait_for_timeout(500);assert pg.locator('#cardTitle').count()==1 and pg.evaluate("document.querySelector('[name=thr][value=\"70\"]').checked") and pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')).th")==70
     pg.goto(B+'crew-route.html');pg.wait_for_selector('#card',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
     print(name,'ERRORS',errs);ok&=not errs;c.close()
   br.close()
