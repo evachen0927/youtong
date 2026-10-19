@@ -18,5 +18,6 @@ with sync_playwright() as p:
   pg.click('[data-full]');W(pg,5000)
   pg.click('.roles a[href="crew.html"]');pg.wait_for_selector('#next [data-amt]');W(pg,8000)
   pg.click('#next [data-amt=full]');W(pg,4000);pg.click('#next [data-amt=half]');W(pg,4000);pg.click('#menu');W(pg,5000)
+  pg.click('#thSeg label:has([value="100"])');W(pg,3000);pg.click('#thSeg label:has([value="70"])');W(pg,3000)  # 清運範圍：只清滿溢 ↔ 快滿了以上
   v=pg.video.path();c.close();br.close()
 shutil.copy(v,'/workspace/demo-backup.webm');print('saved',os.path.getsize('/workspace/demo-backup.webm'))

@@ -42,7 +42,7 @@ with sync_playwright() as p:
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
     # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回
     pg.goto(B+'crew.html?fc=1&day=we&t=15:30');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)
-    assert pg.inner_text('#thV')=='快滿了以上' and '溢出' not in pg.content();sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3>=1 and '必清' in sA and '週六 15:30' in pg.inner_text('#tChip')
+    assert '溢出' not in pg.content();sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3>=1 and '必清' in sA and '週六 15:30' in pg.inner_text('#tChip')
     vis=pg.evaluate("(()=>{const r=card.getBoundingClientRect();return route.slice(0,3).every(e=>{const p=map.latLngToContainerPoint([e.b.la,e.b.lo]);return (p.y<r.top||p.x<r.left)&&p.y>0&&p.x>0&&p.x<innerWidth})})()");print(name,'前 3 站在卡片上方',vis);assert vis
     if name=='mobile':
         h=pg.evaluate("card.getBoundingClientRect().height/innerHeight");print(name,'卡片高度比例',round(h,2));assert h<=0.401
@@ -52,7 +52,9 @@ with sync_playwright() as p:
     s1=pg.inner_text('#cardTitle');assert pg.locator('#timeSheet').is_hidden() and '平日 10:00' in pg.inner_text('#tChip');print(name,'平日10:00',s1)
     pg.click('#tChip');pg.click('#dlinks [data-pt="15:30"]');pg.wait_for_timeout(700);print(name,'週六15:30',pg.inner_text('#cardTitle'));pg.click('#tChip');pg.click('#dlinks [data-pt="10:00"]');pg.wait_for_timeout(700);n1=pg.evaluate("E.filter(e=>e.fill>=100).length");print(name,'平日10:00',pg.inner_text('#tChip'),'>=100',n1);pg.click('#tChip');pg.click('#dlinks [data-pt="15:30"]');pg.wait_for_timeout(700);n2=pg.evaluate("E.filter(e=>e.fill>=100).length");print(name,'週六15:30 >=100',n2);assert n1==2 and n2==6
     pg.screenshot(path=f'shot_crew_forecast_sat_{name}.png')
-    pg.click('#menu');pg.eval_on_selector('#th',"e=>{e.value=90;e.dispatchEvent(new Event('input'))}");c90=pg.inner_text('#cnt');pg.eval_on_selector('#th',"e=>{e.value=70;e.dispatchEvent(new Event('input'))}");c70=pg.inner_text('#cnt');pg.click('#setSheet [data-close]');print(name,'門檻',c90,c70)
+    pg.click('#menu');assert pg.locator('#th').count()==0 and pg.locator('#thSeg input').count()==2
+    pg.click('#thSeg label:has([value="100"])');pg.wait_for_timeout(400);c100=pg.inner_text('#cnt');t100=pg.inner_text('#cardTitle') if pg.locator('#cardTitle').count() else pg.inner_text('#card')[:40]
+    pg.click('#thSeg label:has([value="70"])');pg.wait_for_timeout(400);c70=pg.inner_text('#cnt');pg.click('#setSheet [data-close]');print(name,'清運範圍',c100,'|',t100,'||',c70);assert '%' not in c70 and pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')).th")==70
     first=pg.evaluate("route[0].b.id");pg.click('#startBtn');pg.wait_for_selector('#card[data-state=B] [data-amt]');print(name,'B 執行',pg.inner_text('#orderNote'))
     if name=='mobile':pg.wait_for_timeout(500);pg.screenshot(path='shot_crew_stateB_mobile.png')
     a0=pg.inner_text('#prog');pg.click('#card [data-amt=half]');pg.wait_for_timeout(300);a1=pg.inner_text('#prog')
