@@ -1,6 +1,6 @@
 // ===== 有桶・設計共用（design-owned；common.js 由工程維護，這裡只做視覺層）=====
 // 滿度色階：一條固定冷→暖色階，三個角色頁面共用（值見 tokens.css）
-const RAMP={low:'#8aa3a3',mid:'#e2a33b',high:'#d9731f',over:'#a8501a'};
+const RAMP={low:'#8cc9a8',mid:'#e8b931',high:'#d9731f',over:'#a8501a'};
 const REPORTED='#e2574c'; // 只用於「被回報滿了」
 // 地圖不再有「溢出」狀態：<70% low、70–99% mid、≥100% high；over 參數保留相容但忽略。RAMP.over 只給收運量按鈕等非地圖用途。
 const rampColor=(f,over)=>f>=100?RAMP.high:f>=70?RAMP.mid:RAMP.low;
@@ -18,7 +18,7 @@ function legend(map,items,pos='bottomleft'){
     L.DomEvent.disableClickPropagation(d);return d};C.addTo(map);return C}
 // 底部抽屜（sheet）：開/關；點背景關閉
 function sheetOpen(id){const s=document.getElementById(id);s.hidden=false;s.onclick=e=>{if(e.target===s)s.hidden=true};s.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>s.hidden=true)}
-const RAMP_LEGEND=[{c:RAMP.low,t:'<70%'},{c:RAMP.mid,t:'70–99%'},{c:RAMP.high,t:'≥100%'}];
+const RAMP_LEGEND=[{c:RAMP.low,t:'綠 <70%'},{c:RAMP.mid,t:'黃 70–99%'},{c:RAMP.high,t:'深橘 ≥100%'}];
 const REPORTED_LEGEND={c:REPORTED,t:'紅色＝已被回報滿了'};
 // 角色切換（示範導覽）：常駐分段控制「行人｜清潔隊｜規劃」；host 給定時放進該容器，否則固定在左上
 const ROLES=[['pedestrian.html','行人'],['crew.html','清潔隊'],['index.html','規劃']];
