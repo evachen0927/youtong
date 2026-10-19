@@ -1,6 +1,7 @@
 // ===== 有桶・設計共用（design-owned；common.js 由工程維護，這裡只做視覺層）=====
 // 滿度色階：一條固定冷→暖色階，三個角色頁面共用（值見 tokens.css）
-const RAMP={low:'#8aa3a3',mid:'#e2a33b',high:'#e2574c',over:'#a8231c'};
+const RAMP={low:'#8aa3a3',mid:'#e2a33b',high:'#d9731f',over:'#a8501a'};
+const REPORTED='#e2574c'; // 只用於「被回報滿了」
 const rampColor=(f,over)=>over||f>100?RAMP.over:f>=80?RAMP.high:f>=50?RAMP.mid:RAMP.low;
 const rampLabel=(f,over)=>over||f>100?'溢出':f>=80?'將滿':f>=50?'半滿':'尚有空間';
 // 安靜底圖：OSM 圖磚＋CSS 去飽和（CARTO 需 API key）
@@ -17,3 +18,4 @@ function legend(map,items,pos='bottomleft'){
 // 底部抽屜（sheet）：開/關；點背景關閉
 function sheetOpen(id){const s=document.getElementById(id);s.hidden=false;s.onclick=e=>{if(e.target===s)s.hidden=true};s.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>s.hidden=true)}
 const RAMP_LEGEND=[{c:RAMP.low,t:'<50%'},{c:RAMP.mid,t:'50–79%'},{c:RAMP.high,t:'≥80%'},{c:RAMP.over,t:'溢出'}];
+const REPORTED_LEGEND={c:REPORTED,t:'紅色＝已被回報滿了'};

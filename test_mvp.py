@@ -29,25 +29,30 @@ with sync_playwright() as p:
     pg.click('#advClose');pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
     pg.click('#doneBtn');pg.wait_for_timeout(300);pg.click('[data-full]');pg.wait_for_timeout(300)
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
-    pg.goto(B+'crew.html');pg.wait_for_selector('#next [data-amt]',timeout=20000)
-    a0=pg.inner_text('#prog');pg.click('#next [data-amt=half]');pg.wait_for_timeout(300);a1=pg.inner_text('#prog')
-    amt=pg.evaluate("getEvents().filter(e=>e.kind==='clear'&&e.amount).length")
-    pg.click('#undoBtn');pg.wait_for_timeout(300);a2=pg.inner_text('#prog')
+    # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回
+    pg.goto(B+'crew.html?fc=1&day=we&t=19:00');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)
+    sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3==3 and '週六 19:00' in sA
+    vis=pg.evaluate("(()=>{const r=card.getBoundingClientRect();return route.slice(0,3).every(e=>{const p=map.latLngToContainerPoint([e.b.la,e.b.lo]);return p.y<r.top&&p.y>0&&p.x>0&&p.x<innerWidth})})()");print(name,'前 3 站在卡片上方',vis);assert vis
+    if name=='mobile':
+        h=pg.evaluate("card.getBoundingClientRect().height/innerHeight");print(name,'卡片高度比例',round(h,2));assert h<=0.401
+        pg.screenshot(path='shot_crew_stateA_mobile.png')
+    pg.click('#tChip');pg.click('label:has([name=fcd][value=wk])');assert pg.locator('#timeSheet').is_hidden()
+    pg.click('#tChip');pg.eval_on_selector('#fcT',"e=>{e.value=600;e.dispatchEvent(new Event('input'));e.dispatchEvent(new Event('change'))}");pg.wait_for_timeout(300)
+    s1=pg.inner_text('#cardTitle');assert pg.locator('#timeSheet').is_hidden() and s1!=sA;print(name,'平日10:00',s1)
+    pg.click('#tChip');pg.click('label:has([name=fcd][value=we])');pg.click('#tChip');pg.eval_on_selector('#fcT',"e=>{e.value=1140;e.dispatchEvent(new Event('change'))}");pg.wait_for_timeout(300)
+    pg.screenshot(path=f'shot_crew_forecast_sat_{name}.png')
+    pg.click('#menu');pg.eval_on_selector('#th',"e=>{e.value=90;e.dispatchEvent(new Event('input'))}");c90=pg.inner_text('#cnt');pg.eval_on_selector('#th',"e=>{e.value=70;e.dispatchEvent(new Event('input'))}");c70=pg.inner_text('#cnt');pg.click('#setSheet [data-close]');print(name,'門檻',c90,c70)
+    first=pg.evaluate("route[0].b.id");pg.click('#startBtn');pg.wait_for_selector('#card[data-state=B] [data-amt]');print(name,'B 執行',pg.inner_text('#orderNote'))
+    if name=='mobile':pg.wait_for_timeout(500);pg.screenshot(path='shot_crew_stateB_mobile.png')
+    a0=pg.inner_text('#prog');pg.click('#card [data-amt=half]');pg.wait_for_timeout(300);a1=pg.inner_text('#prog')
+    cal=pg.evaluate(f"FC.state().cal['{first}']");ev=pg.evaluate("getEvents().slice(-1)[0]");flag=pg.locator(f'[data-calid="{first}"]').count()
+    print(name,'校正',first,cal,'event',{k:ev.get(k) for k in ('kind','amount','amountPct','predPct','calib')},'已校正標記',flag);assert cal and cal['n']==1 and ev['predPct'] is not None and flag==1
+    pg.click('.undo button');pg.wait_for_timeout(300);a2=pg.inner_text('#prog');assert not pg.evaluate(f"FC.state().cal['{first}']")
     pg.screenshot(path=f'shot_crew_{name}.png')
     pg.click('#menu');pg.once('dialog',lambda d:d.accept());pg.click('#allClear');pg.wait_for_timeout(300)
-    print(name,'清潔隊',a0.replace('\n',' '),'→',a1.replace('\n',' '),'→ 復原',a2.replace('\n',' '),'| 收運量事件',amt,'| 全部清運後完成卡',pg.locator('#next .done').count()>0)
-    # 預測調度：開啟、平日/週末切換、時間滑桿、已清運＋回報校正
-    pg.goto(B+'crew.html');pg.wait_for_selector('#fcBtn');pg.click('#fcBtn');pg.wait_for_selector('#fcList .fci',timeout=20000)
-    pg.click('label:has([name=fcd][value=wk])');pg.eval_on_selector('#fcT',"e=>{e.value=600;e.dispatchEvent(new Event('input'))}");s1=pg.inner_text('#fcSum').replace('\n',' ')
-    pg.click('label:has([name=fcd][value=we])');pg.eval_on_selector('#fcT',"e=>{e.value=1140;e.dispatchEvent(new Event('input'))}");pg.wait_for_timeout(300);s2=pg.inner_text('#fcSum').replace('\n',' ')
-    print(name,'預測 平日10:00',s1,'| 週末19:00',s2,'| 時間',pg.inner_text('#fcTV'));assert s1!=s2
-    pg.screenshot(path=f'shot_crew_forecast_sat_{name}.png')
-    first=pg.locator('.fci').first;bid=first.get_attribute('data-id');first.locator('[data-fco]').click();pg.locator(f'.fci[data-id="{bid}"] [data-fca="50"]').click();pg.wait_for_timeout(300)
-    cal=pg.evaluate(f"FC.state().cal['{bid}']");ev=pg.evaluate("getEvents().slice(-1)[0]")
-    flag=pg.locator(f'[data-calid="{bid}"]').count()
-    print(name,'校正',bid,cal,'event',{k:ev.get(k) for k in ('kind','amount','amountPct','predPct','calib')},'已校正標記',flag);assert cal and cal['n']==1 and ev['predPct'] is not None and flag==1
-    pg.click('#fcBtn')
-    pg.goto(B+'crew-route.html');pg.wait_for_selector('#next',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
+    print(name,'清潔隊',a0.replace('\n',' '),'→',a1.replace('\n',' '),'→ 復原',a2.replace('\n',' '),'| 完成卡',pg.locator('#card .done').count()>0)
+    pg.click('#backBtn');pg.wait_for_selector('#card[data-state=A]');print(name,'返回 A',pg.inner_text('#cardTitle'))
+    pg.goto(B+'crew-route.html');pg.wait_for_selector('#card',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
     print(name,'ERRORS',errs);ok&=not errs;c.close()
   br.close()
 print('PASS' if ok else 'FAIL')

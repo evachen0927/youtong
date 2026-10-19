@@ -2,87 +2,77 @@
 <meta name="theme-color" content="#ffffff">
 <title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css"><link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="ui.css">
 <style>
-/* ===== 有桶・清潔隊（mobile-first 390x844；戴手套單手操作）===== */
+/* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 #map{position:fixed;inset:0;z-index:0}
 .top{position:fixed;top:0;left:0;right:0;z-index:1000;padding:calc(10px + env(safe-area-inset-top)) 12px 0;display:flex;gap:8px;align-items:center;pointer-events:none}
-.prog{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:var(--touch);padding:0 16px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);pointer-events:auto;font:600 14px/1 var(--font);color:var(--ink)}
-.prog .tr{flex:1;height:6px;border-radius:3px;background:var(--gray-2);overflow:hidden}.prog .tr i{display:block;height:100%;background:var(--ink-2);border-radius:3px;transition:width .3s}
-.prog small{font-weight:500;color:var(--mute);font-size:13px}
+.prog{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:var(--touch);padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);pointer-events:auto;font:600 14px/1 var(--font);color:var(--ink)}
+.prog .tr{flex:1;min-width:30px;height:6px;border-radius:3px;background:var(--gray-2);overflow:hidden}.prog .tr i{display:block;height:100%;background:var(--ink-2);border-radius:3px;transition:width .3s}
+.prog small{font-weight:500;color:var(--mute);font-size:13px;white-space:nowrap}
+.tchip{pointer-events:auto;height:var(--touch);padding:0 12px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);font:700 14px/1 var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .info{position:fixed;top:calc(62px + env(safe-area-inset-top));left:12px;z-index:1000}
-/* 下一站卡片 */
-#next{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow-2);padding:16px;max-width:520px;margin:0 auto}
-.k{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);min-height:24px}
-.k .lbl{font-weight:700;color:var(--ink);font-size:14px}.k .no{font-variant-numeric:tabular-nums}
+/* 卡片：A 規劃／B 執行 */
+#card{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow-2);padding:6px 16px 16px;max-width:520px;margin:0 auto;max-height:40vh;overflow-y:auto;transition:max-height .25s}
+#card.collapsed{max-height:64px;overflow:hidden}
+.grab{display:block;width:100%;height:18px;border:0;background:none;cursor:pointer;padding:0}.grab::before{content:"";display:block;margin:6px auto 0;width:36px;height:4px;border-radius:2px;background:var(--gray-2)}
+.k{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);min-height:28px}
+.k .lbl{font-weight:700;color:var(--ink);font-size:16px}.k .no{font-variant-numeric:tabular-nums}
+.k .back{margin-left:-8px;width:36px;height:36px;border:0;border-radius:50%;background:var(--gray-1);font:700 16px var(--font);color:var(--ink);cursor:pointer}
 .k .nav{margin:-10px -8px -10px auto;width:var(--touch);height:var(--touch);display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--ink-2);text-decoration:none}
 .addr{font-size:19px;font-weight:700;line-height:1.35;margin:4px 0 6px;color:var(--ink)}
-.meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:14px;color:var(--mute)}
-.meta b{color:var(--ink);font-weight:600}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:14px;color:var(--mute)}.meta b{color:var(--ink);font-weight:600}
 .fb{display:inline-block;width:40px;height:7px;border-radius:4px;background:var(--gray-2);overflow:hidden;vertical-align:middle;margin-right:6px}.fb i{display:block;height:100%}
-.q{font-size:13px;color:var(--mute);margin:14px 0 8px}
+.q{font-size:13px;color:var(--mute);margin:12px 0 8px}
 .amts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.amt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:84px;border:0;border-radius:14px;background:var(--surface-2);font:700 18px/1 var(--font);color:var(--ink);cursor:pointer;touch-action:manipulation}
+.amt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:76px;border:0;border-radius:14px;background:var(--surface-2);font:700 17px/1 var(--font);color:var(--ink);cursor:pointer;touch-action:manipulation}
 .amt:active{transform:scale(.97);background:var(--gray-2)}
-.amt svg{display:block}
+.top3{list-style:none;margin:6px 0 12px;padding:0}.top3 li{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.top3 .n{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--surface);font:700 13px var(--font)}
+.top3 .t{flex:1;min-width:0}.top3 .t b{display:block;font-size:15px;line-height:1.3;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.top3 .t span{font-size:13px;color:var(--mute)}
+.top3 .p{font:700 15px var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:12px;color:var(--mute);line-height:1.5}
+.flag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;background:var(--fill-high-soft);color:var(--fill-over)}.flag.cal{background:var(--gray-1);color:var(--ink-2)}
 .done{text-align:center;padding:8px 0 4px}.done b{display:block;font-size:20px;margin:6px 0 4px}.done p{color:var(--mute);font-size:14px;margin:0 0 14px}
 .b{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;border:0;border-radius:14px;background:var(--gray-1);color:var(--ink);font:600 16px/1.2 var(--font);cursor:pointer;text-decoration:none}
-.b.pri{background:var(--brand);color:#fff}.b.danger{background:var(--fill-high-soft);color:var(--fill-over)}
+.b.pri{background:var(--brand);color:var(--surface)}.b.danger{background:var(--fill-high-soft);color:var(--fill-over)}
 /* 地圖標記 */
-.stopw{background:none;border:0}.stop{display:flex;align-items:center;justify-content:center;border-radius:50%;color:#fff;font:700 12px/1 var(--font);box-shadow:0 0 0 2px #fff}
-.stop.cur{font-size:15px;box-shadow:0 0 0 3px #fff,0 0 0 9px #1c1f2122}
+.stopw{background:none;border:0}.stop{display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--surface);font:700 12px/1 var(--font);box-shadow:0 0 0 2px var(--surface)}
+.stop.cur{font-size:15px;box-shadow:0 0 0 3px var(--surface),0 0 0 9px var(--scrim)}
 .stop.ok{background:var(--gray-2)!important;color:var(--mute)}
-.start{width:14px!important;height:14px!important;border-radius:4px;background:var(--ink-2);box-shadow:0 0 0 3px #fff}
-.me{width:18px!important;height:18px!important;border-radius:50%;background:var(--brand);border:3px solid #fff;box-shadow:0 0 0 8px #0f9d7629}
+.start{width:14px!important;height:14px!important;border-radius:4px;background:var(--ink-2);box-shadow:0 0 0 3px var(--surface)}
 /* 復原 toast */
-.undo{position:fixed;left:50%;transform:translateX(-50%);z-index:3000;display:flex;align-items:center;gap:6px;padding:4px 4px 4px 16px;border-radius:999px;background:var(--ink);color:#fff;font:14px var(--font);box-shadow:var(--shadow-2);white-space:nowrap}
-.undo button{min-height:var(--touch);padding:0 16px;border:0;border-radius:999px;background:#ffffff26;color:#fff;font:700 15px var(--font);cursor:pointer}
-/* 調度設定 */
+.undo{position:fixed;left:50%;transform:translateX(-50%);z-index:3000;display:flex;align-items:center;gap:6px;padding:4px 4px 4px 16px;border-radius:999px;background:var(--ink);color:var(--surface);font:14px var(--font);box-shadow:var(--shadow-2);white-space:nowrap}
+.undo button{min-height:var(--touch);padding:0 16px;border:0;border-radius:999px;background:var(--scrim);color:var(--surface);font:700 15px var(--font);cursor:pointer}
+/* 抽屜 */
 .fld{margin:0 0 14px}.fld label{display:block;font-size:13px;color:var(--mute);margin-bottom:6px}
-.sheet select{width:100%;min-height:var(--touch);padding:0 12px;border:0;border-radius:var(--r-sm);background:var(--gray-1);font:15px var(--font)}
 .sheet input[type=range]{width:100%;accent-color:var(--ink-2);height:var(--touch)}
-.seg{display:flex;background:var(--gray-1);border-radius:var(--r-sm);padding:3px}.seg label{flex:1;display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:10px;font-size:14px;cursor:pointer}.seg input{display:none}.seg label:has(input:checked){background:#fff;box-shadow:var(--shadow-1);font-weight:700}
+.seg{display:flex;background:var(--gray-1);border-radius:var(--r-sm);padding:3px}.seg label{flex:1;display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:10px;font-size:14px;cursor:pointer;margin:0;color:var(--ink)}.seg input{display:none}.seg label:has(input:checked){background:var(--surface);box-shadow:var(--shadow-1);font-weight:700}
+.tv{font:700 26px/1 var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}
 .sumr{display:flex;gap:18px;font-size:14px;color:var(--mute);margin:10px 0}.sumr b{display:block;font-size:22px;color:var(--ink)}
 .hist div{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2);line-height:1.5}
 .stack{display:grid;gap:8px}
-.leaflet-top.leaflet-left{top:calc(102px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:240px}
-@media (min-width:761px){#next{left:auto;right:16px;bottom:16px;width:400px}.top{right:auto;width:460px}}
-/* 預測調度（新增控制項）*/
-.fcbtn{pointer-events:auto;height:var(--touch);padding:0 14px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);font:700 14px/1 var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}.fcbtn[aria-pressed=true]{background:var(--ink);color:#fff}
-#fc{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow-2);padding:14px 16px;max-width:520px;margin:0 auto;max-height:58vh;overflow-y:auto}
-#fc .fld{margin:0 0 10px}#fc input[type=range]{width:100%;accent-color:var(--ink-2);height:36px}
-#fc .tv{font:700 22px/1 var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}
-#fc .note{font-size:12px;color:var(--mute);line-height:1.5;margin:6px 0 10px}
-.fci{padding:10px 0;border-top:1px solid var(--line)}.fci .a{font-weight:700;font-size:15px;line-height:1.35}.fci .m{font-size:13px;color:var(--mute);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
-.flag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}.flag.last{background:var(--fill-high-soft);color:var(--fill-over)}.flag.cal{background:var(--gray-1);color:var(--ink-2)}
-.fca{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.fca button{min-height:44px;border:0;border-radius:10px;background:var(--surface-2);font:700 14px var(--font);cursor:pointer}
-.fcsum{display:flex;gap:16px;font-size:13px;color:var(--mute);margin:4px 0 6px}.fcsum b{display:block;font-size:20px;color:var(--ink)}
-@media (min-width:761px){#fc{left:auto;right:16px;bottom:16px;width:420px;max-height:calc(100vh - 110px)}}
+.leaflet-top.leaflet-left{top:calc(102px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:none;flex-wrap:nowrap}
+@media (min-width:761px){#card{left:auto;right:16px;bottom:16px;width:400px;max-height:calc(100vh - 100px)}#card.collapsed{max-height:64px}.top{right:auto;width:520px}}
 </style></head>
 <body>
 <div id="map"></div>
-<div class="top"><div class="prog" id="prog" aria-live="polite">載入中…</div><button class="fcbtn" id="fcBtn" aria-pressed="false">🕒 預測</button><button class="fab" id="menu" aria-label="調度設定">⋯</button></div>
+<div class="top"><div class="prog" id="prog" aria-live="polite">載入中…</div><button class="tchip" id="tChip" aria-label="選擇預測時間">🕒 —</button><button class="fab" id="menu" aria-label="調度設定">⋯</button></div>
 <button class="infochip info" id="infoBtn">資料說明</button>
-<section id="next" aria-live="polite"><div class="addr" style="color:var(--mute);font-weight:500">正在產生今日清運路線…</div></section>
-<section id="fc" hidden aria-label="預測調度">
-  <div class="k"><span class="lbl">預測調度・示範區</span><span id="fcArea"></span></div>
-  <div class="fld" style="margin-top:8px"><div class="seg"><label><input type="radio" name="fcd" value="wk" checked>平日</label><label><input type="radio" name="fcd" value="we">週末</label></div></div>
-  <div class="fld"><label for="fcT" style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mute)">時間 <span class="tv" id="fcTV">08:00</span></label><input type="range" id="fcT" min="0" max="1425" step="15" value="480"></div>
-  <div class="fld"><label for="fcTh" style="font-size:13px;color:var(--mute)">清運門檻：填充度 ≥ <b id="fcThV">70</b>%</label><input type="range" id="fcTh" min="10" max="100" step="5" value="70"></div>
-  <div class="fcsum" id="fcSum"></div>
-  <div class="note">人流由交通活動推估（200m 內 YouBike 2026-07 每小時借＋還）・產生量每次借還 <b id="fcLpr"></b> 公升：<a id="fcSrc" target="_blank" rel="noopener">用官方公開的每日清運頻率校準，仍是假設</a>・填充度為模擬<span class="sim" title="模擬值"></span></div>
-  <div id="fcCal" class="note" hidden></div>
-  <div id="fcList"></div>
-</section>
+<section id="card" aria-live="polite" data-state="A"><button class="grab" id="grab" aria-label="收合／展開卡片"></button><div id="cardBody"><div class="addr" style="color:var(--mute);font-weight:500">正在載入預測…</div></div></section>
 
+<div class="sheet" id="timeSheet" hidden><div class="sh" role="dialog" aria-label="預測時間">
+  <div class="hd"><b>預測時間</b><button class="x" data-close aria-label="關閉">✕</button></div>
+  <div class="fld"><div class="seg"><label><input type="radio" name="fcd" value="wk">平日</label><label><input type="radio" name="fcd" value="we" checked>週六（週末）</label></div></div>
+  <div class="fld"><label for="fcT" style="display:flex;justify-content:space-between;align-items:baseline">時間 <span class="tv" id="fcTV">19:00</span></label><input type="range" id="fcT" min="0" max="1425" step="15" value="1140"></div>
+  <p class="small">放開滑桿即套用並關閉。地圖與站序會依這個時間的預測滿度更新。</p>
+</div></div>
 
 <div class="sheet" id="setSheet" hidden><div class="sh" role="dialog" aria-label="調度設定">
   <div class="hd"><b>調度設定</b><button class="x" data-close aria-label="關閉">✕</button></div>
-  <div class="fld"><label for="dist">清運行政區</label><select id="dist"></select></div>
-  <div class="fld"><label for="th">清運門檻：填充度 ≥ <b id="thV">80</b>%<span class="sim" title="模擬值"></span>　<span id="cnt"></span></label><input type="range" id="th" min="10" max="100" step="5" value="80"></div>
-  <div class="fld"><label>出發點</label><div class="seg"><label><input type="radio" name="st" value="center" checked>行政區中心</label><label><input type="radio" name="st" value="gps">我的位置</label></div></div>
-  <button class="b pri" id="gen">重新產生路線</button>
+  <div class="fld"><label for="th">清運門檻：預測填充度 ≥ <b id="thV">70</b>%　<span id="cnt"></span></label><input type="range" id="th" min="10" max="100" step="5" value="70"></div>
   <div class="sumr" id="sum"></div>
   <a class="b" id="gmap" target="_blank" rel="noopener">在 Google Maps 開啟</a>
+  <h3>已校正的桶</h3><div class="hist" id="calList">尚無</div>
   <h3>回報紀錄</h3><div class="hist" id="hist">尚無紀錄</div>
   <h3>示範工具</h3>
   <div class="stack"><button class="b danger" id="allClear">將剩餘站點全部標示已清運…</button><button class="b" id="reset">清除示範資料</button></div>
@@ -91,146 +81,95 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
   <div class="hd"><b>資料說明</b><button class="x" data-close aria-label="關閉">✕</button></div>
-  <h3>真實資料</h3><ul><li>垃圾桶位置與地址：臺北市行人專用清潔箱街道清冊（2026-09-30）。</li><li>行政區界：內政部鄉鎮市區界線。</li></ul>
-  <h3>模擬資料（標 <span class="sim"></span>）</h3><ul><li>填充度：臺北市目前沒有垃圾桶滿溢偵測資料，填充度依桶編號固定產生；行人「滿了」與清潔隊回報會即時覆蓋。</li><li>路線依填充度門檻挑站，因此站點組合也屬示範。</li></ul>
-  <h3>估算方式</h3><ul><li>距離為直線距離；路線以最近鄰＋2-opt 排序。</li><li>時間以車速 20 km/h、每站停留 2 分鐘估算。</li><li>每站回報的「收運量」（空／半／滿／溢出）會寫入回報紀錄，供規劃頁分析。</li></ul>
+  <h3>真實資料</h3><ul><li>垃圾桶位置與地址：臺北市行人專用清潔箱街道清冊（2026-09-30）。</li><li>每小時交通活動：YouBike 2.0 租借紀錄 2026-07，200m 內站點每小時每日平均借＋還（平日 22 天、週末 7 天，排除 7/10、7/11）。</li></ul>
+  <h3>推估與假設</h3><ul><li>人流由交通活動推估，不是實測人流。</li><li>產生量每次借還 <b id="iLpr"></b> 公升：<a id="iSrc" target="_blank" rel="noopener">用官方公開的每日清運頻率校準，仍是假設</a>（環保局：每箱約 120 公升、每日清運 3–6 次；假設人流前 10% 的桶週末一天滿 6 次）。</li><li>例行清運 08:00／12:00／16:00（假設）；預測從最近一次清運起累積。</li></ul>
+  <h3>模擬資料（標 <span class="sim"></span>）</h3><ul><li>填充度與預計滿時間是模擬；清潔隊回報的實際滿度會校正該桶產生量（EMA）。</li></ul>
+  <h3>排序</h3><ul><li>站序＝預計滿的時間由早到晚（不是最短路徑）；距離為直線距離。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="ui.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="ui.js"></script><script src="bin-icons.js"></script><script src="forecast.js"></script>
 <script>
 nav('crew.html');
-const map=quietMap(TPE_MAIN,14),LS_UI='debug松_crew_ui';
-const AMT=[['empty','空',0],['half','半',50],['full','滿',100],['overflow','溢出',120]];
-let bins=[],dists={},route=[],start=null,gen=0,startMode='center';
-const binL=L.layerGroup().addTo(map),rtL=L.layerGroup().addTo(map);
-legend(map,[...RAMP_LEGEND,{c:'#e7e9ea',t:'已完成'},{c:'#3f4549',t:'路線',shape:'line'}],'topleft');
-const ui=JSON.parse(localStorage.getItem(LS_UI)||'{}');
-function saveUI(){localStorage.setItem(LS_UI,JSON.stringify({dist:dist.value,th:+th.value,route:route.map(b=>b.id),start,gen,startMode}))}
-const inD=()=>bins.filter(b=>b.d===dist.value);
-// 完成判定：本次路線產生後，這個桶有清潔隊「已清運」事件
+const C=CONFIG.forecast,LSU='有桶_crew_ui_v2',AMT=[['empty','空',0],['half','半',50],['full','滿',100],['overflow','溢出',120]];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const map=quietMap(CONFIG.demoArea.center,15),binL=L.layerGroup().addTo(map),rtL=L.layerGroup().addTo(map);
+legend(map,[...RAMP_LEGEND,{c:css('--ink-2'),t:'站序',shape:'line'}],'topleft');
+const q=new URLSearchParams(location.search),ui=JSON.parse(localStorage.getItem(LSU)||'{}');
+let P=[],E=[],route=[],state='A',gen=0;const depot=C.depot||CONFIG.demoArea.center;
+const day=()=>document.querySelector('[name=fcd]:checked').value,T=()=>+fcT.value;
+const dayName=k=>k==='we'?'週六':'平日';
+function saveUI(){localStorage.setItem(LSU,JSON.stringify({day:day(),t:T(),th:+th.value,state,gen,route:route.map(e=>e.b.id)}))}
 const doneSet=()=>{const s=new Set();for(const e of getEvents())if(e.kind==='clear'&&e.ts>=gen)s.add(e.bin);return s};
-const curIdx=()=>{const d=doneSet();return route.findIndex(b=>!d.has(b.id))};
-function tour(st,pts){ // 最近鄰 + 2-opt（開放路徑，起點固定）
-  const P=[st,...pts.map(b=>[b.la,b.lo])],D=(i,j)=>hav(P[i][0],P[i][1],P[j][0],P[j][1]);
-  let ord=[0],left=new Set(pts.map((_,i)=>i+1));
-  while(left.size){const c=ord[ord.length-1];let b=null,bd=1e18;for(const j of left){const d=D(c,j);if(d<bd){bd=d;b=j}}ord.push(b);left.delete(b)}
-  let imp=true,it=0;while(imp&&it++<200){imp=false;for(let i=1;i<ord.length-1;i++)for(let k=i+1;k<ord.length;k++){
-    const a=ord[i-1],b=ord[i],c=ord[k],d=ord[k+1];const old=D(a,b)+(d!==undefined?D(c,d):0),nw=D(a,c)+(d!==undefined?D(b,d):0);
-    if(nw<old-0.01){ord=[...ord.slice(0,i),...ord.slice(i,k+1).reverse(),...ord.slice(k+1)];imp=true}}}
-  return ord.slice(1).map(i=>pts[i-1])}
-const center=()=>dists[dist.value];
-const minsFor=m=>Math.max(1,Math.round(m/1000/20*60));
-async function genRoute(){
-  startMode=document.querySelector('[name=st]:checked').value;let st=center();
-  if(startMode==='gps'){st=await new Promise(r=>{let d=false;const once=(v,t)=>{if(!d){d=true;if(t)toast(t);r(v)}};setTimeout(()=>once(center(),'無法定位，改用行政區中心'),5000);
-    navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>once([p.coords.latitude,p.coords.longitude]),()=>once(center(),'未允許定位，改用行政區中心'),{timeout:4500}):once(center())})}
-  const ev=getEvents(),pick=inD().filter(b=>fillOf(b.id,ev)>=+th.value);
-  start=st;gen=Date.now();route=pick.length?tour(st,pick):[];saveUI();show(true);if(!pick.length)toast('沒有達門檻的垃圾桶')}
-const amtGlyph=(pct)=>{const h=Math.min(100,pct)/100*17,c=rampColor(pct,pct>100);
-  return `<svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true"><rect x="9" y="0" width="8" height="3.5" rx="1.6" fill="#9aa0a4"/><rect x="1" y="2.6" width="24" height="5" rx="2.4" fill="#9aa0a4"/><clipPath id="ac${pct}"><path d="M3 9H23L21.4 28Q21.2 30 19.2 30H6.8Q4.8 30 4.6 28Z"/></clipPath><path d="M3 9H23L21.4 28Q21.2 30 19.2 30H6.8Q4.8 30 4.6 28Z" fill="#e3e6e7"/><rect x="0" y="${30-h}" width="26" height="${h}" fill="${c}" clip-path="url(#ac${pct})"/>${pct>100?`<rect x="1" y="2.6" width="24" height="5" rx="2.4" fill="${c}"/><circle cx="7" cy="1.6" r="1.6" fill="${c}"/><circle cx="20" cy="1.2" r="1.2" fill="${c}"/>`:''}</svg>`};
-function show(fit){
-  rtL.clearLayers();binL.clearLayers();const ev=getEvents(),done=doneSet(),ci=curIdx(),ids=new Set(route.map(b=>b.id));
-  let n=0;for(const b of inD()){const v=fillOf(b.id,ev);if(v>=+th.value)n++;
-    if(!ids.has(b.id))L.circleMarker([b.la,b.lo],{radius:3,stroke:false,fillColor:'#9aa0a4',fillOpacity:.45,interactive:false}).addTo(binL)}
-  cnt.textContent=`（${inD().length} 桶中 ${n} 個達門檻）`;
-  const nd=route.filter(b=>done.has(b.id)).length;
-  prog.innerHTML=route.length?`<span class="no">${nd} / ${route.length}</span><span class="tr"><i style="width:${nd/route.length*100}%"></i></span><small>${dist.value}</small>`:`<small>${dist.value}・尚無路線</small>`;
-  if(route.length){
-    const path=[start,...route.map(b=>[b.la,b.lo])];let tot=0;for(let i=1;i<path.length;i++)tot+=hav(...path[i-1],...path[i]);
-    L.polyline(path,{color:'#3f4549',weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
-    L.marker(start,{icon:startMode==='gps'?L.divIcon({className:'me'}):L.divIcon({className:'start'}),interactive:false}).addTo(rtL);
-    route.forEach((b,i)=>{const ok=done.has(b.id),cur=i===ci,s=cur?34:24,v=fillOf(b.id,ev);
-      L.marker([b.la,b.lo],{zIndexOffset:cur?1000:ok?0:500,title:b.addr,icon:L.divIcon({className:'stopw',iconSize:[s,s],
-        html:`<div class="stop${ok?' ok':''}${cur?' cur':''}" style="width:${s}px;height:${s}px;background:${rampColor(v)}">${ok?'✓':i+1}</div>`})})
-        .on('click',()=>{if(!ok&&!cur&&ci>=0){const r=route.splice(i,1)[0];route.splice(ci,0,r);saveUI();show();focusCur()}}).addTo(rtL)});
-    const wp=route.slice(0,9).map(b=>b.la+','+b.lo),dest=wp.pop();
-    gmap.href=`https://www.google.com/maps/dir/?api=1&origin=${start.join(',')}&destination=${dest}&waypoints=${encodeURIComponent(wp.join('|'))}&travelmode=driving`;gmap.textContent='在 Google Maps 開啟'+(route.length>9?'（前 9 站）':'');gmap.hidden=false;
-    sum.innerHTML=`<span><b>${route.length}</b>站</span><span><b>${(tot/1000).toFixed(1)} km</b>全程</span><span><b>${Math.round(tot/1000/20*60+route.length*2)} 分</b>估計</span>`;
-  }else{sum.innerHTML='';gmap.hidden=true}
-  allClear.disabled=ci<0;renderCard(ev,ci,nd);renderHist();
-  if(fit&&route.length)focusCur(true)}
-function renderCard(ev,ci,nd){
-  if(!route.length){next.innerHTML=`<div class="done"><b>目前沒有需要清運的站點</b><p>${dist.value}沒有填充度 ≥ ${th.value}% 的垃圾桶。</p><button class="b" data-open-set>調整調度設定</button></div>`;return}
-  if(ci<0){next.innerHTML=`<div class="done"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="#e6f4ef"/><path d="M13 23l6 6 12-13" stroke="#0f9d76" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>今日路線完成</b><p>${route.length} 站都已回報收運量。</p><button class="b pri" id="regen">產生新路線</button></div>`;return}
-  const b=route[ci],prev=ci?[route[ci-1].la,route[ci-1].lo]:start,d=hav(prev[0],prev[1],b.la,b.lo),v=fillOf(b.id,ev);
-  const last=ev.filter(e=>e.bin===b.id).slice(-1)[0],rep=last&&last.kind==='full'&&last.by==='行人';
-  next.innerHTML=`<div class="k"><span class="lbl">下一站</span><span class="no">${ci+1} / ${route.length}</span><a class="nav" target="_blank" rel="noopener" aria-label="導航到這一站" href="https://www.google.com/maps/dir/?api=1&destination=${b.la},${b.lo}&travelmode=driving"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 11L21 3l-8 18-2-8z" fill="#3f4549"/></svg></a></div>
+const curIdx=()=>{const d=doneSet();return route.findIndex(e=>!d.has(e.b.id))};
+// 規劃：依選定時間的預測，站序＝預計滿時間由早到晚
+function plan(){const st=FC.state();E=FC.evaluate(P,day(),T(),st);route=E.filter(e=>e.fill>=+th.value);gen=Date.now()}
+function cardH(){return card.getBoundingClientRect().height}
+function fitTop(n=3){const pts=route.slice(0,n).map(e=>[e.b.la,e.b.lo]);if(!pts.length){map.fitBounds(CONFIG.demoArea.bounds,{paddingTopLeft:[20,110],paddingBottomRight:[20,cardH()+20]});return}
+  if(state==='B'){const ci=curIdx();if(ci>=0){const b=route[ci].b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot;pts.length=0;pts.push(prev,[b.la,b.lo])}}
+  map.fitBounds(pts,{paddingTopLeft:[50,110],paddingBottomRight:[50,cardH()+30],maxZoom:17})}
+function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=doneSet(),ci=curIdx(),ids=new Set(route.map(e=>e.b.id)),small=map.getZoom()<15;
+  for(const e of E)if(!ids.has(e.b.id)){const f=Math.round(e.fill);L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev)||(f>100?'overflow':null),small),title:`${e.b.addr}・預測 ${f}%`}).addTo(binL)}
+  if(route.length){L.polyline([depot,...route.map(e=>[e.b.la,e.b.lo])],{color:css('--ink-2'),weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
+    L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點',interactive:false}).addTo(rtL);
+    route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:i<3&&state==='A'?28:24;
+      L.marker([e.b.la,e.b.lo],{zIndexOffset:cur?1000:ok?0:600-i,title:e.b.addr,icon:L.divIcon({className:'stopw',iconSize:[s,s],html:`<div class="stop${ok?' ok':''}${cur?' cur':''}" style="width:${s}px;height:${s}px;background:${rampColor(e.fill,e.fill>100)}">${ok?'✓':i+1}</div>`})}).addTo(rtL)})}
+  const nd=route.filter(e=>done.has(e.b.id)).length;
+  prog.innerHTML=route.length?`<span class="no">${nd} / ${route.length}</span><span class="tr"><i style="width:${nd/route.length*100}%"></i></span><small>${CONFIG.demoArea.name}</small>`:`<small>${CONFIG.demoArea.name}・無站點</small>`;
+  tChip.textContent=`🕒 ${dayName(day())} ${FC.fmt(T())} ▾`;
+  cnt.textContent=`（${E.length} 桶中 ${route.length} 個達門檻）`;
+  let km=0,c0=depot;for(const e of route){km+=hav(c0[0],c0[1],e.b.la,e.b.lo);c0=[e.b.la,e.b.lo]}
+  sum.innerHTML=`<span><b>${route.length}</b>站</span><span><b>${(km/1000).toFixed(1)} km</b>依站序</span><span><b>${E.filter(e=>e.fill>=100).length}</b>預計會滿</span>`;
+  if(route.length){const wp=route.slice(0,9).map(e=>e.b.la+','+e.b.lo),dest=wp.pop();gmap.href=`https://www.google.com/maps/dir/?api=1&origin=${depot.join(',')}&destination=${dest}&waypoints=${encodeURIComponent(wp.join('|'))}&travelmode=driving`;gmap.hidden=false}else gmap.hidden=true;
+  allClear.disabled=!(state==='B'&&ci>=0);renderCard(ev,done,ci);renderLists()}
+function renderCard(ev,done,ci){card.dataset.state=state;const k=day(),t=FC.fmt(T()),st=FC.state();
+  if(state==='A'){const nFull=E.filter(e=>e.fill>=100).length;
+    cardBody.innerHTML=`<div class="k"><span class="lbl" id="cardTitle">${dayName(k)} ${t} 預計 ${nFull} 桶會滿</span></div>
+     <div class="small">${route.length} 桶達 ${th.value}% 門檻・站序＝預計滿的時間<span class="sim" title="模擬值"></span></div>
+     ${route.length?`<ol class="top3">${route.slice(0,3).map((e,i)=>`<li><span class="n" style="background:${rampColor(e.fill,e.fill>100)}">${i+1}</span><span class="t"><b>${e.b.addr}</b><span>預計滿 ${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}${e.last?' <span class="flag">收班前最後一輪</span>':''}${st.cal[e.b.id]?' <span class="flag cal">已校正</span>':''}</span></span><span class="p">${Math.round(e.fill)}%</span></li>`).join('')}</ol>
+     <button class="b pri" id="startBtn">開始清運，從第 1 站</button>`:`<p class="small" style="margin:10px 0">這個時間沒有預測達門檻的桶，可在「⋯ 調度設定」降低門檻或換時間。</p>`}`;return}
+  if(ci<0){cardBody.innerHTML=`<div class="k"><button class="back" id="backBtn" aria-label="回到規劃">‹</button><span class="lbl">今日路線完成</span></div><div class="done"><p>${route.length} 站都已回報收運量。</p><button class="b pri" id="replanBtn">回到規劃</button></div>`;return}
+  const e=route[ci],b=e.b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot,d=hav(prev[0],prev[1],b.la,b.lo),v=Math.round(FC.fillAt(b,k,T(),st));
+  cardBody.innerHTML=`<div class="k"><button class="back" id="backBtn" aria-label="回到規劃">‹</button><span class="lbl">下一站</span><span class="no">${ci+1} / ${route.length}</span><a class="nav" target="_blank" rel="noopener" aria-label="導航到這一站" href="https://www.google.com/maps/dir/?api=1&destination=${b.la},${b.lo}&travelmode=driving"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 11L21 3l-8 18-2-8z" fill="currentColor"/></svg></a></div>
    <div class="addr">${b.addr}</div>
-   <div class="meta"><span><b>${fmtM(d)}</b>・車程約 ${minsFor(d)} 分</span><span><span class="fb"><i style="width:${Math.max(6,v)}%;background:${rampColor(v)}"></i></span>目前 <b>${v}%</b>${rep?'・行人回報滿了':'<span class="sim" title="模擬值"></span>'}</span></div>
-   <div class="q">這桶收了多少？點一下即完成此站</div>
-   <div class="amts">${AMT.map(a=>`<button class="amt" data-amt="${a[0]}" data-pct="${a[2]}" aria-label="收運量：${a[1]}">${amtGlyph(a[2])}${a[1]}</button>`).join('')}</div>`}
-function renderHist(){const ids=new Set(inD().map(b=>b.id)),ev=getEvents().filter(e=>ids.has(e.bin)).reverse().slice(0,12);
-  const A=Object.fromEntries(AMT.map(a=>[a[0],a[1]]));
-  hist.innerHTML=ev.length?ev.map(e=>{const b=bins.find(x=>x.id===e.bin);return `<div>${timeStr(e.ts)}・<b>${e.by}</b> ${e.kind==='full'?'回報已滿':e.kind==='clear'?'已清運'+(e.amount?'・收運量 '+A[e.amount]:''):'回報 '+e.level+'%'}<br>${b?b.addr:e.bin}</div>`}).join(''):'尚無紀錄'}
-function focusCur(fit){const ci=curIdx();if(ci<0){map.fitBounds([start,...route.map(b=>[b.la,b.lo])],{paddingTopLeft:[30,80],paddingBottomRight:[30,next.offsetHeight+30]});return}
-  const b=route[ci],prev=ci?[route[ci-1].la,route[ci-1].lo]:start;map.fitBounds([prev,[b.la,b.lo]],{paddingTopLeft:[50,110],paddingBottomRight:[50,next.offsetHeight+40],maxZoom:16,animate:!fit})}
-// 一次點擊：記錄收運量＋完成此站 → 自動前往下一站；3 秒內可復原
+   <div class="meta"><span><b>${fmtM(d)}</b>・車程約 ${Math.max(1,Math.round(d/1000/20*60))} 分</span><span><span class="fb"><i style="width:${Math.max(6,Math.min(100,v))}%;background:${rampColor(v,v>100)}"></i></span>預測 <b>${v}%</b><span class="sim" title="模擬值"></span></span>${st.cal[b.id]?'<span class="flag cal">已校正 ×'+st.cal[b.id].k+'</span>':''}</div>
+   <div class="small" id="orderNote">依 ${t} 預測排序</div>
+   <div class="q">這桶實際多滿？點一下即完成此站（並校正預測）</div>
+   <div class="amts">${AMT.map(a=>`<button class="amt" data-amt="${a[0]}" data-pct="${a[2]}" aria-label="收運量：${a[1]}">${binIconSVG(a[2],a[2]>100?'overflow':null).html}${a[1]}</button>`).join('')}</div>`}
+function renderLists(){const st=FC.state(),A=Object.fromEntries(AMT.map(a=>[a[0],a[1]]));
+  const cb=P.filter(b=>st.cal[b.id]);calList.innerHTML=cb.length?cb.map(b=>`<div data-calid="${b.id}">${b.addr}・產生量 ×${st.cal[b.id].k}（${st.cal[b.id].n} 次回報）</div>`).join(''):'尚無';
+  const ids=new Set(P.map(b=>b.id)),ev=getEvents().filter(e=>ids.has(e.bin)).reverse().slice(0,12);
+  hist.innerHTML=ev.length?ev.map(e=>{const b=P.find(x=>x.id===e.bin);return `<div>${timeStr(e.ts)}・<b>${e.by}</b> ${e.kind==='full'?'回報已滿':e.kind==='clear'?'已清運'+(e.amount?'・實際 '+A[e.amount]:'')+(e.predPct!=null?'（預測 '+e.predPct+'%）':''):'回報 '+e.level+'%'}<br>${b?b.addr:e.bin}</div>`}).join(''):'尚無紀錄'}
+function setState(s){state=s;card.classList.remove('collapsed');saveUI();draw();requestAnimationFrame(()=>fitTop())}
 let undoT=null;
-function record(id,amount,pct){
-  addEvent({bin:id,kind:'clear',level:0,by:'清潔隊',amount,amountPct:pct}); // 相容舊結構：kind/level 不變，新增 amount/amountPct
-  const ts=getEvents().slice(-1)[0].ts;show();focusCur();
+function record(id,amount,pct){const b=P.find(x=>x.id===id),st=FC.state(),r=FC.clearAndCalibrate(b,day(),T(),pct,st);
+  addEvent({bin:id,kind:'clear',level:0,by:'清潔隊',amount,amountPct:pct,predPct:Math.round(r.pred),calib:+r.k.toFixed(3),fcDay:day(),fcMin:T()});
+  const ts=getEvents().slice(-1)[0].ts;draw();fitTop();
   let u=document.querySelector('.undo');if(u)u.remove();clearTimeout(undoT);
   u=document.createElement('div');u.className='undo';u.setAttribute('role','status');
-  u.innerHTML=`<span>已完成・收運量 ${AMT.find(a=>a[0]===amount)[1]}</span><button id="undoBtn">復原</button>`;u.style.bottom=(next.offsetHeight+22)+'px';document.body.appendChild(u);
-  u.querySelector('button').onclick=()=>{localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents().filter(e=>!(e.ts===ts&&e.bin===id))));u.remove();clearTimeout(undoT);show();focusCur()};
+  u.innerHTML=`<span>已完成・實際 ${AMT.find(a=>a[0]===amount)[1]}・預測 ${Math.round(r.pred)}%</span><button>復原</button>`;u.style.bottom=(cardH()+22)+'px';document.body.appendChild(u);
+  u.querySelector('button').onclick=()=>{localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents().filter(e=>!(e.ts===ts&&e.bin===id))));const s2=FC.state();if(r.old===1&&s2.cal[id]&&s2.cal[id].n===1)delete s2.cal[id];else if(s2.cal[id])s2.cal[id]={k:r.old,n:s2.cal[id].n-1};delete s2.clear[id];FC.save(s2);u.remove();clearTimeout(undoT);draw();fitTop()};
   undoT=setTimeout(()=>u.remove(),3000)}
-next.onclick=e=>{const a=e.target.closest('[data-amt]');if(a){record(route[curIdx()].id,a.dataset.amt,+a.dataset.pct);return}
-  if(e.target.closest('#regen'))genRoute();if(e.target.closest('[data-open-set]'))sheetOpen('setSheet')};
-menu.onclick=()=>sheetOpen('setSheet');infoBtn.onclick=()=>sheetOpen('infoSheet');
-th.oninput=()=>{thV.textContent=th.value;show()};th.onchange=saveUI;
-dist.onchange=()=>{route=[];saveUI();map.setView(center(),14);show()};
-document.getElementById('gen').onclick=async()=>{await genRoute();setSheet.hidden=true};
-allClear.onclick=()=>{const d=doneSet(),left=route.filter(b=>!d.has(b.id));if(!left.length)return;
-  if(confirm(`確定將剩餘 ${left.length} 站全部標示為「已清運」？\n（不會記錄收運量，建議逐站回報）`)){left.forEach(b=>addEvent({bin:b.id,kind:'clear',level:0,by:'清潔隊'}));toast(`已標示 ${left.length} 站清運完成`);show();setSheet.hidden=true}};
-reset.onclick=()=>{if(confirm('清除所有示範回報與路線？')){localStorage.removeItem(LS_EVENTS);toast('已清除');genRoute()}};
-Promise.all([loadJSON('bins.geojson'),loadJSON('districts.geojson')]).then(([b,d])=>{
-  bins=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district}));
-  for(const f of d.features){const c=L.geoJSON(f).getBounds().getCenter();dists[f.properties.name]=[c.lat,c.lng]}
-  const c={};bins.forEach(x=>c[x.d]=(c[x.d]||0)+1);
-  const names=Object.keys(dists).sort((x,y)=>(c[y]||0)-(c[x]||0));
-  dist.innerHTML=names.map(n=>`<option value="${n}">${n}（${c[n]||0} 個）</option>`).join('');
-  dist.value=ui.dist&&dists[ui.dist]?ui.dist:'大安區';th.value=ui.th||80;thV.textContent=th.value;
-  if(ui.startMode==='gps')document.querySelector('[name=st][value=gps]').checked=true;
-  if(ui.route&&ui.route.length&&ui.gen){route=ui.route.map(id=>bins.find(x=>x.id===id)).filter(Boolean);start=ui.start;gen=ui.gen;startMode=ui.startMode||'center';show(true)}
-  else genRoute()}).catch(e=>toast('資料載入失敗：'+e.message));
-</script>
-<script src="forecast.js"></script>
-<script>
-// ===== 預測調度：時間滑桿＋平日/週末，優先順序（預計滿的時間）、最近鄰路線、已清運＋回報校正 =====
-(function(){
-const fcL=L.layerGroup(),LSF='有桶_fc_ui',C=CONFIG.forecast,AM=[['空',0],['半',50],['滿',100],['溢出',120]];
-let P=null,on=false,openId=null;const depot=C.depot||CONFIG.demoArea.center;
-const fu=JSON.parse(localStorage.getItem(LSF)||'{}');const q=new URLSearchParams(location.search);
-const day=()=>document.querySelector('[name=fcd]:checked').value;
-function setUI(){if(q.get('day'))fu.day=q.get('day');if(q.get('t'))fu.t=FC.hm(q.get('t'));
-  document.querySelector(`[name=fcd][value=${fu.day||'wk'}]`).checked=true;fcT.value=fu.t??FC.hm(C.shiftStart);fcTh.value=fu.th||C.threshold;fcArea.textContent=CONFIG.demoArea.name}
-function saveF(){localStorage.setItem(LSF,JSON.stringify({on,day:day(),t:+fcT.value,th:+fcTh.value}))}
-function render(){if(!P)return;const k=day(),t=+fcT.value,th=+fcTh.value,st=FC.state();fcTV.textContent=FC.fmt(t);fcThV.textContent=th;
-  const E=FC.evaluate(P,k,t,st);fcL.clearLayers();
-  for(const e of E){const f=Math.round(e.fill);L.circleMarker([e.b.la,e.b.lo],{radius:f>=100?9:f>=th?7:5,color:'#fff',weight:1.5,fillColor:rampColor(f,f>100),fillOpacity:.95}).bindTooltip(`${e.b.addr}<br>${f}%・預計滿 ${isFinite(e.fullAt)?FC.fmt(e.fullAt):'48 小時內不會滿'}`).addTo(fcL)}
-  const pick=E.filter(e=>e.fill>=th),R=FC.nnRoute(depot,pick);let km=0,cur=depot;for(const e of R){km+=hav(cur[0],cur[1],e.b.la,e.b.lo);cur=[e.b.la,e.b.lo]}
-  if(R.length)L.polyline([depot,...R.map(e=>[e.b.la,e.b.lo])],{color:'#3f4549',weight:3,opacity:.6}).addTo(fcL);
-  L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點'}).addTo(fcL);
-  R.forEach((e,i)=>L.marker([e.b.la,e.b.lo],{icon:L.divIcon({className:'stopw',iconSize:[22,22],html:`<div class="stop" style="width:22px;height:22px;background:${rampColor(e.fill,e.fill>100)}">${i+1}</div>`}),zIndexOffset:500}).addTo(fcL));
-  const over=E.filter(e=>e.fill>100).length,last=E.filter(e=>e.last).length;
-  fcSum.innerHTML=`<span><b>${pick.length}</b>達門檻</span><span><b>${(km/1000).toFixed(1)} km</b>路線（最近鄰）</span><span><b>${over}</b>溢出</span><span><b>${last}</b>收班前最後一輪</span>`;
-  fcList.innerHTML=E.slice(0,10).map((e,i)=>`<div class="fci" data-id="${e.b.id}"><div class="a">${i+1}. ${e.b.addr}</div><div class="m"><span><span class="fb"><i style="width:${Math.max(6,Math.min(100,e.fill))}%;background:${rampColor(e.fill,e.fill>100)}"></i></span><b>${Math.round(e.fill)}%</b></span><span>預計滿 <b>${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}</b></span>${e.last?'<span class="flag last">收班前最後一輪</span>':''}${e.cal?`<span class="flag cal">已校正 ×${st.cal[e.b.id].k}</span>`:''}</div>
-   ${openId===e.b.id?`<div class="fca">${AM.map(a=>`<button data-fca="${a[1]}" aria-label="回報滿度 ${a[0]}">${a[0]}</button>`).join('')}</div>`:`<button class="b" style="min-height:40px;margin-top:8px;font-size:14px" data-fco>已清運＋回報滿度</button>`}</div>`).join('');
-  const cb=P.filter(b=>st.cal[b.id]);fcCal.hidden=!cb.length;fcCal.innerHTML=cb.length?'已校正：'+cb.map(b=>`<span class="flag cal" data-calid="${b.id}">${b.addr} ×${st.cal[b.id].k}</span>`).join(' '):'';
-  saveF()}
-function show(v){on=v;fcBtn.setAttribute('aria-pressed',v);fc.hidden=!v;next.hidden=v;const u=document.querySelector('.undo');if(u)u.remove();
-  if(v){map.removeLayer(rtL);map.removeLayer(binL);fcL.addTo(map);map.fitBounds(CONFIG.demoArea.bounds,{paddingTopLeft:[20,80],paddingBottomRight:[innerWidth>760?440:20,innerWidth>760?20:fc.offsetHeight+20]});render()}
-  else{fcL.remove();rtL.addTo(map);binL.addTo(map)}saveF()}
-fcBtn.onclick=()=>show(!on);
-document.querySelectorAll('[name=fcd]').forEach(r=>r.onchange=render);fcT.oninput=render;fcTh.oninput=render;
-fcList.onclick=e=>{const it=e.target.closest('.fci');if(!it)return;
-  if(e.target.closest('[data-fco]')){openId=it.dataset.id;render();return}
-  const a=e.target.closest('[data-fca]');if(a){const b=P.find(x=>x.id===it.dataset.id),pct=+a.dataset.fca,st=FC.state(),r=FC.clearAndCalibrate(b,day(),+fcT.value,pct,st);
-    addEvent({bin:b.id,kind:'clear',level:0,by:'清潔隊',amount:['empty','half','full','overflow'][[0,50,100,120].indexOf(pct)],amountPct:pct,predPct:Math.round(r.pred),calib:+r.k.toFixed(3),fcDay:day(),fcMin:+fcT.value});
-    openId=null;toast(`已清運；預測 ${Math.round(r.pred)}%、回報 ${pct}% → 產生量校正 ×${r.k.toFixed(2)}`);render()}};
+card.onclick=e=>{const a=e.target.closest('[data-amt]');if(a){record(route[curIdx()].b.id,a.dataset.amt,+a.dataset.pct);return}
+  if(e.target.closest('#startBtn')){setState('B');return}
+  if(e.target.closest('#backBtn')||e.target.closest('#replanBtn')){plan();setState('A');return}
+  if(e.target.closest('#grab')){card.classList.toggle('collapsed');requestAnimationFrame(()=>fitTop())}};
+menu.onclick=()=>sheetOpen('setSheet');infoBtn.onclick=()=>sheetOpen('infoSheet');tChip.onclick=()=>sheetOpen('timeSheet');
+function replan(){plan();if(state==='B')state='A';saveUI();draw();requestAnimationFrame(()=>fitTop())}
+fcT.oninput=()=>{fcTV.textContent=FC.fmt(T())};fcT.onchange=()=>{replan();timeSheet.hidden=true};
+document.querySelectorAll('[name=fcd]').forEach(r=>r.onchange=()=>{replan();timeSheet.hidden=true});
+th.oninput=()=>{thV.textContent=th.value;replan()};
+allClear.onclick=()=>{const d=doneSet(),left=route.filter(e=>!d.has(e.b.id));if(!left.length)return;
+  if(confirm(`確定將剩餘 ${left.length} 站全部標示為「已清運」？\n（不會記錄實際滿度，也不會校正）`)){left.forEach(e=>addEvent({bin:e.b.id,kind:'clear',level:0,by:'清潔隊'}));toast(`已標示 ${left.length} 站清運完成`);draw();setSheet.hidden=true}};
+reset.onclick=()=>{if(confirm('清除所有示範回報與校正？')){localStorage.removeItem(LS_EVENTS);localStorage.removeItem(CONFIG.storageKeys.forecast);toast('已清除');replan()}};
+iLpr.textContent=C.litersPerRide;iSrc.href=C.calibration.source;
 Promise.all([loadJSON('bins.geojson'),loadJSON('footfall_hourly.json')]).then(([b,h])=>{
-  const bins=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address})).filter(x=>SC_in(x.la,x.lo));
-  P=FC.prepare(bins,h);fcLpr.textContent=C.litersPerRide;fcSrc.href=C.calibration.source;fcSrc.title=`環保局：每箱約 120 公升、每日清運約 3–6 次；假設人流前 10% 的桶週末一天滿 6 次`;setUI();if(q.get('fc')==='1'||fu.on)show(true)}).catch(e=>toast('預測資料載入失敗：'+e.message));
-function SC_in(la,lo){const[[a,b],[c,d]]=CONFIG.demoArea.bounds;return la>=a&&la<=c&&lo>=b&&lo<=d}
-})();
+  const[[a1,b1],[c1,d1]]=CONFIG.demoArea.bounds;
+  const bins=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address})).filter(x=>x.la>=a1&&x.la<=c1&&x.lo>=b1&&x.lo<=d1);
+  P=FC.prepare(bins,h);
+  const deep=q.get('fc')==='1'||q.has('day')||q.has('t');
+  const dd=q.get('day')||(!deep&&ui.day)||C.demoTime.day,tt=q.get('t')?FC.hm(q.get('t')):(!deep&&ui.t!=null?ui.t:FC.hm(C.demoTime.time));
+  document.querySelector(`[name=fcd][value=${dd}]`).checked=true;fcT.value=tt;fcTV.textContent=FC.fmt(tt);th.value=ui.th||C.threshold;thV.textContent=th.value;
+  plan();
+  if(!deep&&ui.state==='B'&&ui.gen&&ui.route&&ui.route.length){const m=new Map(E.map(e=>[e.b.id,e]));route=ui.route.map(id=>m.get(id)).filter(Boolean);gen=ui.gen;state='B'}else state='A';
+  saveUI();draw();requestAnimationFrame(()=>fitTop())}).catch(e=>toast('資料載入失敗：'+e.message));
 </script></body></html>

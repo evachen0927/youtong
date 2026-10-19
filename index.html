@@ -4,7 +4,7 @@
 .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:10px 0}.seg button{flex:1;border:0;background:#fff;padding:10px 4px;font-size:13px;font-family:inherit;cursor:pointer}.seg button.on{background:var(--accent);color:#fff;font-weight:600}
 .tag{font-size:11px;padding:1px 6px;border-radius:6px;background:#eef1f3;color:var(--mute);margin-left:4px}.tag.sim{background:#f3e8ff;color:#7b3fbf}.tag.est{background:#e8f0fe;color:#2a5fc1}
 .back{border:0;background:none;color:var(--accent);font-size:14px;padding:0;margin-bottom:8px;cursor:pointer;font-family:inherit}
-.vmk{width:9px!important;height:9px!important;background:#7b5cc4;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#e2574c;font-weight:900;font-size:20px;text-shadow:0 0 3px #fff}.ftop{position:absolute;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:8px;pointer-events:none}
+.vmk{width:9px!important;height:9px!important;background:#7b5cc4;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#646b70;font-weight:900;font-size:20px;text-shadow:0 0 3px #fff}.ftop{position:absolute;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:8px;pointer-events:none}
 .ftop .wm{display:inline-flex;align-items:center;height:44px;padding:0 16px;border-radius:999px;background:#fff;box-shadow:var(--shadow-1);font-weight:700;font-size:16px;letter-spacing:.5px}
 .ftop .role{font-size:12px;color:var(--mute);background:#ffffffd9;padding:4px 10px;border-radius:999px}
 .mk.hot{background:var(--ink);box-shadow:0 0 0 2px #fff,0 1px 4px #0003;border:0}
@@ -103,7 +103,7 @@ function render(){const h=cur,E=h.E,A=E.A,C=E.C,saved=SC.load();
   adopt.onclick=()=>{SC.save({hotspotId:h.id,hotspotName:h.name,option:opt,ts:Date.now(),moved:opt==='C'&&E.donor?{id:E.donor.b.id,from:[E.donor.b.la,E.donor.b.lo],to:[h.la+0.00008,h.lo+0.00008]}:null,upgraded:opt==='B'?E.B.bins.map(b=>b.id):[]});toast('已採用 '+OPT_NAME[opt]);render()};
   draw()}
 function draw(){const h=cur,E=h.E;chgL.clearLayers();drawBase(opt==='C'&&E.binsC?E.binsC:D.street);
-  L.circle([h.la,h.lo],{radius:100,color:'#e2574c',weight:1.5,dashArray:'4',fillOpacity:.05,interactive:false}).addTo(chgL);
+  L.circle([h.la,h.lo],{radius:100,color:'#646b70',weight:1.5,dashArray:'4',fillOpacity:.05,interactive:false}).addTo(chgL);
   if(opt==='B')for(const b of E.B.bins)L.circleMarker([b.la,b.lo],{radius:13,color:'#7b5cc4',weight:3,fill:false}).bindTooltip('容量↑ 清運↑（模擬）',{permanent:true,direction:'top',offset:[0,-10]}).addTo(chgL);
   if(opt==='C'&&E.donor){const f=[E.donor.b.la,E.donor.b.lo],t=[h.la+0.00008,h.lo+0.00008];
     L.marker(f,{icon:L.divIcon({className:'xmk',html:'✕',iconSize:[20,20]})}).bindTooltip('移出',{permanent:true,direction:'left'}).addTo(chgL);
@@ -122,7 +122,7 @@ loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];
   lyAnc.onchange=()=>lyAnc.checked?ancL.addTo(map):ancL.remove();
   const cnt={};D.street.forEach(b=>cnt[b.d]=(cnt[b.d]||0)+1);const ds=['士林區','中正區','內湖區','萬華區','信義區','松山區','大安區','中山區','文山區','大同區','南港區','北投區'];const mx=Math.max(...Object.values(cnt));
   bars.innerHTML=ds.map(n=>`<div class="bar"><span>${n.replace('區','')}</span><i class="${['北投區','南港區'].includes(n)?'gap':''}" style="width:${Math.max(1,(cnt[n]||0)/mx*100)}%"></i><span>${cnt[n]||0}${['北投區','南港區'].includes(n)?' ⚠️':''}</span></div>`).join('');
-  legend(map,[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'缺口熱點'},{c:'#e2574c',t:'100 m 範圍',shape:'ring'}]);
+  legend(map,[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'缺口熱點'},{c:'#646b70',t:'100 m 範圍',shape:'ring'}]);
   home();map.on('moveend',()=>drawBase(cur!==null&&opt==='C'&&cur.E.binsC?cur.E.binsC:D.street));
   const q=new URLSearchParams(location.search);if(q.has('hotspot'))open(HS[+q.get('hotspot')]);
 }).catch(e=>toast('資料載入失敗：'+e.message));

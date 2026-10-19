@@ -3,8 +3,10 @@
   /* 品牌綠：只用於主要動作與「你的位置」 */
   --brand:#0f9d76;--brand-ink:#0b7a5c;--brand-soft:#e6f4ef;
   /* 滿度色階（冷→暖，固定）：<50 灰青、50–79 琥珀、≥80 珊瑚紅、溢出 深紅 */
-  --fill-low:#8aa3a3;--fill-mid:#e2a33b;--fill-high:#e2574c;--fill-over:#a8231c;
-  --fill-low-soft:#eef2f2;--fill-mid-soft:#fbf1df;--fill-high-soft:#fcebe9;--fill-over-soft:#f6e1df;
+  --fill-low:#8aa3a3;--fill-mid:#e2a33b;--fill-high:#d9731f;--fill-over:#a8501a;
+  --fill-low-soft:#eef2f2;--fill-mid-soft:#fbf1df;--fill-high-soft:#fbeadb;--fill-over-soft:#f3e2d6;
+  /* 紅色只保留給「被回報滿了」（行人回報、尚未清運）；滿度色階不使用紅色 */
+  --reported:#e2574c;--reported-soft:#fcebe9;--reported-ink:#b4232a;
   /* 類別（只在有真實類別資料時使用） */
   --cat-general:#3b3734;--cat-recycle:#2f6fde;
   /* 其他圖層：交通站點、方案 */
@@ -17,5 +19,5 @@
   --r:16px;--r-sm:12px;--touch:44px;
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
   /* 舊變數對應（common.css 相容） */
-  --accent:var(--brand);--accent-l:var(--brand-soft);--warn:var(--fill-mid);--bad:var(--fill-high)
+  --accent:var(--brand);--accent-l:var(--brand-soft);--warn:var(--fill-mid);--bad:var(--reported)
 }

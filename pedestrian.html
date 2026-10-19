@@ -37,7 +37,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .meta .fb i{display:block;height:100%}
 .acts{display:flex;gap:8px;margin-top:12px}
 .b{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 14px;border:0;border-radius:12px;background:#f1f2f1;color:var(--ink);font:600 15px/1.2 var(--font);text-decoration:none;cursor:pointer}
-.b.pri{background:var(--accent);color:#fff}.b.warn{background:#fde9e8;color:#b4232a}
+.b.pri{background:var(--accent);color:#fff}.b.warn{background:var(--reported-soft);color:var(--reported-ink)}
 .next{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:10px;padding:8px 0 0;border:0;border-top:1px solid var(--line);background:none;font:14px/1.4 var(--font);color:var(--mute);text-align:left;cursor:pointer}
 .next b{color:var(--ink);font-weight:600}.next .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ask{margin-top:12px;padding:12px;border-radius:12px;background:#f6f7f6;font-size:14px}
@@ -135,7 +135,7 @@ function drawBins(){binL.clearLayers();const bd=map.getBounds().pad(.3),ev=getEv
 function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.circleMarker([f.la,f.lo],{renderer:ren,radius:4,stroke:false,fillColor:color,fillOpacity:.8}).bindPopup(pop(f)).addTo(layer)}
 function redraw(){drawBins();drawPts(ybL,D.yb,'#d9a441',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'#8a84c9',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`);drawChange()}
 function drawChange(){chgL.clearLayers();if(mode!=='after'||!scen)return;
-  if(scen.moved){L.marker(scen.moved.from,{icon:L.divIcon({className:'',html:'<b style="color:#e2574c;font-size:18px;text-shadow:0 0 3px #fff">✕</b>',iconSize:[18,18]})}).addTo(chgL);L.polyline([scen.moved.from,scen.moved.to],{color:'#7b5cc4',dashArray:'8 6',weight:3}).addTo(chgL)}
+  if(scen.moved){L.marker(scen.moved.from,{icon:L.divIcon({className:'',html:'<b style="color:#646b70;font-size:18px;text-shadow:0 0 3px #fff">✕</b>',iconSize:[18,18]})}).addTo(chgL);L.polyline([scen.moved.from,scen.moved.to],{color:'#7b5cc4',dashArray:'8 6',weight:3}).addTo(chgL)}
   for(const b of binsAfter)if(upg.has(b.id))L.circleMarker([b.la,b.lo],{radius:16,color:'#7b5cc4',weight:2,fill:false,interactive:false}).addTo(chgL)}
 map.on('moveend',redraw);
 
@@ -146,7 +146,7 @@ function nextOf(p){return nearestN(shown()).find(t=>!p||t.f.id!==p.f.id)||null}
 const ago=ts=>{const m=Math.round((Date.now()-ts)/60000);return m<1?'剛剛':m<60?m+' 分鐘前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前'};
 function catBadge(b){const c=binCategory(b).cat;const dots=c==='both'?`<i style="background:var(--gen)"></i><i style="background:var(--rec)"></i>`:`<i style="background:${BIN_CAT[c].color}"></i>`;return `<span class="cat">${dots}${BIN_CAT[c].label}</span>`}
 function freshness(b,ev){const last=ev.filter(e=>e.bin===b.id).slice(-1)[0],f=fillOf(b.id,ev);
-  const bar=`<span class="fb"><i style="width:${Math.max(6,f)}%;background:${rampColor(f)}"></i></span>`;
+  const bar=`<span class="fb"><i style="width:${Math.max(6,f)}%;background:${last&&last.kind==='full'?REPORTED:rampColor(f)}"></i></span>`;
   if(last)return `<span>${bar}${last.kind==='full'?'滿了':last.kind==='clear'?'已清運':f+'%'}・${ago(last.ts)}${last.by}回報</span>`;
   return `<span>${bar}滿度 ${f}%<span class="sim" title="模擬值"></span></span>`}
 function render(fit){

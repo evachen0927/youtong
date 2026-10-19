@@ -2,7 +2,7 @@
 // 依賴：rampColor（ui.js）
 // 滿度＝桶身內水位（tokens 色階），任何縮放都顯示；空的部分＝淺中性灰；桶蓋＝中性。
 // state：'reported'（行人回報滿了、尚未清運）→ 整個桶實心紅；'overflow' → 整桶深紅。
-const BIN_LID='#8d9397',BIN_EMPTY='#e3e6e7',BIN_REPORTED='#e2574c',BIN_OVER='#a8231c';
+const BIN_LID='#8d9397',BIN_EMPTY='#e3e6e7',BIN_REPORTED=REPORTED,BIN_OVER=RAMP.over;
 const BIN_BODY='M2 8.5H20L18.6 27Q18.4 29 16.4 29H5.6Q3.6 29 3.4 27Z';
 let _binUid=0;
 function binGlyph(fill,state){ // 局部座標 22×29
