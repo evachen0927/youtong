@@ -28,6 +28,7 @@ const getNeeds=()=>{try{const v=JSON.parse(localStorage.getItem(LS_NEEDS));retur
 // 50 m 內已有回報 → 不重複計數，回傳既有那筆
 function addNeed(la,lo){const a=getNeeds(),d=a.find(n=>hav(la,lo,n.la,n.lo)<=NEED_DEDUP_M);if(d)return{rec:d,dup:true};
   const rec={id:'N'+Date.now().toString(36),la,lo,ts:Date.now(),reason:null};a.push(rec);localStorage.setItem(LS_NEEDS,JSON.stringify(a.slice(-500)));return{rec,dup:false}}
+function removeNeed(id){localStorage.setItem(LS_NEEDS,JSON.stringify(getNeeds().filter(x=>x.id!==id)))}
 function setNeedReason(id,reason){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a))}
 function addEvent(e){const a=getEvents();a.push({...e,ts:Date.now()});localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)))}
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定

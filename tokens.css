@@ -13,7 +13,7 @@
   /* 其他圖層：交通站點、方案 */
   --pt-youbike:#a07d3e;--pt-bus:#5b6f9c;--scenario:#7b5cc4;--scenario-soft:#efeafb;
   /* 中性灰 */
-  --ink:#1c1f21;--ink-2:#3f4549;--mute:#646b70;--faint:#9aa0a4;--line:#eceeef;--gray-1:#f4f5f5;--gray-2:#e7e9ea;
+  --ink:#1c1f21;--ink-2:#3f4549;--mute:#646b70;--faint:#9aa0a4;--line:#eceeef;--gray-1:#f4f5f5;--gray-2:#e7e9ea;--ink-strong:#2b3333;--need:#7a5cc4;
   /* 表面 */
   --bg:#ffffff;--surface:#ffffff;--surface-2:#f6f7f6;--map-bg:#f2f2f0;--scrim:#0000004d;
   --shadow-1:0 1px 3px #0000001f;--shadow-2:0 6px 24px #0000001f,0 1px 3px #00000014;

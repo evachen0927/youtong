@@ -39,7 +39,7 @@ html,body{font-family:var(--font)}
 .roles.fixed{position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px}
 .roles .wm{display:inline-flex;gap:6px;justify-content:center;min-width:var(--touch);box-sizing:border-box;font-weight:700;font-size:16px;letter-spacing:.5px;color:var(--ink);background:#ffffffe6;height:var(--touch);align-items:center;padding:0 14px;border-radius:999px;box-shadow:var(--shadow-1)}
 .roles .seg3{display:flex;padding:3px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1)}
-.roles a{display:flex;align-items:center;justify-content:center;min-width:58px;height:38px;padding:0 12px;border-radius:999px;color:var(--ink-2);text-decoration:none;font:500 14px/1 var(--font);white-space:nowrap}
+.roles a{display:flex;align-items:center;justify-content:center;min-width:58px;height:var(--touch);padding:0 12px;border-radius:999px;color:var(--ink-2);text-decoration:none;font:500 14px/1 var(--font);white-space:nowrap}
 .roles a.on{background:var(--ink);color:#fff;font-weight:700}
 .roles .seg3{min-height:var(--touch);box-sizing:border-box}
 .roles .wm img{display:block;flex:none}.roles .wm .wt{display:none}

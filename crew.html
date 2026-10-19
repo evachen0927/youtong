@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020k"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020k"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020k"><link rel="stylesheet" href="tokens.css?v=20261020k"><link rel="stylesheet" href="ui.css?v=20261020k">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020l"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020l"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020l"><link rel="stylesheet" href="tokens.css?v=20261020l"><link rel="stylesheet" href="ui.css?v=20261020l">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
@@ -46,7 +46,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 .undo{position:fixed;left:50%;transform:translateX(-50%);z-index:3000;display:flex;align-items:center;gap:6px;padding:4px 4px 4px 16px;border-radius:999px;background:var(--ink);color:var(--surface);font:14px var(--font);box-shadow:var(--shadow-2);white-space:nowrap}
 .undo button{min-height:var(--touch);padding:0 16px;border:0;border-radius:999px;background:var(--scrim);color:var(--surface);font:700 15px var(--font);cursor:pointer}
 /* 抽屜 */
-.tlink{display:inline-flex;align-items:center;min-height:44px;padding:0 2px;border:0;background:none;color:var(--ink);font:500 14px/1 var(--font);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.tlink{display:inline-flex;align-items:center;min-height:44px;margin:0 0 8px;padding:0 2px;border:0;background:none;color:var(--ink);font:500 14px/1 var(--font);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .fld{margin:0 0 14px}.thl{font-size:13px;color:var(--mute);margin-bottom:6px}
 #thSeg label{min-height:44px;height:44px;font:500 14px/1 var(--font)}#thSeg label:has(input:checked){background:var(--ink);color:var(--surface);font-weight:700;box-shadow:none}
 .fld label{display:block;font-size:13px;color:var(--mute);margin-bottom:6px}
@@ -93,7 +93,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020k"></script><script src="common.js?v=20261020k"></script><script src="ui.js?v=20261020k"></script><script src="bin-icons.js?v=20261020k"></script><script src="forecast.js?v=20261020k"></script><script src="routing.js?v=20261020k"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020l"></script><script src="common.js?v=20261020l"></script><script src="ui.js?v=20261020l"></script><script src="bin-icons.js?v=20261020l"></script><script src="forecast.js?v=20261020l"></script><script src="routing.js?v=20261020l"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
@@ -131,7 +131,7 @@ function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=d
     route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:i<3&&state==='A'?28:24;
       L.marker([e.b.la,e.b.lo],{zIndexOffset:cur?1000:ok?0:600-i,title:e.b.addr,icon:L.divIcon({className:'stopw',iconSize:[s,s],html:`<div class="stop${ok?' ok':''}${cur?' cur':''}${e.must&&!ok?' must':''}" style="width:${s}px;height:${s}px;background:${rampColor(e.fill,e.fill>100)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${ok?'✓':i+1}</div>`})}).addTo(rtL)})}
   const nd=route.filter(e=>done.has(e.b.id)).length;
-  prog.innerHTML=route.length?`<span class="no">${nd} / ${route.length}</span><span class="tr"><i style="width:${nd/route.length*100}%"></i></span><small>${CONFIG.demoArea.name}</small>`:`<small>${CONFIG.demoArea.name}・無站點</small>`;
+  prog.innerHTML=route.length?`<span class="no">${nd} / ${route.length}</span><span class="tr"><i style="width:${nd/route.length*100}%"></i></span><small>${CONFIG.demoArea.name}</small>`:`<small>${CONFIG.demoArea.name}・沒有要清的桶</small>`;
   tChip.textContent=`🕒 ${dayName(day())} ${FC.fmt(T())} ▾`;
   cnt.textContent=`　${E.length} 桶中列入 ${route.length} 桶`;
   const km=legKm();
@@ -141,7 +141,11 @@ function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=d
 function renderCard(ev,done,ci){card.dataset.state=state;const k=day(),t=FC.fmt(T()),st=FC.state();
   if(state==='A'){const nM=route.filter(e=>e.must).length,nR=route.length-nM;
     const li=(e,i)=>`<li><span class="n${e.must?' must':''}" style="background:${rampColor(e.fill)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${i+1}</span><span class="t"><b>${e.b.addr}</b><span>預計滿 ${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}${e.must?' <span class="flag must">必清</span>':''}${st.cal[e.b.id]?' <span class="flag cal">已校正</span>':''}</span></span><span class="p">${stateChip(e.fill)}</span></li>`;
-    cardBody.innerHTML=`<div class="k">${route.length?`<span class="lbl" id="cardTitle">必清 ${nM} 站・順路 ${nR} 站</span>`:`<span class="lbl" id="cardCount">${P.length} 桶中列入 0 桶</span>`}</div>
+    if(!route.length){ // 空狀態：標題＝狀況，副標＝桶數；「快滿了以上」也沒有時，若剛例行清運過就說明
+      const tt=T(),d0=Math.floor(tt/1440)*1440,lastRC=C.routineClears.map(FC.hm).sort((x,y)=>x-y).filter(m=>d0+m<=tt).pop(),none70=!E.some(e=>e.fill>=70);
+      const [title,link]=th.value>=100&&!none70?['目前沒有滿溢的桶','<button class="tlink" id="toNear">改看快滿了以上</button>']:[lastRC!=null?`${FC.fmt(lastRC)} 已例行清運，目前沒有要清的桶`:'目前沒有要清的桶','<button class="tlink" id="toTime">調整時間</button>'];
+      cardBody.innerHTML=`<div class="k"><span class="lbl" id="cardEmpty">${title}</span></div><div class="small" id="cardCount">${P.length} 桶中列入 0 桶</div>${link}`;return}
+    cardBody.innerHTML=`<div class="k"><span class="lbl" id="cardTitle">必清 ${nM} 站・順路 ${nR} 站</span></div>
      <div class="small" id="crewSub">給領班的參考排序，全部為模擬</div>
      ${route.length?`<ol class="top3" id="mustList">${route.map((e,i)=>e.must?li(e,i):'').join('')}</ol>${nR?`<div class="subh">順路</div><ol class="top3" id="wayList">${route.map((e,i)=>e.must?'':li(e,i)).join('')}</ol>`:''}
      <button class="b pri" id="startBtn">開始清運，從第 1 站</button>`:(th.value>=100?`<p class="small" style="margin:10px 0 0;color:var(--mute)">目前沒有滿溢的桶</p><button class="tlink" id="toNear">改看快滿了以上</button>`:`<p class="small" style="margin:10px 0;color:var(--mute)">這個時間沒有快滿了以上的桶，可換時間。</p>`)}`;return}
@@ -176,7 +180,7 @@ function replan(){plan();if(state==='B')state='A';saveUI();draw();requestAnimati
 fcT.oninput=()=>{fcTV.textContent=FC.fmt(T())};fcT.onchange=()=>{replan();timeSheet.hidden=true};
 document.querySelectorAll('[name=fcd]').forEach(r=>r.onchange=()=>{replan();timeSheet.hidden=true});
 thSeg.onchange=()=>replan();
-cardBody.addEventListener('click',e=>{if(e.target.closest('#toNear')){th.value=70;replan()}}); // 空狀態連結：切回「快滿了以上」（切換鈕、清單、存檔一起更新）
+cardBody.addEventListener('click',e=>{if(e.target.closest('#toNear')){th.value=70;replan()}if(e.target.closest('#toTime'))sheetOpen('timeSheet')}); // 空狀態連結：切回「快滿了以上」（切換鈕、清單、存檔一起更新）
 allClear.onclick=()=>{const d=doneSet(),left=route.filter(e=>!d.has(e.b.id));if(!left.length)return;
   if(confirm(`確定將剩餘 ${left.length} 站全部標示為「已清運」？\n（不會記錄實際滿度，也不會校正）`)){left.forEach(e=>addEvent({bin:e.b.id,kind:'clear',level:0,by:'清潔隊'}));toast(`已標示 ${left.length} 站清運完成`);draw();setSheet.hidden=true}};
 reset.onclick=()=>{if(confirm('清除所有示範回報與校正？')){localStorage.removeItem(LS_EVENTS);localStorage.removeItem(CONFIG.storageKeys.forecast);toast('已清除');replan()}};

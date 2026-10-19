@@ -43,17 +43,30 @@ with sync_playwright() as p:
     # 這裡需要垃圾桶：?reset=1 後、示範位置（捷運公館站公車站）按一次 → 設點規劃圖層與公館熱點詳情都是 1 筆
     pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     assert pg.evaluate("getNeeds().length")==0 and pg.locator('#needBtn').is_visible() and pg.locator('#needBtn').bounding_box()['height']>=44
-    near=pg.locator('#need.far').count();print(name,'需求按鈕 示範位置 醒目',near)
+    near=pg.locator('#need.far').count();print(name,'需求按鈕 示範位置 醒目',near);assert near==0  # 示範位置步行 102 m → 不醒目
     pg.click('#needBtn');pg.wait_for_timeout(300);assert '謝謝，已給設點規劃參考' in pg.inner_text('#list') and pg.evaluate("getNeeds().length")==1
     assert pg.locator('[data-reason]').count()==3 and pg.locator('[data-reason]').first.bounding_box()['height']>=44
+    assert '✓ 謝謝，已給設點規劃參考' in pg.inner_text('#list') and '原因（可不選）' in pg.inner_text('#need')
+    assert pg.locator('#needUndo').bounding_box()['height']>=44;pg.click('#needUndo');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds().length")==0 and pg.locator('#needBtn').is_visible()
+    pg.click('#needBtn');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds().length")==1
     pg.click('[data-reason="外帶餐盒"]');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].reason")=='外帶餐盒' and pg.get_attribute('[data-reason="外帶餐盒"]','aria-pressed')=='true'
     dup=pg.evaluate("(()=>{const r=addNeed(pos[0]+0.0002,pos[1]);return [r.dup,getNeeds().length]})()");assert dup==[True,1],dup  # 50 m 內只算一次
     pg.evaluate("(()=>{const s=D.yb.find(x=>x.name==='捷運大安站(4號出口)');setPos([s.la,s.lo],'手動設定的位置')})()");pg.wait_for_timeout(500)
-    q=pg.inner_text('#needQ') if pg.locator('#needQ').count() else '';print(name,'遠處',q);assert pg.locator('#need.far #needBtn').count()==1 and '最近的桶要走' in q and '需要這裡多一個嗎？' in q
+    q=pg.inner_text('#needQ') if pg.locator('#needQ').count() else '';print(name,'遠處',q,'| 卡片',pg.inner_text('.dist').replace('\n',' '));assert pg.evaluate("RT.walkMin(nearestN(shown(),1)[0].d)")==int(q.split('走 ')[1].split(' ')[0]) and ('步行約 %s 分'%q.split('走 ')[1].split(' ')[0]) in pg.inner_text('.dist')
+    st=pg.evaluate("(()=>{const c=getComputedStyle(needBtn);return [c.backgroundColor,c.borderTopColor,c.color]})()");print(name,'醒目樣式',st);assert st==['rgb(255, 255, 255)','rgb(43, 51, 51)','rgb(43, 51, 51)']
+    assert pg.locator('#need.far #needBtn').count()==1 and '最近的桶要走' in q and '需要這裡多一個嗎？' in q
     pg.screenshot(path=f'shot_pedestrian_need_{name}.png')
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);lt=pg.inner_text('[data-ly="need"]');print(name,'規劃圖層',lt);assert '1 筆' in lt and pg.get_attribute('[data-ly="need"]','aria-pressed')=='true'
+    dot=pg.evaluate("getComputedStyle(document.querySelector('[data-ly=need] i')).backgroundColor");mk=pg.locator('.needmk');bb=mk.first.bounding_box();bg=pg.evaluate("getComputedStyle(document.querySelector('.needmk')).backgroundColor");print(name,'需求點',mk.count(),bb['width'],dot,bg);assert mk.count()==1 and 10<=bb['width']<=12 and dot==bg=='rgb(122, 92, 196)'
+    assert pg.evaluate("getComputedStyle(document.querySelector('#thrSeg button.on')).backgroundColor")=='rgb(43, 51, 51)'
     pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆'
     if name=='mobile':pg.screenshot(path='shot_planner_need_mobile.png')
+    pg.evaluate("(()=>{const n=getNeeds()[0];addNeed(n.la+0.0006,n.lo);addNeed(n.la,n.lo+0.0007)})()");pg.click('#bk');pg.evaluate("map.setView([getNeeds()[0].la,getNeeds()[0].lo],14)");pg.wait_for_timeout(600)
+    cl=pg.evaluate("[...document.querySelectorAll('.needmk')].map(e=>e.innerText)");print(name,'合併',pg.evaluate("getNeeds().length"),'筆 →',cl);assert cl==['3']
+    pg.evaluate("localStorage.setItem('有桶_needs_v1',JSON.stringify(getNeeds().slice(0,1)))")
+    for u in ('pedestrian.html','crew.html','index.html'):
+      pg.goto(B+u);pg.wait_for_selector('.roles a');hs=pg.evaluate("[...document.querySelectorAll('.roles a')].map(a=>a.getBoundingClientRect().height)");assert min(hs)>=44,(u,hs)
+    print(name,'角色切換高度 OK')
     # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回
     pg.goto(B+'crew.html?fc=1&day=we&t=15:30');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)
     assert '溢出' not in pg.content();sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3>=1 and '必清' in sA and '週六 15:30' in pg.inner_text('#tChip')
@@ -100,8 +113,12 @@ with sync_playwright() as p:
     # 空狀態重現（?reset=1 之後）：平日 08:30 + 只清滿溢
     pg.goto(B+'crew.html?reset=1');pg.wait_for_url('**/crew.html');pg.goto(B+'crew.html?fc=1&day=wk&t=08:30');pg.wait_for_selector('#card[data-state=A]',timeout=20000);pg.wait_for_timeout(600)
     pg.click('#menu');pg.click('#thSeg label:has([value="100"])');pg.wait_for_timeout(400);pg.click('#setSheet [data-close]')
-    cb=pg.inner_text('#card');print(name,'空狀態 reset 後 平日08:30',cb.replace('\n',' ')[:60]);assert '目前沒有滿溢的桶' in cb and '43 桶中列入 0 桶' in cb and pg.locator('#cardTitle').count()==0 and '必清 0 站' not in cb
+    cb=pg.inner_text('#card');print(name,'空狀態 reset 後 平日08:30',cb.replace('\n',' ')[:60]);assert pg.inner_text('#cardEmpty')=='目前沒有滿溢的桶' and pg.inner_text('#cardCount')=='43 桶中列入 0 桶';assert '目前沒有滿溢的桶' in cb and '43 桶中列入 0 桶' in cb and pg.locator('#cardTitle').count()==0 and '必清 0 站' not in cb
     pg.click('#toNear');pg.wait_for_timeout(500);assert pg.locator('#cardTitle').count()==1 and pg.evaluate("document.querySelector('[name=thr][value=\"70\"]').checked") and pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')).th")==70
+    # 剛例行清運、沒有要清的桶：平日 07:00 → 05:00 已例行清運；「調整時間」開時間設定
+    pg.goto(B+'crew.html?fc=1&day=wk&t=07:00');pg.wait_for_selector('#card[data-state=A] #cardEmpty',timeout=20000);pg.wait_for_timeout(400)
+    et=pg.inner_text('#cardEmpty');print(name,'例行清運後空狀態',et,'|',pg.inner_text('#prog'));assert et=='05:00 已例行清運，目前沒有要清的桶' and '43 桶中列入 0 桶' in pg.inner_text('#cardCount') and '沒有要清的桶' in pg.inner_text('#prog') and '無站點' not in pg.content()
+    assert pg.locator('#toTime').bounding_box()['height']>=44;pg.click('#toTime');pg.wait_for_timeout(300);assert pg.locator('#timeSheet').is_visible();pg.keyboard.press('Escape')
     # 例行清運時間（假設）：config 與資料說明一致
     assert pg.evaluate("CONFIG.forecast.routineClears.join(',')")=='05:00,08:00,12:00,16:00' and '例行清運時間 05:00／08:00／12:00／16:00 為假設；官方公開資料只提到一天 3–6 次，沒有公布時間' in pg.content()
     pg.goto(B+'crew-route.html');pg.wait_for_selector('#card',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
