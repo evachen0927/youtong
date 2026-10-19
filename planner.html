@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>規劃｜垃圾桶缺口分析</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="common.css"></head>
+<body><div class="app"><header></header><main>
+<div id="map"></div>
+<aside class="panel"><button class="handle" aria-label="展開面板"></button>
+ <h2>垃圾桶缺口分析</h2><p class="sub">找出公車站與 YouBike 站周邊沒有垃圾桶的地方，作為新增點位參考。</p>
+ <div class="stats" id="cards"></div>
+ <h3>覆蓋半徑：<b id="rV">200</b> 公尺</h3>
+ <input type="range" id="r" min="100" max="300" step="100" value="200">
+ <div class="row sub" style="justify-content:space-between;margin:2px 0 0"><span>100</span><span>200</span><span>300</span></div>
+ <div class="stats" id="unc" style="margin-top:12px"></div>
+ <h3>建議新增點位 Top 10</h3><div id="sug"></div>
+ <h3>各行政區垃圾桶數（每 km²）</h3><div id="bars"></div>
+ <div class="note">⚠️ 北投區在主要清潔箱資料中為 0 筆（僅有景點商圈 10 點），南港區也僅 9 點：<b>資料缺漏，非實際覆蓋率</b>。這兩區的缺口數字請謹慎解讀。</div>
+ <div class="foot">公車站以內政部鄉鎮市區界（taiwan-atlas 2021 版 TopoJSON）判定是否位於臺北市；距離為直線距離。建議點位以貪婪法選出：每次挑能涵蓋最多「未覆蓋站點」的站點位置。無人口資料，未計算每萬人密度。</div>
+</aside></main></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="common.js"></script>
+<script>
+nav('planner.html');sheet();
+const map=baseMap([25.06,121.55],12),ren=L.canvas({padding:.3});
+const binL=L.layerGroup().addTo(map),uL=L.layerGroup().addTo(map),sL=L.layerGroup().addTo(map);
+let bins,pts,dis,GAP=['北投區','南港區'];
+const GS=0.003; // 網格 ~300m
+function grid(arr){const g=new Map();arr.forEach((p,i)=>{const k=Math.floor(p.la/GS)+','+Math.floor(p.lo/GS);(g.get(k)||g.set(k,[]).get(k)).push(i)});return g}
+function near(g,arr,p,R,cb){const a=Math.floor(p.la/GS),b=Math.floor(p.lo/GS),n=Math.ceil(R/300)+0;for(let i=a-n;i<=a+n;i++)for(let j=b-n;j<=b+n;j++)for(const k of g.get(i+','+j)||[])if(hav(p.la,p.lo,arr[k].la,arr[k].lo)<=R)cb(k)}
+let binG;
+function run(){
+  const R=+r.value;rV.textContent=R;
+  const u=pts.filter(p=>p.nb>R);
+  uL.clearLayers();for(const p of u)L.circleMarker([p.la,p.lo],{renderer:ren,radius:4,stroke:false,fillColor:p.t==='bus'?'#e5484d':'#f5a623',fillOpacity:.65}).bindPopup(`${p.t==='bus'?'🚌':'🚲'} <b>${p.name}</b><br>${p.d}・最近垃圾桶 ${fmtM(p.nb)}${GAP.includes(p.d)?'<br><i>資料缺漏區</i>':''}`).addTo(uL);
+  const ub=u.filter(p=>p.t==='bus').length,uy=u.length-ub,nb=pts.filter(p=>p.t==='bus').length;
+  unc.innerHTML=`<div class="stat"><b style="color:#e5484d">${ub}</b><span>公車站無垃圾桶（共 ${nb}）</span></div><div class="stat"><b style="color:#c98200">${uy}</b><span>YouBike 站無垃圾桶（共 ${pts.length-nb}）</span></div>`;
+  // 貪婪選點
+  const ug=grid(u),cov=new Array(u.length).fill(false),out=[];
+  const nbrs=u.map(p=>{const a=[];near(ug,u,p,R,k=>a.push(k));return a});
+  for(let s=0;s<10;s++){let bi=-1,bc=0;for(let i=0;i<u.length;i++){let c=0;for(const k of nbrs[i])if(!cov[k])c++;if(c>bc){bc=c;bi=i}}
+    if(bi<0||bc===0)break;let nbus=0,nyb=0;for(const k of nbrs[bi])if(!cov[k]){cov[k]=true;u[k].t==='bus'?nbus++:nyb++}out.push({p:u[bi],nbus,nyb})}
+  sL.clearLayers();out.forEach((o,i)=>{L.circle([o.p.la,o.p.lo],{radius:R,color:'#0f9d76',weight:1.5,fillOpacity:.08}).addTo(sL);L.marker([o.p.la,o.p.lo],{icon:L.divIcon({className:'mk',html:i+1,iconSize:[26,26]})}).addTo(sL)});
+  sug.innerHTML=out.map((o,i)=>`<div class="card item" data-i="${i}"><div class="row" style="flex-wrap:nowrap;align-items:flex-start"><span class="num">${i+1}</span><div style="flex:1"><div class="t">${o.p.name} 附近</div><div class="m">${o.p.d}・${o.p.addr||''}</div><div class="m">可涵蓋 <b>${o.nbus}</b> 個公車站、<b>${o.nyb}</b> 個 YouBike 站 ${GAP.includes(o.p.d)?'<span class="pill mid">資料缺漏區</span>':''}</div></div></div></div>`).join('')||'<p class="sub">此半徑下已無缺口</p>';
+  sug.onclick=e=>{const c=e.target.closest('[data-i]');if(c){const o=out[+c.dataset.i];map.setView([o.p.la,o.p.lo],16)}};
+  localStorage.setItem('debug松_planner_r',R)}
+Promise.all(['bins.geojson','youbike.geojson','busstops_taipei.geojson','districts.geojson'].map(loadJSON)).then(([b,y,s,d])=>{
+  bins=b.features.map(f=>({la:ll(f)[0],lo:ll(f)[1],d:f.properties.district,src:f.properties.source}));binG=grid(bins);dis=d.features;
+  pts=[...y.features.map(f=>({t:'yb',name:f.properties.name,d:f.properties.district,addr:f.properties.address,la:ll(f)[0],lo:ll(f)[1]})),...s.features.map(f=>({t:'bus',name:f.properties.name,d:f.properties.district,addr:f.properties.address,la:ll(f)[0],lo:ll(f)[1]}))];
+  for(const p of pts){let m=1e9;near(binG,bins,p,1000,k=>{m=Math.min(m,hav(p.la,p.lo,bins[k].la,bins[k].lo))});if(m===1e9)for(const q of bins)m=Math.min(m,hav(p.la,p.lo,q.la,q.lo));p.nb=m}
+  L.geoJSON(d,{style:f=>({color:'#0f9d76',weight:1,dashArray:'3',fillColor:'#f1d28a',fillOpacity:GAP.includes(f.properties.name)?.18:0}),interactive:false}).addTo(map);
+  for(const q of bins)L.circleMarker([q.la,q.lo],{renderer:ren,radius:3,stroke:false,fillColor:'#5b6670',fillOpacity:.9}).addTo(binL);
+  const area=dis.reduce((a,f)=>a+f.properties.area_km2,0);
+  cards.innerHTML=`<div class="stat"><b>${bins.length}</b><span>清潔箱點位</span></div><div class="stat"><b>${(bins.length/area).toFixed(1)}</b><span>每 km² 點位（全市 ${area.toFixed(0)} km²）</span></div><div class="stat"><b>${y.features.length}</b><span>YouBike 站</span></div><div class="stat"><b>${s.features.length}</b><span>公車站（臺北市）</span></div>`;
+  const rows=dis.map(f=>{const n=bins.filter(q=>q.d===f.properties.name).length;return{n:f.properties.name,c:n,k:n/f.properties.area_km2}}).sort((a,b)=>b.c-a.c),mx=rows[0].c;
+  bars.innerHTML=rows.map(o=>`<div class="bar"><span>${o.n.replace('區','')}</span><i class="${GAP.includes(o.n)?'gap':''}" style="width:${Math.max(2,o.c/mx*100)}%"></i><span>${o.c}（${o.k.toFixed(1)}）</span></div>`).join('');
+  r.value=localStorage.getItem('debug松_planner_r')||200;r.oninput=run;run();
+  L.control.layers(null,{'垃圾桶':binL,'未覆蓋站點':uL,'建議點位':sL},{position:'topleft'}).addTo(map);
+}).catch(e=>toast('資料載入失敗：'+e.message));
+</script></body></html>
