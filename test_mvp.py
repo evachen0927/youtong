@@ -28,8 +28,9 @@ with sync_playwright() as p:
     pg.screenshot(path=f'shot_planner_compare_{name}.png')
     pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     print(name,'行人',pg.inner_text('#where'))
-    pg.evaluate("hotBtn.click()");pg.wait_for_timeout(500);pg.click('[data-m=after]');pg.wait_for_timeout(600)
-    print(name,'調整後',pg.inner_text('#delta').replace('\n',' '))
+    pg.evaluate("hotBtn.click()");pg.wait_for_timeout(600)
+    print(name,'只顯示現況',pg.locator('[data-m]').count()==0 and pg.locator('#delta').count()==0);assert pg.locator('[data-m]').count()==0
+    pg.goto(B+'pedestrian.html?mode=after');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(1500);assert 'pill sc' not in pg.content() and '調整後' not in pg.inner_text('#list')
     pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
     pg.click('#doneBtn');pg.wait_for_timeout(300);pg.click('[data-full]');pg.wait_for_timeout(300)
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))

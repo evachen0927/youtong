@@ -14,7 +14,7 @@ with sync_playwright() as p:
   pg.locator('.panel').evaluate("e=>e.scrollTo({top:400,behavior:'smooth'})");W(pg,8000)
   pg.click('#adopt');W(pg,5000)
   pg.click('.roles a[href="pedestrian.html"]');pg.wait_for_selector('#list .card');W(pg,8000)
-  pg.evaluate("hotBtn.click()");W(pg,5000);pg.click('[data-m=after]');W(pg,6000);pg.click('[data-m=before]');W(pg,4000);pg.click('[data-m=after]');W(pg,4000)
+  pg.evaluate("hotBtn.click()");W(pg,5000)  # 行人頁只顯示現況（已移除現況／改善後切換）
   pg.click('#doneBtn');W(pg,3000);pg.click('[data-full]');W(pg,5000)
   pg.click('.roles a[href="crew.html"]');pg.wait_for_selector('#next [data-amt]');W(pg,8000)
   pg.click('#next [data-amt=full]');W(pg,4000);pg.click('#next [data-amt=half]');W(pg,4000);pg.click('#menu');W(pg,5000)
