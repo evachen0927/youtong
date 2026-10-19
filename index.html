@@ -9,17 +9,32 @@
 .ftop .role{font-size:12px;color:var(--mute);background:#ffffffd9;padding:4px 10px;border-radius:999px}
 .mk.hot{background:var(--ink);box-shadow:0 0 0 2px #fff,0 1px 4px #0003;border:0}
 .app main{height:100dvh}
+.insight{padding:4px 0 6px}.insight .eyebrow{font-size:12px;font-weight:600;color:var(--mute);letter-spacing:.5px}
+.insight .big{font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1.1;margin:6px 0 2px}.insight .big small{font-size:18px;color:var(--mute);font-weight:500;letter-spacing:0}
+.insight .lead{font-size:17px;font-weight:600;margin:4px 0 6px;line-height:1.45}.insight .lead2{font-size:14px;color:var(--ink-2);margin:0 0 8px;line-height:1.55}
+.insight .src{font-size:12px;color:var(--faint);margin:0;line-height:1.5}
+h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
+.hs{display:flex;gap:12px;align-items:flex-start;border:0;background:var(--surface-2);border-radius:var(--r);padding:14px;margin-bottom:8px;min-height:44px;transition:background .15s}
+.hs:hover{background:var(--gray-2)}.hs .bd{flex:1;min-width:0}.hs .t{font-weight:600;font-size:15px}
+.hs .ev{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;font-size:12px;color:var(--mute)}.hs .ev b{display:block;font-size:15px;color:var(--ink)}
+.hs .gi{height:4px;border-radius:2px;background:var(--gray-2);margin-top:10px;overflow:hidden}.hs .gi i{display:block;height:100%;background:var(--fill-high);opacity:.75}
+.hs .go{color:var(--faint);font-size:20px;align-self:center}
+.stat{border:0;background:var(--surface-2);border-radius:var(--r)}.card{border-radius:var(--r)}
+@media (min-width:1024px){.panel{width:40%;min-width:420px;padding:72px 32px 32px}}
+@media (min-width:761px) and (max-width:1023px){main{flex-direction:column}#map{flex:none;height:52vh}.panel{width:auto;border-left:0;border-top:1px solid var(--line);flex:1;padding:20px 24px 32px}}
+@media (max-width:760px){.leaflet-bottom.leaflet-left{top:64px;bottom:auto}.app main{padding-bottom:0}.panel{bottom:0;height:50%}.insight .big{font-size:36px}}
 </style></head>
 <body><div class="app"><main>
 <div class="ftop"><span class="wm">有桶</span><span class="role">規劃</span><button class="fab" id="menu" aria-label="選單">⋯</button></div>
 <div id="map"></div>
 <aside class="panel"><button class="handle" aria-label="展開面板"></button>
 <div id="home">
- <h2 id="hTitle"></h2><p class="sub" id="hCaveat"></p>
- <div class="stats" id="cards"></div>
- <h3>示範區：<span id="areaName"></span> 缺口熱點</h3>
- <p class="sub">YouBike 站「最近街道清冊垃圾桶 &gt; <span class="thr"></span>m」，依 <b>缺口指數 = 活動量 × (距離 − <span class="thr"></span>m)</b> 排序。活動量為 2026-07 借＋還次數<span class="tag est">推估人流</span>。點一個熱點比較 A/B/C。</p>
+ <section class="insight" id="insight"></section>
+ <h3 class="sec">示範區 <span id="areaName"></span>・缺口熱點排名</h3>
+ <p class="sub">YouBike 站最近的登記垃圾桶超過 <span class="thr"></span> m，依 <b>缺口指數＝借還量 ×（距離 − <span class="thr"></span> m）</b>排序。點選可在地圖上查看並比較 A／B／C 方案。</p>
  <div id="hot"></div>
+ <h3 class="sec">全市數據</h3>
+ <div class="stats" id="cards"></div><p class="sub" id="hCaveat" style="margin-top:10px"></p>
  <h3>人流高 ≠ 缺口大</h3><div class="card" id="vs"></div>
  <label class="ck"><input type="checkbox" id="lyAnc"> 🔶 研究團隊觀察錨點（39 處，每區活動量前 3）</label>
  <h3>各行政區街道清冊點位</h3><div id="bars"></div>
@@ -43,7 +58,8 @@ const map=quietMap(CONFIG.demoArea.center,CONFIG.demoArea.zoom),ren=L.canvas({pa
 const baseL=L.layerGroup().addTo(map),hotL=L.layerGroup().addTo(map),chgL=L.layerGroup().addTo(map),ancL=L.layerGroup();
 let D,ST,HS,cur=null,opt='A';const curH=()=>cur;
 document.querySelectorAll('.thr').forEach(e=>e.textContent=CONFIG.hotspot.gapThresholdM);
-hTitle.textContent=CONFIG.headline.title;hCaveat.textContent=CONFIG.headline.caveat;areaName.textContent=CONFIG.demoArea.name;
+hCaveat.textContent=CONFIG.headline.caveat;areaName.textContent=CONFIG.demoArea.name;
+{const it=CONFIG.headline.items,y=it[2],b=it[3];insight.innerHTML=`<div class="eyebrow">關鍵發現・真實資料</div><div class="big">${y.value}<small> / ${(y.note.match(/共\s*([\d,]+)/)||[,''])[1]} 站</small></div><p class="lead">${y.label.replace('YouBike 站','YouBike 站點的 ')}</p><p class="lead2">公車站位也一樣：${(b.note.match(/共\s*([\d,]+)/)||[,''])[1]} 個站位中，有 <b>${b.value}</b> 個 100 m 內沒有登記垃圾桶。</p><p class="src">${it[0].note}（${it[0].label.match(/\d{4}-\d{2}-\d{2}/)?.[0]||''}）× YouBike 站點、公車站位；直線距離。</p>`}
 cards.innerHTML=CONFIG.headline.items.map(i=>`<div class="stat"><b>${i.value}</b><span>${i.label}</span></div>`).join('');
 const fmt=n=>n.toLocaleString('zh-TW');
 function drawBase(bins){baseL.clearLayers();
@@ -56,7 +72,7 @@ function drawBase(bins){baseL.clearLayers();
 function home(){cur=null;detail.hidden=true;document.getElementById('home').hidden=false;chgL.clearLayers();drawBase(D.street);drawHot()}
 function drawHot(){hotL.clearLayers();HS.slice(0,CONFIG.hotspot.maxList).forEach((h,i)=>L.marker([h.la,h.lo],{icon:L.divIcon({className:'mk hot',html:i+1,iconSize:[26,26]}),zIndexOffset:800}).on('click',()=>open(h)).addTo(hotL))}
 function open(h){cur=h;const saved=SC.load();const E=SC.evaluate(h,ST,D.street);h.E=E;opt=(saved&&saved.hotspotId===h.id)?saved.option:E.rec;
-  document.getElementById('home').hidden=true;detail.hidden=false;render();focusAt(map,[h.la,h.lo],16);
+  document.getElementById('home').hidden=true;detail.hidden=false;render();if(isMobile()||!map.flyTo)focusAt(map,[h.la,h.lo],16);else map.flyTo([h.la,h.lo],16,{duration:.8});
   const p=document.querySelector('.panel');p.classList.remove('min');p.scrollTop=0}
 function render(){const h=cur,E=h.E,A=E.A,C=E.C,saved=SC.load();
   const row=(lab,a,b,c,better)=>`<tr><td>${lab}</td><td>${a}</td><td>${b}</td><td class="${better?'good':''}">${c}</td></tr>`;
@@ -93,7 +109,8 @@ function draw(){const h=cur,E=h.E;chgL.clearLayers();drawBase(opt==='C'&&E.binsC
 loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];
   ST=[...D.yb,...D.bus].filter(s=>SC.inArea(s.la,s.lo));
   HS=SC.hotspots(ST,D.street);
-  hot.innerHTML=HS.slice(0,CONFIG.hotspot.maxList).map((h,i)=>`<div class="card item" data-i="${i}"><div class="row" style="flex-wrap:nowrap;align-items:flex-start"><span class="num">${i+1}</span><div style="flex:1"><div class="t">${h.name}</div><div class="m">${h.d}・最近桶 ${fmtM(h.nb)}・借＋還 ${fmt(h.act)}</div></div><span class="pill">比較 ›</span></div></div>`).join('')||'<p class="sub">示範區沒有缺口熱點</p>';
+  const gmax=HS[0]?HS[0].gap:1,near=h=>SC.all.filter(s=>hav(h.la,h.lo,s.la,s.lo)<=200).length;
+  hot.innerHTML=HS.slice(0,CONFIG.hotspot.maxList).map((h,i)=>`<div class="card item hs" data-i="${i}"><span class="num">${i+1}</span><div class="bd"><div class="t">${h.name}</div><div class="ev"><span><b>${fmtM(h.nb)}</b>最近登記桶</span><span><b>${fmt(h.act)}</b>月借還量</span><span><b>${near(h)}</b>200 m 內站點</span></div><div class="gi"><i style="width:${Math.max(4,h.gap/gmax*100)}%"></i></div></div><span class="go">›</span></div>`).join('')||'<p class="sub">示範區沒有缺口熱點</p>';
   hot.onclick=e=>{const c=e.target.closest('[data-i]');if(c)open(HS[+c.dataset.i])};
   vs.innerHTML=CONFIG.compare.map((c,i)=>{const s=D.yb.find(x=>x.name===c.name);if(!s)return'';const[d]=SC.nearestDist(s,D.street);return `<div class="row" style="flex-wrap:nowrap;padding:6px 0;${i?'border-top:1px solid var(--line)':''}"><div style="flex:1"><div class="t" style="font-weight:600;font-size:14px">${c.label}｜${s.name}</div><div class="m" style="color:var(--mute);font-size:13px">借＋還 ${fmt(s.act||0)}・最近桶 ${fmtM(d)}</div></div><button class="btn sm" data-vs="${i}">前往 ›</button></div>`}).join('')+'<p class="sub" style="margin:6px 0 0">活動量最高的站附近已有桶；缺口指數同時看活動量與距離。</p>';
   vs.onclick=e=>{const b=e.target.closest('[data-vs]');if(!b)return;const c=CONFIG.compare[+b.dataset.vs],s=D.yb.find(x=>x.name===c.name);const[d,bn]=SC.nearestDist(s,D.street);open({...s,nb:d,nbBin:bn,gap:(s.act||0)*Math.max(0,d-CONFIG.hotspot.gapThresholdM)})};
