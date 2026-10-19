@@ -37,12 +37,14 @@ html,body{font-family:var(--font)}
 /* 常駐角色切換 */
 .roles{display:flex;align-items:center;gap:10px;pointer-events:auto;z-index:1100}
 .roles.fixed{position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px}
-.roles .wm{display:none;font-weight:700;font-size:16px;letter-spacing:.5px;color:var(--ink);background:#ffffffe6;height:var(--touch);align-items:center;padding:0 14px;border-radius:999px;box-shadow:var(--shadow-1)}
+.roles .wm{display:inline-flex;gap:6px;justify-content:center;min-width:var(--touch);box-sizing:border-box;font-weight:700;font-size:16px;letter-spacing:.5px;color:var(--ink);background:#ffffffe6;height:var(--touch);align-items:center;padding:0 14px;border-radius:999px;box-shadow:var(--shadow-1)}
 .roles .seg3{display:flex;padding:3px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1)}
 .roles a{display:flex;align-items:center;justify-content:center;min-width:58px;height:38px;padding:0 12px;border-radius:999px;color:var(--ink-2);text-decoration:none;font:500 14px/1 var(--font);white-space:nowrap}
 .roles a.on{background:var(--ink);color:#fff;font-weight:700}
 .roles .seg3{min-height:var(--touch);box-sizing:border-box}
-@media (min-width:761px){.roles .wm{display:inline-flex}}
+.roles .wm img{display:block;flex:none}.roles .wm .wt{display:none}
+@media (max-width:760px){.roles .wm{padding:0}}
+@media (min-width:761px){.roles .wm{padding:0 14px 0 10px}.roles .wm .wt{display:inline}}
 /* 字體統一：表單元件、Leaflet 控制項／彈窗／版權列都用同一個 --font */
 button,input,select,textarea,optgroup{font-family:inherit}
 .leaflet-container,.leaflet-container .leaflet-control,.leaflet-popup-content,.leaflet-tooltip,.leaflet-control-attribution{font-family:var(--font)!important}
