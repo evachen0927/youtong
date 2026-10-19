@@ -69,7 +69,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <div class="fld"><label for="fcT" style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mute)">時間 <span class="tv" id="fcTV">08:00</span></label><input type="range" id="fcT" min="0" max="1425" step="15" value="480"></div>
   <div class="fld"><label for="fcTh" style="font-size:13px;color:var(--mute)">清運門檻：填充度 ≥ <b id="fcThV">70</b>%</label><input type="range" id="fcTh" min="10" max="100" step="5" value="70"></div>
   <div class="fcsum" id="fcSum"></div>
-  <div class="note">人流由交通活動推估（YouBike 2026-07 借還＋公車路線數）・產生量為假設，可調整（每 1,000 人次 5 公升）・填充度為模擬<span class="sim" title="模擬值"></span></div>
+  <div class="note">人流由交通活動推估（200m 內 YouBike 2026-07 每小時借＋還）・產生量每次借還 <b id="fcLpr"></b> 公升：<a id="fcSrc" target="_blank" rel="noopener">用官方公開的每日清運頻率校準，仍是假設</a>・填充度為模擬<span class="sim" title="模擬值"></span></div>
   <div id="fcCal" class="note" hidden></div>
   <div id="fcList"></div>
 </section>
@@ -228,10 +228,9 @@ fcList.onclick=e=>{const it=e.target.closest('.fci');if(!it)return;
   const a=e.target.closest('[data-fca]');if(a){const b=P.find(x=>x.id===it.dataset.id),pct=+a.dataset.fca,st=FC.state(),r=FC.clearAndCalibrate(b,day(),+fcT.value,pct,st);
     addEvent({bin:b.id,kind:'clear',level:0,by:'清潔隊',amount:['empty','half','full','overflow'][[0,50,100,120].indexOf(pct)],amountPct:pct,predPct:Math.round(r.pred),calib:+r.k.toFixed(3),fcDay:day(),fcMin:+fcT.value});
     openId=null;toast(`已清運；預測 ${Math.round(r.pred)}%、回報 ${pct}% → 產生量校正 ×${r.k.toFixed(2)}`);render()}};
-Promise.all([loadJSON('bins.geojson'),loadJSON('footfall_hourly.json'),loadJSON('busstops_taipei.geojson')]).then(([b,h,s])=>{
+Promise.all([loadJSON('bins.geojson'),loadJSON('footfall_hourly.json')]).then(([b,h])=>{
   const bins=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address})).filter(x=>SC_in(x.la,x.lo));
-  const bus=s.features.map(f=>({la:ll(f)[0],lo:ll(f)[1],routes:f.properties.routes}));
-  P=FC.prepare(bins,h,bus);setUI();if(q.get('fc')==='1'||fu.on)show(true)}).catch(e=>toast('預測資料載入失敗：'+e.message));
+  P=FC.prepare(bins,h);fcLpr.textContent=C.litersPerRide;fcSrc.href=C.calibration.source;fcSrc.title=`環保局：每箱約 120 公升、每日清運約 3–6 次；假設人流前 10% 的桶週末一天滿 6 次`;setUI();if(q.get('fc')==='1'||fu.on)show(true)}).catch(e=>toast('預測資料載入失敗：'+e.message));
 function SC_in(la,lo){const[[a,b],[c,d]]=CONFIG.demoArea.bounds;return la>=a&&la<=c&&lo>=b&&lo<=d}
 })();
 </script></body></html>

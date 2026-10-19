@@ -25,19 +25,22 @@ window.CONFIG={
   suggestion:{bIfBinWithinM:100, cMinReduction100:1}, // 建議規則（假設，可調整）：熱點 ≤100m 有桶→B；C 可行且減少 ≥1 個 100m 無桶站→C；否則 A
   compare:[{name:'捷運公館站(2號出口)',label:'人流最高'},{name:'捷運大安站(4號出口)',label:'缺口最大'}], // 「人流高 ≠ 缺口大」比較卡
   // ===== 清潔隊「預測調度」（示範區）=====
-  // 每桶每小時人流 = 200m 內 YouBike 站該小時「每日平均借＋還次數」的平均（2026-07 實際紀錄）
-  //               + Σ 200m 內公車站停靠路線數 × busRidesPerRoutePerDay × 全市 YouBike 該小時占比（推估）
-  // 每小時產生量(L) = 人流 × footfallPerRide × litersPer1000 / 1000 × 該桶校正係數
-  // 填充度 = 起始量 + 自上次清運起累積產生量 / capacityL
+  // 每桶每小時人流 = 200m 內 YouBike 站該小時「每日平均借＋還次數」的平均（2026-07 實際紀錄；人流由交通活動推估）
+  // 每小時產生量(L) = 人流 × litersPerRide × 該桶校正係數；填充度 = 起始量 + 自上次清運起累積量 / capacityL
+  // litersPerRide 用官方公開的每日清運頻率校準，仍是假設（calibrate_rate.py）：
+  //   環保局：每箱約 120 公升、每日巡查清運約 3–6 次（聯合報 2025-08-17／經濟日報轉載）
+  //   假設示範區人流前 10% 的桶在週末一天裝滿 6 次；取第 90 百分位門檻桶（前 10% 中人流最低者）的週末每日人流 617.0
+  //   litersPerRide = 6 × 120 / 617.0 = 1.167
   forecast:{
     radiusM:200,
-    busRidesPerRoutePerDay:20,   // 假設，可調整：每條停靠路線約等於每日 20 次借還的活動量
-    footfallPerRide:15,          // 假設，可調整：每 1 次借還代表約 15 位經過的行人
-    litersPer1000:5,             // 假設，可調整：每 1,000 人次產生 5 公升
+    litersPerRide:1.167,
+    calibration:{fillsPerDay:6,capacityL:120,topShare:0.10,dayType:'we',basis:'第 90 百分位門檻桶的週末每日人流',refRidesPerDay:617.0,
+      source:'https://money.udn.com/money/story/7307/8944421',label:'用官方公開的每日清運頻率校準，仍是假設'},
     capacityL:120,
-    startFillMaxPct:30,          // 模擬：收班後起始量 0–30%（依桶編號固定）
+    startFillMaxPct:30,          // 模擬：例行清運後殘留起始量 0–30%（依桶編號固定）
     emaAlpha:0.3,                // 校正：實際回報滿度 ÷ 預測滿度，指數移動平均
     shiftStart:'08:00', shiftEnd:'16:30',
+    routineClears:['08:00','12:00','16:00'], // 假設：例行巡查清運 3 次（官方每日 3–6 次的下限）；預測從最近一次例行清運起累積
     depot:null,                  // 清潔隊出發點 [lat,lng]；null = 示範區中心
     threshold:70,
     demoTime:{day:'we',time:'19:00'} // 示範：週六傍晚
