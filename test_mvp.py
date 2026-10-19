@@ -9,7 +9,7 @@ with sync_playwright() as p:
   for name,opt in VP.items():
     c=br.new_context(**opt,locale='zh-TW')  # 不給定位權限 → 測試 fallback 台北市政府
     pg=c.new_page();errs=[];pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
-    pg.goto(B+'planner.html');pg.wait_for_selector('#hot .card',timeout=20000)
+    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000)
     print(name,'規劃 熱點數',pg.locator('#hot .card').count(),'| #1',pg.locator('#hot .card').first.inner_text().replace('\n',' '))
     pg.screenshot(path=f'shot_planner_{name}.png')
     pg.locator('#hot .card').first.click();pg.wait_for_selector('.cmp')
@@ -19,7 +19,7 @@ with sync_playwright() as p:
     print(name,'建議',[t for t in pg.inner_text('#detail').split('\n') if '★ 本工具' in t or 'C 移出' in t])
     pg.click('[data-o="C"]');pg.click('#adopt');pg.wait_for_timeout(600)
     pg.screenshot(path=f'shot_planner_compare_{name}.png')
-    pg.goto(B+'index.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
+    pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     print(name,'行人',pg.inner_text('#where'))
     pg.click('#hotBtn');pg.wait_for_timeout(500);pg.click('[data-m=after]');pg.wait_for_timeout(600)
     print(name,'調整後',pg.inner_text('#delta').replace('\n',' '))

@@ -3,7 +3,7 @@ const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.0375,121.563
 const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'台北市政府';
 const LS_EVENTS=(window.CONFIG&&CONFIG.storageKeys.events)||'debug松_events_v1';
 function nav(active){
-  const tabs=[['planner.html','📊','規劃'],['index.html','🚶','行人'],['crew.html','🧹','清潔隊']];
+  const tabs=[['index.html','📊','規劃'],['pedestrian.html','🚶','行人'],['crew.html','🧹','清潔隊']];
   document.querySelector('header').innerHTML='<div class="brand">debug<span>松</span>・垃圾桶地圖</div><nav class="tabs">'+tabs.map(t=>`<a href="${t[0]}" class="${t[0]===active?'on':''}"><span>${t[1]}</span>${t[2]}</a>`).join('')+'</nav>';
 }
 function sheet(){ // 手機底部面板：點把手切換大小
@@ -40,3 +40,9 @@ async function loadCore(){const [b,y,s]=await Promise.all(['bins.geojson','youbi
   const bus=s.features.map(f=>({t:'bus',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],routes:f.properties.routes,d:f.properties.district,addr:f.properties.address}));
   return{raw:b,street,venue,yb,bus}}
 const OPT_NAME={A:'A 維持現況',B:'B 原位改善',C:'C 同桶數挪一處'};
+
+// 手機底部面板會蓋住地圖下半部：把焦點往上偏移
+const isMobile=()=>matchMedia('(max-width:760px)').matches;
+function sheetH(){const p=document.querySelector('.panel');return isMobile()&&p?p.getBoundingClientRect().height:0}
+function focusAt(map,latlng,zoom){map.setView(latlng,zoom,{animate:false});const h=sheetH();if(h)map.panBy([0,h/2],{animate:false})}
+function fitTo(map,pts,maxZoom){map.fitBounds(pts,{paddingTopLeft:[40,40],paddingBottomRight:[40,40+sheetH()],maxZoom})}

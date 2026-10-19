@@ -11,14 +11,14 @@
 ## 三個頁面
 | 頁面 | 檔案 | 功能 |
 |---|---|---|
-| 規劃（主頁） | `planner.html` | 開場數字（來自 `config.js`）、示範區缺口熱點、點熱點看 A/B/C 指標對照與地圖變化，「採用」後存入 localStorage |
-| 行人 | `index.html` | 定位（拒絕時改用台北市政府，可點地圖手動設定）、最近 5 個垃圾桶＋Google Maps 步行導航、「調整前／調整後」距離比較、回報「滿了」 |
+| 規劃（主頁） | `index.html` | 開場數字（來自 `config.js`）、示範區缺口熱點、點熱點看 A/B/C 指標對照與地圖變化，「採用」後存入 localStorage |
+| 行人 | `pedestrian.html` | 定位（拒絕時改用台北市政府，可點地圖手動設定）、最近 5 個垃圾桶＋Google Maps 步行導航、「調整前／調整後」距離比較、回報「滿了」 |
 | 清潔隊 | `crew.html` | 模擬滿溢告警清單、單筆或一鍵回報已清運（動態路線保留在 `crew-route.html`，預設隱藏；`config.js` 的 `features.crewRouting` 或 `crew.html?route=1` 開啟） |
 
 ## 怎麼執行
 ```bash
 cd trash-mvp
-python3 -m http.server 8765   # 開 http://localhost:8765/planner.html
+python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 ```
 純靜態網站（HTML/CSS/原生 JS + Leaflet），沒有後端；所有路徑都是相對路徑，可直接放到 GitHub Pages（repo 根目錄），已附 `.nojekyll`。Leaflet 已放在 `vendor/`，不依賴 CDN；**地圖底圖仍需網路**（OpenStreetMap）。離線備援：`demo-backup.mp4` 示範影片。
 
