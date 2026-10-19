@@ -29,7 +29,7 @@ with sync_playwright() as p:
     pg.screenshot(path=f'shot_planner_compare_{name}.png')
     pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     print(name,'行人',pg.inner_text('#where'))
-    pg.evaluate("hotBtn.click()");pg.wait_for_timeout(600)
+    dist=pg.inner_text('.dist');print(name,'示範位置距離',dist.replace('\n',' '));assert '步行約' in dist and '示範區外' not in dist
     print(name,'只顯示現況',pg.locator('[data-m]').count()==0 and pg.locator('#delta').count()==0);assert pg.locator('[data-m]').count()==0
     pg.goto(B+'pedestrian.html?mode=after');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(1500);assert 'pill sc' not in pg.content() and '調整後' not in pg.inner_text('#list')
     pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')

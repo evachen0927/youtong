@@ -1,6 +1,6 @@
 // 共用：導覽列、資料、localStorage、距離、填充度
-const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.037232,121.568269];
-const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'興雅國中公車站';
+const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.033404,121.543827];
+const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'捷運大安站(信義)公車站';
 const LS_EVENTS=(window.CONFIG&&CONFIG.storageKeys.events)||'debug松_events_v1';
 function sheet(){ // 手機底部面板：點把手切換大小
   const p=document.querySelector('.panel'),h=p.querySelector('.handle');if(!h)return;
