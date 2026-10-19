@@ -4,7 +4,7 @@ const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'台北市政府';
 const LS_EVENTS=(window.CONFIG&&CONFIG.storageKeys.events)||'debug松_events_v1';
 function nav(active){
   const tabs=[['index.html','📊','規劃'],['pedestrian.html','🚶','行人'],['crew.html','🧹','清潔隊']];
-  document.querySelector('header').innerHTML='<div class="brand">debug<span>松</span>・垃圾桶地圖</div><nav class="tabs">'+tabs.map(t=>`<a href="${t[0]}" class="${t[0]===active?'on':''}"><span>${t[1]}</span>${t[2]}</a>`).join('')+'</nav>';
+  document.querySelector('header').innerHTML='<div class="brand"><span>有桶</span></div><nav class="tabs">'+tabs.map(t=>`<a href="${t[0]}" class="${t[0]===active?'on':''}"><span>${t[1]}</span>${t[2]}</a>`).join('')+'</nav>';
 }
 function sheet(){ // 手機底部面板：點把手切換大小
   const p=document.querySelector('.panel'),h=p.querySelector('.handle');if(!h)return;
