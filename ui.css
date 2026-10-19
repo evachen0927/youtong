@@ -71,3 +71,8 @@ button,input,select,textarea,optgroup{font-family:inherit}
 .crow{top:calc(var(--row2) + env(safe-area-inset-top))!important}
 html body .top{padding-top:calc(var(--row2) + env(safe-area-inset-top))!important}
 @media (max-width:760px){.lychips{top:var(--row2)!important}.leaflet-bottom.leaflet-left{top:calc(var(--row2) + 2px)!important}}
+/* logo 徽章：綠色圓角方塊內＝白色桶圖示＋白色粗體「有桶」（HTML 系統字）；比 44px 切換器大 */
+.roles .wm{background:var(--brand)!important;border-radius:14px;width:48px;height:56px!important;padding:0!important;margin-top:0;gap:0;justify-content:center;filter:none;box-shadow:var(--shadow-1)!important}
+.roles .wm img{width:34px!important;height:34px!important;margin:-3px 0 -2px}
+.roles .wm .wt{color:#fff!important;font:700 12px/1.1 var(--font)!important;letter-spacing:1px}
+@media (min-width:761px){.roles .wm{width:56px;height:64px!important;border-radius:16px;margin-top:-2px}.roles .wm img{width:40px!important;height:40px!important}.roles .wm .wt{font-size:14px!important}}
