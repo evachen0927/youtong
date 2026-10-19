@@ -1,8 +1,9 @@
 // 共用：導覽列、資料、localStorage、距離、填充度
-const TPE_MAIN=[25.0478,121.5170];
-const LS_EVENTS='debug松_events_v1';
+const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.0375,121.5637];
+const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'台北市政府';
+const LS_EVENTS=(window.CONFIG&&CONFIG.storageKeys.events)||'debug松_events_v1';
 function nav(active){
-  const tabs=[['index.html','🚶','行人'],['crew.html','🧹','清潔隊'],['planner.html','📊','規劃']];
+  const tabs=[['planner.html','📊','規劃'],['index.html','🚶','行人'],['crew.html','🧹','清潔隊']];
   document.querySelector('header').innerHTML='<div class="brand">debug<span>松</span>・垃圾桶地圖</div><nav class="tabs">'+tabs.map(t=>`<a href="${t[0]}" class="${t[0]===active?'on':''}"><span>${t[1]}</span>${t[2]}</a>`).join('')+'</nav>';
 }
 function sheet(){ // 手機底部面板：點把手切換大小
@@ -30,3 +31,12 @@ function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin
 const fillColor=f=>f>=80?'#e5484d':f>=50?'#e8a317':'#0f9d76';
 const fillPill=f=>`<span class="pill ${f>=80?'full':f>=50?'mid':'ok'}">${f}%</span>`;
 const timeStr=ts=>new Date(ts).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+
+// 示範資料：街道清冊垃圾桶（不含場域線索）、示範區站點
+async function loadCore(){const [b,y,s]=await Promise.all(['bins.geojson','youbike.geojson','busstops_taipei.geojson'].map(loadJSON));
+  const street=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district}));
+  const venue=b.features.filter(f=>f.properties.source==='scenic130').map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district,count:f.properties.count}));
+  const yb=y.features.map(f=>({t:'yb',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],act:f.properties.act,dock:f.properties.total,d:f.properties.district,addr:f.properties.address}));
+  const bus=s.features.map(f=>({t:'bus',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],routes:f.properties.routes,d:f.properties.district,addr:f.properties.address}));
+  return{raw:b,street,venue,yb,bus}}
+const OPT_NAME={A:'A 維持現況',B:'B 原位改善',C:'C 同桶數挪一處'};

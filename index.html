@@ -1,48 +1,66 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>行人｜找最近的垃圾桶</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="common.css"></head>
+<title>行人｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css">
+<style>.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:6px 0 12px}.seg button{flex:1;border:0;background:#fff;padding:10px;font-size:14px;font-family:inherit;cursor:pointer}.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.delta{background:var(--accent-l);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px;line-height:1.6}.delta b{font-size:18px}</style></head>
 <body><div class="app"><header></header><main>
 <div id="map"></div><div class="hint">點地圖可手動設定位置</div>
 <aside class="panel"><button class="handle" aria-label="展開面板"></button>
  <h2>最近的垃圾桶</h2><p class="sub" id="where">定位中…</p>
- <div class="row" style="margin-bottom:14px"><button class="btn sm" id="locate">📍 重新定位</button><button class="btn sm" id="station">🚉 台北車站</button></div>
+ <div class="row" style="margin-bottom:10px"><button class="btn sm" id="locate">📍 重新定位</button><button class="btn sm" id="hotBtn">🎯 到熱點</button></div>
+ <div class="seg" id="seg"><button data-m="before" class="on">調整前</button><button data-m="after">調整後</button></div>
+ <div id="delta"></div>
  <div id="list"></div>
  <h3>圖層</h3>
- <label class="ck"><input type="checkbox" id="lyYb"> 🚲 YouBike 站點（附近）</label>
- <label class="ck"><input type="checkbox" id="lyBus"> 🚌 公車站（附近）</label>
- <div class="foot">距離為直線距離，步行時間以 ×1.3 繞行係數、每分鐘 80 公尺估算。<br>資料：臺北市資料大平臺 行人專用清潔箱（含景點商圈 130 點）、YouBike2.0、臺北市公車站位。</div>
+ <label class="ck"><input type="checkbox" id="lyYb"> 🚲 YouBike 站點（畫面內）</label>
+ <label class="ck"><input type="checkbox" id="lyBus"> 🚌 公車站（畫面內）</label>
+ <div class="foot">垃圾桶為臺北市行人專用清潔箱街道清冊（2026-09-30）；「調整後」套用規劃頁採用的方案（模擬情境，非實際設置）。距離為直線距離，步行時間以 ×1.3 繞行係數、每分鐘 80 公尺估算。</div>
 </aside></main></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="common.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script>
 <script>
 nav('index.html');sheet();
-const map=baseMap(TPE_MAIN,16);
-let bins=[],yb=[],bus=[],me=null,pos=null,sel=null;
-const nearL=L.layerGroup().addTo(map),binL=L.layerGroup().addTo(map),ybL=L.layerGroup(),busL=L.layerGroup();
-const ren=L.canvas({padding:.3});
-function drawBins(){binL.clearLayers();const b=map.getBounds().pad(.3);for(const f of bins){const p=ll(f);if(b.contains(p))L.circleMarker(p,{renderer:ren,radius:5,color:'#fff',weight:1.5,fillColor:'#5b6670',fillOpacity:.9}).on('click',()=>focusBin(f)).addTo(binL)}}
-function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data){const p=ll(f);if(b.contains(p))L.circleMarker(p,{renderer:ren,radius:4,color:'#fff',weight:1,fillColor:color,fillOpacity:.9}).bindPopup(pop(f)).addTo(layer)}}
-function redraw(){drawBins();drawPts(ybL,yb,'#f5a623',lyYb.checked,f=>`🚲 <b>${f.properties.name}</b><br>可借 ${f.properties.rent??'-'}・可還 ${f.properties.ret??'-'}`);drawPts(busL,bus,'#2a7de1',lyBus.checked,f=>`🚌 <b>${f.properties.name}</b><br>${f.properties.routes} 條路線停靠`)}
+const map=baseMap(TPE_MAIN,16),ren=L.canvas({padding:.3});
+let D,binsBefore=[],binsAfter=[],scen=null,mode='before',me=null,pos=null,sel=null,upg=new Set();
+const nearL=L.layerGroup().addTo(map),binL=L.layerGroup().addTo(map),ybL=L.layerGroup(),busL=L.layerGroup(),chgL=L.layerGroup().addTo(map);
+const bins=()=>mode==='after'?binsAfter:binsBefore;
+function drawBins(){binL.clearLayers();const b=map.getBounds().pad(.3);for(const f of bins())if(b.contains([f.la,f.lo]))L.circleMarker([f.la,f.lo],{renderer:ren,radius:f.moved?8:5,color:'#fff',weight:1.5,fillColor:f.moved?'#0f9d76':'#5b6670',fillOpacity:.9}).on('click',()=>focusBin(f)).addTo(binL)}
+function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.circleMarker([f.la,f.lo],{renderer:ren,radius:4,color:'#fff',weight:1,fillColor:color,fillOpacity:.9}).bindPopup(pop(f)).addTo(layer)}
+function redraw(){drawBins();drawPts(ybL,D.yb,'#f5a623',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'#2a7de1',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`);drawChange()}
+function drawChange(){chgL.clearLayers();if(mode!=='after'||!scen)return;
+  if(scen.moved){L.marker(scen.moved.from,{icon:L.divIcon({className:'',html:'<b style="color:#e5484d;font-size:18px;text-shadow:0 0 3px #fff">✕</b>',iconSize:[18,18]})}).addTo(chgL);L.polyline([scen.moved.from,scen.moved.to],{color:'#0f9d76',dashArray:'8 6',weight:3}).addTo(chgL)}
+  for(const b of binsAfter)if(upg.has(b.id))L.circleMarker([b.la,b.lo],{radius:12,color:'#7b3fbf',weight:3,fill:false}).addTo(chgL)}
 map.on('moveend',redraw);
 lyYb.onchange=()=>{lyYb.checked?ybL.addTo(map):ybL.remove();redraw()};lyBus.onchange=()=>{lyBus.checked?busL.addTo(map):busL.remove();redraw()};
+seg.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;mode=b.dataset.m;seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));redraw();render(false)};
 function setPos(p,label){pos=p;if(me)me.remove();me=L.marker(p,{icon:L.divIcon({className:'me'}),zIndexOffset:1000}).addTo(map);where.textContent=label;render(true)}
+const nearestN=(arr)=>arr.map(f=>({f,d:hav(pos[0],pos[1],f.la,f.lo)})).sort((a,b)=>a.d-b.d).slice(0,5);
 function render(fit){
-  const ev=getEvents();
-  const top=bins.map(f=>({f,d:hav(pos[0],pos[1],...ll(f))})).sort((a,b)=>a.d-b.d).slice(0,5);
+  if(!pos)return;const ev=getEvents(),T=nearestN(bins());const b0=nearestN(binsBefore)[0],a0=nearestN(binsAfter)[0];
+  const dd=a0.d-b0.d;
+  delta.innerHTML=scen?`<div class="delta">情境：<b style="font-size:14px">${OPT_NAME[scen.option]}</b> @ ${scen.hotspotName}${scen.auto?'（預設示範）':''}<br>最近垃圾桶：調整前 <b>${Math.round(b0.d)}m</b> → 調整後 <b>${Math.round(a0.d)}m</b> ${Math.abs(dd)<1?'（不變'+(scen.option==='B'&&upg.has(a0.f.id)?'；此桶容量↑ 模擬':'')+'）':`（${dd<0?'縮短':'增加'} ${Math.round(Math.abs(dd))}m，步行 ${walkMin(b0.d)}→${walkMin(a0.d)} 分）`}</div>`:'';
   nearL.clearLayers();
-  top.forEach((t,i)=>{L.marker(ll(t.f),{icon:L.divIcon({className:'mk',html:i+1,iconSize:[26,26]}),zIndexOffset:500}).on('click',()=>focusBin(t.f)).addTo(nearL)});
-  list.innerHTML=top.map((t,i)=>{const p=t.f.properties,f=fillOf(p.id,ev),[la,lo]=ll(t.f);return `<div class="card item ${sel===p.id?'on':''}" data-id="${p.id}">
-   <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><span class="num">${i+1}</span><div style="flex:1"><div class="t">${p.address}</div>
-   <div class="m">${p.district}・${fmtM(t.d)}・步行約 ${walkMin(t.d)} 分${p.count>1?'・'+p.count+' 個桶':''}</div>
-   <div class="m">目前估計 ${fillPill(f)} ${p.source.includes('scenic')?'<span class="pill">景點商圈</span>':''}</div></div></div>
-   ${sel===p.id?`<div class="row" style="margin-top:12px"><a class="btn sm pri" target="_blank" rel="noopener" href="${gmapWalk(la,lo)}">Google Maps 導航</a><button class="btn sm" data-full="${p.id}">回報：這個垃圾桶滿了</button></div>`:''}</div>`}).join('');
-  if(fit)map.fitBounds([pos,...top.slice(0,3).map(t=>ll(t.f))],{padding:[50,50],maxZoom:17});
+  T.forEach((t,i)=>L.marker([t.f.la,t.f.lo],{icon:L.divIcon({className:'mk',html:i+1,iconSize:[26,26]}),zIndexOffset:500}).on('click',()=>focusBin(t.f)).addTo(nearL));
+  list.innerHTML=T.map((t,i)=>{const p=t.f,f=fillOf(p.id,ev);return `<div class="card item ${sel===p.id?'on':''}" data-id="${p.id}">
+   <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><span class="num">${i+1}</span><div style="flex:1"><div class="t">${p.addr}${p.moved?' <span class="pill ok">方案 C 移入</span>':''}${mode==='after'&&upg.has(p.id)?' <span class="pill">容量↑ 模擬</span>':''}</div>
+   <div class="m">${p.d}・${fmtM(t.d)}・步行約 ${walkMin(t.d)} 分・填充度 ${fillPill(f)}<span style="font-size:11px">（模擬）</span></div></div></div>
+   ${sel===p.id?`<div class="row" style="margin-top:12px"><a class="btn sm pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">Google Maps 導航</a><button class="btn sm" data-full="${p.id}">回報：這個垃圾桶滿了</button></div>`:''}</div>`}).join('');
+  if(fit)map.fitBounds([pos,...T.slice(0,3).map(t=>[t.f.la,t.f.lo])],{padding:[50,50],maxZoom:17});
 }
-function focusBin(f){sel=f.properties.id;map.setView(ll(f),Math.max(map.getZoom(),17));render(false);const c=list.querySelector(`[data-id="${sel}"]`);if(c){c.scrollIntoView({block:'nearest',behavior:'smooth'})}else toast(f.properties.address+'（不在最近 5 個內）')}
+function focusBin(f){sel=f.id;map.setView([f.la,f.lo],Math.max(map.getZoom(),17));render(false)}
 list.onclick=e=>{const fb=e.target.closest('[data-full]');if(fb){addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});toast('已回報，清潔隊頁面會看到 🙏');render(false);return}
-  if(e.target.closest('a'))return;const c=e.target.closest('.card');if(c){const f=bins.find(b=>b.properties.id===c.dataset.id);sel=c.dataset.id;map.setView(ll(f),17);render(false)}};
+  if(e.target.closest('a'))return;const c=e.target.closest('.card');if(c){const f=bins().find(b=>b.id===c.dataset.id);sel=f.id;map.setView([f.la,f.lo],17);render(false)}};
 map.on('click',e=>{sel=null;setPos([e.latlng.lat,e.latlng.lng],'手動設定的位置')});
 function locate(){where.textContent='定位中…';let done=false;const once=(p,l)=>{if(!done){done=true;setPos(p,l)}};
-  setTimeout(()=>once(TPE_MAIN,'無法取得定位，已改用台北車站'),6000);
-  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>once([p.coords.latitude,p.coords.longitude],'你的目前位置'),()=>once(TPE_MAIN,'未允許定位，已改用台北車站'),{timeout:5000,enableHighAccuracy:true});else once(TPE_MAIN,'瀏覽器不支援定位，已改用台北車站')}
-document.getElementById('locate').onclick=locate;station.onclick=()=>setPos(TPE_MAIN,'台北車站');
-Promise.all(['bins.geojson','youbike.geojson','busstops.geojson'].map(loadJSON)).then(([b,y,s])=>{bins=b.features;yb=y.features;bus=s.features;redraw();locate()}).catch(e=>where.textContent='資料載入失敗：'+e.message);
+  setTimeout(()=>once(TPE_MAIN,`無法取得定位，已改用${TPE_NAME}（可點地圖改位置）`),6000);
+  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>once([p.coords.latitude,p.coords.longitude],'你的目前位置'),()=>once(TPE_MAIN,`未允許定位，已改用${TPE_NAME}（可點地圖改位置）`),{timeout:5000,enableHighAccuracy:true});else once(TPE_MAIN,`不支援定位，已改用${TPE_NAME}`)}
+document.getElementById('locate').onclick=locate;
+hotBtn.onclick=()=>{if(scen)setPos([scen.hotLa,scen.hotLo].every(Boolean)?[scen.hotLa,scen.hotLo]:scen.moved?scen.moved.to:CONFIG.demoArea.center,'熱點：'+scen.hotspotName)};
+loadCore().then(d=>{D=d;binsBefore=D.street;
+  const ST=[...D.yb,...D.bus].filter(s=>SC.inArea(s.la,s.lo)),HS=SC.hotspots(ST,D.street);
+  scen=SC.load();
+  if(!scen&&HS.length){const h=HS[0],E=SC.evaluate(h,ST,D.street),o=E.rec;scen={hotspotId:h.id,hotspotName:h.name,option:o,auto:true,moved:o==='C'&&E.donor?{id:E.donor.b.id,from:[E.donor.b.la,E.donor.b.lo],to:[h.la+0.00008,h.lo+0.00008]}:null,upgraded:o==='B'?E.B.bins.map(b=>b.id):[]}}
+  if(scen){const h=HS.find(x=>x.id===scen.hotspotId)||D.yb.find(x=>x.id===scen.hotspotId);if(h){scen.hotLa=h.la;scen.hotLo=h.lo}
+    upg=new Set(scen.upgraded||[]);binsAfter=scen.moved?D.street.map(b=>b.id===scen.moved.id?{...b,la:scen.moved.to[0],lo:scen.moved.to[1],moved:true,addr:'（移入）'+scen.hotspotName+' 旁'}:b):D.street}
+  else{binsAfter=D.street;hotBtn.hidden=true}
+  if(new URLSearchParams(location.search).get('mode')==='after')seg.querySelector('[data-m=after]').click();
+  redraw();locate()}).catch(e=>where.textContent='資料載入失敗：'+e.message);
 </script></body></html>

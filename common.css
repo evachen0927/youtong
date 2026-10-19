@@ -48,3 +48,4 @@ label.ck{display:flex;align-items:center;gap:8px;font-size:14px;padding:4px 0;cu
  #map{flex:1}
  .toast{bottom:150px}
 }
+[hidden]{display:none!important}

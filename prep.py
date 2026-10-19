@@ -40,7 +40,7 @@ save([{"type":"Feature","geometry":mapping(v.simplify(0.0003)),"properties":{"na
 # --- bins: merge two resources
 bins=[];stat=collections.Counter()
 def addbin(r,src):
-    try: lon,lat=float(r['經度']),float(r['緯度'])
+    try: lon,lat=float(r['經度'].strip().lstrip('?？')),float(r['緯度'].strip().lstrip('?？'))  # 1 列有多餘 '?' 前綴
     except: stat['bad_'+src]+=1;return
     if not(24.9<lat<25.25 and 121.4<lon<121.7): stat['bad_'+src]+=1;return
     for b in bins:
@@ -60,10 +60,11 @@ for i,b in enumerate(bins):
 print("bins",len(bins),dict(stat),collections.Counter(b['properties']['source'] for b in bins))
 save(bins,'bins.geojson')
 # --- youbike
+act={o['sno']:o for o in json.load(open('youbike_activity_202607.json'))}
 yb=[]
 for s in json.load(open('youbike_raw.json')):
     lat,lon=float(s['latitude']),float(s['longitude'])
-    yb.append(F(lon,lat,{"id":s['sno'],"name":s['sna'].replace('YouBike2.0_',''),"district":dist_of(lon,lat) or s['sarea'],"address":s['ar'],"total":s.get('Quantity'),"rent":s.get('available_rent_bikes'),"ret":s.get('available_return_bikes')}))
+    yb.append(F(lon,lat,{"id":s['sno'],"name":s['sna'].replace('YouBike2.0_',''),"district":dist_of(lon,lat) or s['sarea'],"address":s['ar'],"total":s.get('Quantity'),"rent":s.get('available_rent_bikes'),"ret":s.get('available_return_bikes'),"act":act[s['sno']]['activity_excl_0710_0711'] if act[s['sno']]['matched'] else None}))
 save(yb,'youbike.geojson')
 # --- bus stops (unique stopLocationId), district by polygon
 d=json.loads(gzip.open('busstop_raw.gz').read().decode('utf-8-sig'))['BusInfo'];g={}
