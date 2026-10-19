@@ -71,6 +71,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .toast{top:calc(116px + env(safe-area-inset-top));bottom:auto!important}
 .leaflet-top.leaflet-left{top:calc(112px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:250px}
 @media (min-width:761px){#list{left:auto;right:16px;bottom:16px;width:380px}.top{right:auto;width:520px}}
+.top{justify-content:space-between;padding-left:260px}
+.crow{position:fixed;top:calc(62px + env(safe-area-inset-top));left:12px;right:12px;z-index:1000;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px 0 6px}.crow::-webkit-scrollbar{display:none}
+.lchip{flex:none;display:inline-flex;align-items:center;gap:6px;height:var(--touch);padding:0 12px;border:0;border-radius:999px;background:var(--surface);color:var(--mute);box-shadow:var(--shadow-1);font:500 13px/1 var(--font);cursor:pointer}
+.lchip i{width:8px;height:8px;border-radius:50%;background:var(--c);opacity:.35}.lchip.on{color:var(--ink)}.lchip.on i{opacity:1}
+.seg2{flex:none;display:flex;padding:3px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);height:var(--touch);box-sizing:border-box}
+.seg2 button{border:0;background:none;border-radius:999px;padding:0 12px;font:500 13px/1 var(--font);color:var(--ink-2);cursor:pointer}.seg2 button.on{background:var(--ink);color:#fff;font-weight:600}
+.crow .lhint{flex:none;height:var(--touch);box-sizing:border-box}
 </style></head>
 <body>
 <div id="map"></div>
@@ -80,20 +87,19 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
     <button class="chip" data-f="general" role="radio" aria-checked="false"><span class="dot gen"></span>一般垃圾</button>
     <button class="chip" data-f="recycle" role="radio" aria-checked="false"><span class="dot rec"></span>資源回收</button>
   </div>
-  <button class="icon-btn" id="more" aria-label="更多選項">⋯</button>
+  <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
-<button class="infochip simtag" id="infoBtn">資料說明</button>
+<div class="crow" id="crow"><button class="lchip on" data-ly="lyYb" aria-pressed="true"><i style="--c:#d9a441"></i>YouBike</button><button class="lchip on" data-ly="lyBus" aria-pressed="true"><i style="--c:#8a84c9"></i>公車站</button><div class="seg2" id="seg" role="group" aria-label="情境"><button data-m="before" class="on">現況</button><button data-m="after">改善後</button></div><span class="lgd lhint" id="rhint"></span></div>
 <section id="list" aria-live="polite"><div class="k"><span class="brandm">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <div class="adv" id="adv" hidden><div class="sh" role="dialog" aria-label="更多">
   <div class="hd"><b>有桶・更多</b><button class="icon-btn" id="advClose" aria-label="關閉" style="box-shadow:none;background:#f3f3f1;font-size:16px">✕</button></div>
   <h3>規劃情境比較（模擬）</h3>
-  <div class="seg" id="seg"><button data-m="before" class="on">調整前</button><button data-m="after">調整後</button></div>
   <div id="delta"></div>
   <button class="b" id="hotBtn">🎯 把位置移到規劃熱點</button>
   <h3>圖層</h3>
-  <label class="ck"><input type="checkbox" id="lyYb"> 🚲 YouBike 站點（畫面內）</label>
-  <label class="ck"><input type="checkbox" id="lyBus"> 🚌 公車站（畫面內）</label>
+  <label class="ck"><input type="checkbox" id="lyYb" checked> 🚲 YouBike 站點（畫面內）</label>
+  <label class="ck"><input type="checkbox" id="lyBus" checked> 🚌 公車站（畫面內）</label>
   <div class="foot">資料來源與模擬說明請見地圖左上角「資料說明」。點地圖任一處可手動設定位置。</div>
 </div></div>
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
@@ -114,7 +120,7 @@ roleSwitch('pedestrian.html'); // 導覽列放在「更多」面板內
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);
-legend(map,REPORTED_HINT(),'topleft')._container.classList.add('lhint');
+rhint.innerHTML=REPORTED_HINT().map(i=>`<span>${i.html}${i.t}</span>`).join('');
 legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:'var(--brand)',t:'你的位置'}]);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 document.getElementById('map').classList.add('desat');
@@ -132,7 +138,7 @@ function pinIcon(b,ev,near){const st=binState(b.id,ev),f=st?0:Math.round(fillOf(
 function drawBins(){binL.clearLayers();const bd=map.getBounds().pad(.3),ev=getEvents(),nid=primary()&&primary().f.id;
   for(const f of shown())if(bd.contains([f.la,f.lo])){const near=f.id===nid;
     L.marker([f.la,f.lo],{icon:pinIcon(f,ev,near),zIndexOffset:near?900:0,keyboard:false,title:f.addr}).on('click',()=>focusBin(f)).addTo(binL)}}
-function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.circleMarker([f.la,f.lo],{renderer:ren,radius:4,stroke:false,fillColor:color,fillOpacity:.8}).bindPopup(pop(f)).addTo(layer)}
+function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.circleMarker([f.la,f.lo],{renderer:ren,radius:3,stroke:false,fillColor:color,fillOpacity:.5}).bindPopup(pop(f)).addTo(layer)}
 function redraw(){drawBins();drawPts(ybL,D.yb,'#d9a441',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'#8a84c9',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`);drawChange()}
 function drawChange(){chgL.clearLayers();if(mode!=='after'||!scen)return;
   if(scen.moved){L.marker(scen.moved.from,{icon:L.divIcon({className:'',html:'<b style="color:#646b70;font-size:18px;text-shadow:0 0 3px #fff">✕</b>',iconSize:[18,18]})}).addTo(chgL);L.polyline([scen.moved.from,scen.moved.to],{color:'#7b5cc4',dashArray:'8 6',weight:3}).addTo(chgL)}
@@ -198,8 +204,8 @@ function locate(){where='定位中…';const w=document.getElementById('where');
     ()=>once(()=>fallback('未允許定位')),{timeout:3500,enableHighAccuracy:true,maximumAge:60000})}
 
 // ---- 更多面板：規劃情境（調整前／後）、圖層、導覽 ----
-more.onclick=()=>{adv.hidden=false};infoBtn.onclick=()=>sheetOpen('infoSheet');advClose.onclick=()=>{adv.hidden=true};adv.onclick=e=>{if(e.target===adv)adv.hidden=true};
-lyYb.onchange=()=>{lyYb.checked?ybL.addTo(map):ybL.remove();redraw()};lyBus.onchange=()=>{lyBus.checked?busL.addTo(map):busL.remove();redraw()};
+infoBtn.onclick=()=>sheetOpen('infoSheet');crow.querySelectorAll('[data-ly]').forEach(c=>c.onclick=()=>{const i=document.getElementById(c.dataset.ly);i.checked=!i.checked;c.classList.toggle('on',i.checked);c.setAttribute('aria-pressed',i.checked);i.onchange()});advClose.onclick=()=>{adv.hidden=true};adv.onclick=e=>{if(e.target===adv)adv.hidden=true};
+lyYb.onchange=()=>{lyYb.checked?ybL.addTo(map):ybL.remove();redraw()};lyBus.onchange=()=>{lyBus.checked?busL.addTo(map):busL.remove();redraw()};ybL.addTo(map);busL.addTo(map); // 預設開啟
 seg.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;mode=b.dataset.m;seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));sel=null;render(false)};
 hotBtn.onclick=()=>{if(scen){adv.hidden=true;sel=null;setPos([scen.hotLa,scen.hotLo].every(Boolean)?[scen.hotLa,scen.hotLo]:scen.moved?scen.moved.to:CONFIG.demoArea.center,'熱點：'+scen.hotspotName)}};
 

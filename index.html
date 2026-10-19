@@ -6,6 +6,8 @@
 .back{border:0;background:none;color:var(--accent);font-size:14px;padding:0;margin-bottom:8px;cursor:pointer;font-family:inherit}
 .vmk{width:9px!important;height:9px!important;background:#7b5cc4;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#646b70;font-weight:700;font-size:20px;text-shadow:0 0 3px #fff}.ftop{position:absolute;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:8px;pointer-events:none}
 
+.lychips{display:flex;gap:6px;margin:0 0 14px}.lchip{display:inline-flex;align-items:center;gap:6px;height:var(--touch);padding:0 14px;border:0;border-radius:999px;background:var(--surface-2);color:var(--mute);font:500 13px/1 var(--font);cursor:pointer}.lchip i{width:8px;height:8px;border-radius:50%;background:var(--c);opacity:.35}.lchip.on{color:var(--ink);background:var(--gray-2)}.lchip.on i{opacity:1}
+@media (max-width:760px){.lychips{position:fixed;top:66px;left:12px;z-index:1000;margin:0}.lychips .lchip{background:var(--surface);box-shadow:var(--shadow-1)}.leaflet-bottom.leaflet-left{top:120px!important}}
 .ftop .role{font-size:12px;color:var(--mute);background:#ffffffd9;padding:4px 10px;border-radius:999px}
 .mk.hot{background:var(--ink);box-shadow:0 0 0 2px #fff,0 1px 4px #0003;border:0}
 .app main{height:100dvh}
@@ -27,9 +29,10 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 .cmp td,.hs .ev b,.stat b{font-variant-numeric:tabular-nums}
 </style></head>
 <body><div class="app"><main>
-<div class="ftop"><button class="fab" id="menu" aria-label="選單">⋯</button></div>
+<div class="ftop"><button class="fab ibtn" id="menu" aria-label="資料說明">i</button></div>
 <div id="map"></div>
 <aside class="panel"><button class="handle" aria-label="展開面板"></button>
+<div class="lychips" id="lychips" role="group" aria-label="圖層"><button class="lchip on" data-ly="yb" aria-pressed="true"><i style="--c:#d9a441"></i>YouBike</button><button class="lchip on" data-ly="bus" aria-pressed="true"><i style="--c:#8a84c9"></i>公車站</button></div>
 <div id="home">
  <section class="insight" id="insight"></section>
  <h3 class="sec">示範區 <span id="areaName"></span>・查核優先序</h3>
@@ -49,8 +52,8 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 <div id="detail" hidden></div>
 <div class="foot">交通活動量是人流的推估，不等於垃圾量。示範區內距離為步行路網距離（OpenStreetMap，2026-10-18 預先計算）；全市數字與示範區外為直線距離。B2 的滿溢時數為模擬值（有桶團隊加的，不在研究 PRD 內）。方案定義依研究團隊「A 現況／B 原位改善指引／C 同桶數微調一處」。</div>
 </aside></main></div>
-<div class="sheet" id="menuSheet" hidden><div class="sh" role="dialog" aria-label="選單">
-  <div class="hd"><b>有桶</b><button class="x" data-close aria-label="關閉">✕</button></div>
+<div class="sheet" id="menuSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
+  <div class="hd"><b>資料說明</b><button class="x" data-close aria-label="關閉">✕</button></div>
   <h3>資料說明</h3>
   <ul><li><b>真實資料</b>：垃圾桶位置（臺北市行人專用清潔箱街道清冊，2026-09-30）、YouBike 站點與 2026-07 借還次數、公車站位、景點商圈場域線索（2026-08-18）。</li>
   <li><b>推估</b>：借＋還次數與停靠路線數只是人流的代理指標，不等於垃圾量；示範區內中位數與 A/B/C 指標用步行路網距離；查核優先序與開場數字用直線距離（© OpenStreetMap contributors，ODbL；2026-10-18 預先計算），全市頭條數字仍為直線距離。</li>
@@ -62,6 +65,7 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 <script>
 let THR=CONFIG.hotspot.gapThresholdM;
 sheet();roleSwitch('index.html',document.querySelector('.ftop'));menu.onclick=()=>sheetOpen('menuSheet');
+const LY={yb:true,bus:true};lychips.onclick=e=>{const c=e.target.closest('[data-ly]');if(!c)return;LY[c.dataset.ly]=!LY[c.dataset.ly];c.classList.toggle('on',LY[c.dataset.ly]);c.setAttribute('aria-pressed',LY[c.dataset.ly]);if(typeof drawBase==='function'&&D)drawBase(cur&&opt==='C'&&cur.E&&cur.E.binsC?cur.E.binsC:D.street)};
 const map=quietMap(CONFIG.demoArea.center,CONFIG.demoArea.zoom),ren=L.canvas({padding:.3});
 const baseL=L.layerGroup().addTo(map),hotL=L.layerGroup().addTo(map),chgL=L.layerGroup().addTo(map),ancL=L.layerGroup();
 let D,ST,HS,cur=null,opt='A';const curH=()=>cur;
@@ -73,8 +77,8 @@ cards.innerHTML=CONFIG.headline.items.map(i=>`<div class="stat"><b>${i.value}</b
 const fmt=n=>n.toLocaleString('zh-TW');
 function drawBase(bins){baseL.clearLayers();
   L.rectangle(CONFIG.demoArea.bounds,{color:'#646b70',weight:1.2,dashArray:'6',fill:false,interactive:false}).addTo(baseL);
-  for(const s of D.bus)if(map.getBounds().pad(.5).contains([s.la,s.lo]))L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#8a84c9',fillOpacity:.55}).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
-  for(const s of D.yb){if(!map.getBounds().pad(.5).contains([s.la,s.lo]))continue;const r=s.act?Math.max(3,Math.sqrt(s.act)/22):3;
+  for(const s of D.bus)if(LY.bus&&map.getBounds().pad(.5).contains([s.la,s.lo]))L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#8a84c9',fillOpacity:.55}).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
+  for(const s of D.yb){if(!LY.yb||!map.getBounds().pad(.5).contains([s.la,s.lo]))continue;const r=s.act?Math.max(3,Math.sqrt(s.act)/22):3;
     L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#d9a441',fillOpacity:.7}).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
   for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk',iconSize:[10,10]})}).bindPopup(`◆ 場域線索：${v.addr}`).addTo(baseL);
   const z=map.getZoom(),vb=map.getBounds().pad(.3);

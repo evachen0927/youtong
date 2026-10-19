@@ -28,9 +28,9 @@ with sync_playwright() as p:
     pg.screenshot(path=f'shot_planner_compare_{name}.png')
     pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     print(name,'行人',pg.inner_text('#where'))
-    pg.click('#more');pg.click('#hotBtn');pg.wait_for_timeout(500);pg.click('#more');pg.click('[data-m=after]');pg.wait_for_timeout(600)
+    pg.evaluate("hotBtn.click()");pg.wait_for_timeout(500);pg.click('[data-m=after]');pg.wait_for_timeout(600)
     print(name,'調整後',pg.inner_text('#delta').replace('\n',' '))
-    pg.click('#advClose');pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
+    pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
     pg.click('#doneBtn');pg.wait_for_timeout(300);pg.click('[data-full]');pg.wait_for_timeout(300)
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
     # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回

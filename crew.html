@@ -11,7 +11,8 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 .prog small{font-weight:500;color:var(--mute);font-size:13px;white-space:nowrap}
 .tchip{pointer-events:auto;height:var(--touch);padding:0 12px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);font:700 14px/1 var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .info{position:fixed;top:calc(114px + env(safe-area-inset-top));left:12px;z-index:1000}
-.top{padding-top:calc(62px + env(safe-area-inset-top))!important}#menu{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1100}
+.top{padding-top:calc(62px + env(safe-area-inset-top))!important}#infoBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1100}
+#menu{flex:none}
 /* 卡片：A 規劃／B 執行 */
 #card{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow-2);padding:6px 16px 16px;max-width:520px;margin:0 auto;max-height:40vh;overflow-y:auto;transition:max-height .25s}
 #card.collapsed{max-height:64px;overflow:hidden}
@@ -57,8 +58,8 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 </style></head>
 <body>
 <div id="map"></div>
-<div class="top"><div class="prog" id="prog" aria-live="polite">載入中…</div><button class="tchip" id="tChip" aria-label="選擇預測時間">🕒 —</button><button class="fab" id="menu" aria-label="調度設定">⋯</button></div>
-<button class="infochip info" id="infoBtn">資料說明</button>
+<div class="top"><div class="prog" id="prog" aria-live="polite">載入中…</div><button class="tchip" id="tChip" aria-label="選擇預測時間">🕒 —</button><button class="tchip" id="menu" aria-label="調度設定">調度</button></div>
+<button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 <section id="card" aria-live="polite" data-state="A"><button class="grab" id="grab" aria-label="收合／展開卡片"></button><div id="cardBody"><div class="addr" style="color:var(--mute);font-weight:500">正在載入預測…</div></div></section>
 
 <div class="sheet" id="timeSheet" hidden><div class="sh" role="dialog" aria-label="預測時間">
@@ -94,7 +95,6 @@ roleSwitch('crew.html');
 const C=CONFIG.forecast,LSU='有桶_crew_ui_v2',AMT=[['empty','空',0],['half','半',50],['full','滿',100],['overflow','溢出',120]];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const map=quietMap(CONFIG.demoArea.center,15),binL=L.layerGroup().addTo(map),rtL=L.layerGroup().addTo(map);
-legend(map,[{html:'<b style="font-weight:600">滿度</b>',t:''},...RAMP_LEGEND],'topleft')._container.classList.add('lhint');
 legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:css('--ink-2'),t:'站序',shape:'line'}]);
 const q=new URLSearchParams(location.search),ui=JSON.parse(localStorage.getItem(LSU)||'{}');
 let P=[],E=[],route=[],state='A',gen=0;const depot=C.depot||CONFIG.demoArea.center;
