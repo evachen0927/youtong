@@ -2,7 +2,7 @@
 :root{
   /* 品牌綠：只用於主要動作與「你的位置」 */
   --brand:#0f9d76;--brand-ink:#0b7a5c;--brand-soft:#e6f4ef;
-  /* 滿度色階（冷→暖，固定）：<50 灰青、50–69 琥珀、≥70 深橘（含 >100%）；--fill-over 僅供收運量按鈕等非地圖用途 */
+  /* 滿度色階（冷→暖，固定）：<70 灰青、70–99 琥珀、≥100 深橘；--fill-over 僅供收運量按鈕等非地圖用途 */
   --fill-low:#8aa3a3;--fill-mid:#e2a33b;--fill-high:#d9731f;--fill-over:#a8501a;
   --fill-low-soft:#eef2f2;--fill-mid-soft:#fbf1df;--fill-high-soft:#fbeadb;--fill-over-soft:#f3e2d6;
   /* 紅色只保留給「被回報滿了」（行人回報、尚未清運）；滿度色階不使用紅色 */
