@@ -89,7 +89,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <li>示範位置：興雅國中公車站（公車站位資料），最近的清潔箱（松仁路32號）步行約 190 公尺（直線 179 公尺）。點地圖任一處可手動設定位置。</li></ul>
   <h3>模擬資料（標 <span class="sim"></span>）</h3>
   <ul><li><b>滿度</b>：臺北市沒有清潔箱滿溢偵測資料，滿度依編號固定產生；行人與清潔隊回報會覆蓋。</li></ul>
-  <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
+  <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
 <script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="routing.js"></script><script src="bin-category.js"></script><script src="ui.js"></script><script src="bin-icons.js"></script>

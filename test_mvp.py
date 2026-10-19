@@ -10,7 +10,7 @@ with sync_playwright() as p:
     c=br.new_context(**opt,locale='zh-TW')  # 不給定位權限 → 測試 fallback 台北市政府
     pg=c.new_page();errs=[];pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000)
-    print(name,'規劃 熱點數',pg.locator('#hot .card').count(),'| #1',pg.locator('#hot .card').first.inner_text().replace('\n',' '))
+    print(name,'設點規劃 熱點數',pg.locator('#hot .card').count(),'| #1',pg.locator('#hot .card').first.inner_text().replace('\n',' '))
     pg.screenshot(path=f'shot_planner_{name}.png')
     pg.click('#how summary');print(name,'怎麼算的',pg.inner_text('#formula')[:30],'|',pg.inner_text('#sens').replace('\n',' '))
     for t in (200,300,100):

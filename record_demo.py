@@ -1,4 +1,4 @@
-# 錄製 2 分鐘 Demo 備援影片（1280x800）：規劃熱點 → A/B/C → 行人前後 → 清潔隊告警與清運
+# 錄製 2 分鐘 Demo 備援影片（1280x800）：設點規劃熱點 → A/B/C → 行人前後 → 清潔隊告警與清運
 import shutil,glob,os
 from playwright.sync_api import sync_playwright
 B='http://localhost:8765/';W=lambda pg,ms:pg.wait_for_timeout(ms)
