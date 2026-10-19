@@ -17,7 +17,7 @@
 | 頁面 | 檔案 | 功能 |
 |---|---|---|
 | 設點規劃（主頁） | `index.html` | 開場數字（來自 `config.js`）、示範區查核優先序、點熱點看 A/B/C 指標對照與地圖變化，「採用」後存入 localStorage |
-| 行人 | `pedestrian.html` | 只顯示現況。定位（拒絕時改用示範位置「興雅國中公車站」，`config.js > fallbackLocation`；可點地圖手動設定）、最近 1 個垃圾桶＋「下一個」1 個、Google Maps 步行導航、「我丟好了 → 回報滿了／沒滿」（回報提供給清潔隊頁）。只顯示步行路網距離（全臺北市）；**不顯示滿度**：地圖垃圾桶一律中性色，只有被回報滿了、尚未清運的桶為紅（`--reported`）；卡片不顯示行政區與桶數 |
+| 行人 | `pedestrian.html` | 只顯示現況。定位（拒絕時改用示範位置「興雅國中公車站」，`config.js > fallbackLocation`；可點地圖手動設定）、最近 1 個垃圾桶＋「下一個」1 個、Google Maps 步行導航、一步回報：卡片直接問「這桶滿了嗎？」——「滿了」寫入回報（地圖該桶變紅，清潔隊頁讀得到），「還能丟」不寫入；按下後原位顯示一行「謝謝，已通知清潔隊」／「謝謝回報」，同一桶不再問（`有桶_asked_v1`，重設會清除）。只顯示步行路網距離（全臺北市）；卡片不顯示行政區與桶數 |
 | 清潔隊 | `crew.html` | 單一頁面：依預測產生參考清運順序（給領班參考，不排班、不派工，全部為模擬）。上方時間 chip 開抽屜（平日／週末＋時間滑桿，預設「平日 10:00」「週六 15:30」），卡片分「規劃」（必清／順路）與「執行」（逐站回報收運量 空／半／滿／溢出，可復原；回報會歸零並校正該桶產生量）。舊網址 `crew-route.html` 會自動導向 `crew.html`。 |
 
 ## 怎麼執行
@@ -61,7 +61,7 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 ### localStorage 事件格式
 `{bin, kind:'full'|'level'|'clear', level, by:'行人'|'清潔隊', ts, amount, amountPct}`；預測調度回報另加 `predPct`（預測滿度）、`calib`（新校正係數）、`fcDay`（wk/we）、`fcMin`（滑桿時間，分鐘）。校正係數另存 `localStorage['有桶_forecast_v1']`；清潔隊回報收運量時 `amount` 為 `empty|half|full|overflow`，`amountPct` 對應 0／50／100／120。
 
-重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）→ 路網 `python build_walk_city.py`（步行，全市；osmium extract -p 臺北市多邊形 → tags-filter w/highway）＋`python build_roads.py`（行車，示範區）（osmnx；先以 osmium 從 Geofabrik 臺灣 pbf 擷取示範區並篩選道路，指令見檔頭）。測試：`python test_mvp.py`（Playwright，桌面 1280×800＋手機 390×844）。行人頁：`#doneBtn` → `[data-full]` 回報滿了；清潔隊頁用 `#card [data-amt]` 回報收運量。
+重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）→ 路網 `python build_walk_city.py`（步行，全市；osmium extract -p 臺北市多邊形 → tags-filter w/highway）＋`python build_roads.py`（行車，示範區）（osmnx；先以 osmium 從 Geofabrik 臺灣 pbf 擷取示範區並篩選道路，指令見檔頭）。測試：`python test_mvp.py`（Playwright，桌面 1280×800＋手機 390×844）。行人頁：`[data-full]` 回報滿了、`[data-ok]` 還能丟；清潔隊頁用 `#card [data-amt]` 回報收運量。
 
 ## 資料來源（真實開放資料）
 | 資料 | 來源 | 授權 | 用法 |
