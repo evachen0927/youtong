@@ -77,9 +77,9 @@ cards.innerHTML=CONFIG.headline.items.map(i=>`<div class="stat"><b>${i.value}</b
 const fmt=n=>n.toLocaleString('zh-TW');
 function drawBase(bins){baseL.clearLayers();
   L.rectangle(CONFIG.demoArea.bounds,{color:'#646b70',weight:1.2,dashArray:'6',fill:false,interactive:false}).addTo(baseL);
-  for(const s of D.bus)if(LY.bus&&map.getBounds().pad(.5).contains([s.la,s.lo]))L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#8a84c9',fillOpacity:.55}).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
+  for(const s of D.bus)if(LY.bus&&map.getBounds().pad(.5).contains([s.la,s.lo]))L.circleMarker([s.la,s.lo],{renderer:ren,radius:2.5,stroke:false,fillColor:'#8a84c9',fillOpacity:.4}).bindPopup(`🚌 <b>${s.name}</b><br>${s.routes} 條路線停靠<span class="tag est">推估</span>`).addTo(baseL);
   for(const s of D.yb){if(!LY.yb||!map.getBounds().pad(.5).contains([s.la,s.lo]))continue;const r=s.act?Math.max(3,Math.sqrt(s.act)/22):3;
-    L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#d9a441',fillOpacity:.7}).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
+    L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#d9a441',fillOpacity:.5}).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
   for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk',iconSize:[10,10]})}).bindPopup(`◆ 場域線索：${v.addr}`).addTo(baseL);
   const z=map.getZoom(),vb=map.getBounds().pad(.3);
   for(const b of bins){if(z>=15&&!b.moved){if(vb.contains([b.la,b.lo]))L.marker([b.la,b.lo],{icon:PL_BIN[z>=16?0:1],keyboard:false}).bindPopup(`🗑 ${b.addr}${b.c>1?`<br>此處重疊 ${b.c} 列清冊（5 m 內）`:''}`).addTo(baseL)}
