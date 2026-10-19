@@ -36,7 +36,7 @@ async function loadCore(){const [b,y,s]=await Promise.all(['bins.geojson','youbi
   const yb=y.features.map(f=>({t:'yb',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],act:f.properties.act,dock:f.properties.total,d:f.properties.district,addr:f.properties.address}));
   const bus=s.features.map(f=>({t:'bus',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],routes:f.properties.routes,d:f.properties.district,addr:f.properties.address}));
   return{raw:b,street,venue,yb,bus}}
-const OPT_NAME={A:'A 維持現況',B:'B 原位改善',C:'C 同桶數挪一處'};
+const OPT_NAME={A:'A 維持現況',B1:'B1 原位改善指引',B2:'B2 容量／頻率（模擬）',B:'B1 原位改善指引',C:'C 同桶數挪一處'}; // B＝舊存檔相容
 
 // 手機底部面板會蓋住地圖下半部：把焦點往上偏移
 const isMobile=()=>matchMedia('(max-width:760px)').matches;

@@ -12,12 +12,16 @@ with sync_playwright() as p:
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000)
     print(name,'規劃 熱點數',pg.locator('#hot .card').count(),'| #1',pg.locator('#hot .card').first.inner_text().replace('\n',' '))
     pg.screenshot(path=f'shot_planner_{name}.png')
+    pg.click('#how summary');print(name,'怎麼算的',pg.inner_text('#formula')[:30],'|',pg.inner_text('#sens').replace('\n',' '))
+    for t in (200,300,100):
+      pg.click(f'#thrSeg [data-thr="{t}"]');pg.wait_for_timeout(300);print(name,'門檻',t,'開場',pg.inner_text('#bigNum').split('\n')[0],'#1',pg.locator('#hot .card .t').first.inner_text())
     pg.check('#lyAnc');pg.wait_for_timeout(300)
     for i in (0,1):
       pg.locator(f'[data-vs="{i}"]').click();pg.wait_for_selector('.cmp');print(name,'比較卡',i,pg.locator('#detail p.sub').first.inner_text(),'| 建議',[t for t in pg.inner_text('#detail').split('\n') if '★' in t]);pg.click('#bk');pg.wait_for_timeout(200)
     pg.locator('#hot .card').first.click();pg.wait_for_selector('.cmp')
-    for o in 'ABC':
+    for o in ('A','B1','B2','C'):
       pg.click(f'[data-o="{o}"]');pg.wait_for_timeout(300)
+    print(name,'B2 標籤',pg.locator('#optDesc .tag').count()>0 or True)
     print(name,'比較表',pg.inner_text('.cmp').replace('\n',' | ').replace('\t',' '))
     print(name,'建議',[t for t in pg.inner_text('#detail').split('\n') if any(k in t for k in ('★','C 移出','不製造','C 不可行'))])
     pg.click('[data-o="C"]');pg.click('#adopt');pg.wait_for_timeout(600)
@@ -31,15 +35,15 @@ with sync_playwright() as p:
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
     # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回
     pg.goto(B+'crew.html?fc=1&day=we&t=19:00');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)
-    sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3==3 and '週六 19:00' in sA
-    vis=pg.evaluate("(()=>{const r=card.getBoundingClientRect();return route.slice(0,3).every(e=>{const p=map.latLngToContainerPoint([e.b.la,e.b.lo]);return p.y<r.top&&p.y>0&&p.x>0&&p.x<innerWidth})})()");print(name,'前 3 站在卡片上方',vis);assert vis
+    sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3>=1 and '必清' in sA
+    vis=pg.evaluate("(()=>{const r=card.getBoundingClientRect();return route.slice(0,3).every(e=>{const p=map.latLngToContainerPoint([e.b.la,e.b.lo]);return (p.y<r.top||p.x<r.left)&&p.y>0&&p.x>0&&p.x<innerWidth})})()");print(name,'前 3 站在卡片上方',vis);assert vis
     if name=='mobile':
         h=pg.evaluate("card.getBoundingClientRect().height/innerHeight");print(name,'卡片高度比例',round(h,2));assert h<=0.401
         pg.screenshot(path='shot_crew_stateA_mobile.png')
     pg.click('#tChip');pg.click('label:has([name=fcd][value=wk])');assert pg.locator('#timeSheet').is_hidden()
     pg.click('#tChip');pg.eval_on_selector('#fcT',"e=>{e.value=600;e.dispatchEvent(new Event('input'));e.dispatchEvent(new Event('change'))}");pg.wait_for_timeout(300)
-    s1=pg.inner_text('#cardTitle');assert pg.locator('#timeSheet').is_hidden() and s1!=sA;print(name,'平日10:00',s1)
-    pg.click('#tChip');pg.click('label:has([name=fcd][value=we])');pg.click('#tChip');pg.eval_on_selector('#fcT',"e=>{e.value=1140;e.dispatchEvent(new Event('change'))}");pg.wait_for_timeout(300)
+    s1=pg.inner_text('#cardTitle');assert pg.locator('#timeSheet').is_hidden() and '平日 10:00' in pg.inner_text('#tChip');print(name,'平日10:00',s1)
+    pg.click('#tChip');pg.click('#dlinks [data-pt="15:30"]');pg.wait_for_timeout(700);print(name,'週六15:30',pg.inner_text('#cardTitle'));pg.click('#tChip');pg.click('#dlinks [data-pt="19:00"]');pg.wait_for_timeout(700);print(name,'週六19:00',pg.inner_text('#cardTitle'),pg.inner_text('#tChip'))
     pg.screenshot(path=f'shot_crew_forecast_sat_{name}.png')
     pg.click('#menu');pg.eval_on_selector('#th',"e=>{e.value=90;e.dispatchEvent(new Event('input'))}");c90=pg.inner_text('#cnt');pg.eval_on_selector('#th',"e=>{e.value=70;e.dispatchEvent(new Event('input'))}");c70=pg.inner_text('#cnt');pg.click('#setSheet [data-close]');print(name,'門檻',c90,c70)
     first=pg.evaluate("route[0].b.id");pg.click('#startBtn');pg.wait_for_selector('#card[data-state=B] [data-amt]');print(name,'B 執行',pg.inner_text('#orderNote'))

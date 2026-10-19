@@ -16,7 +16,7 @@ FC.lph=(b,k,h,st)=>{const C=FC.cfg(),cal=(st.cal[b.id]&&st.cal[b.id].k)||1;retur
 FC.fillAt=(b,k,t,st)=>{const C=FC.cfg(),s0=FC.hm(C.shiftStart),cl=st.clear[b.id]&&st.clear[b.id].k===k?st.clear[b.id]:null;
   const day=Math.floor(t/1440)*1440,rc=(C.routineClears||[C.shiftStart]).map(FC.hm).sort((x,y)=>x-y);
   const prev=[...rc.map(m=>day+m),...rc.map(m=>day-1440+m)].filter(m=>m<=t).sort((x,y)=>y-x)[0]; // 最近一次例行清運
-  const useCl=cl&&cl.min<=t&&cl.min>=prev;let from=useCl?cl.min:prev,L=useCl?0:b.start/100*C.capacityL;
+  const useCl=cl&&cl.min<=t&&cl.min>=prev;let from=useCl?cl.min:prev,L=0; // 例行或手動清運都歸零（不再疊加模擬殘留量）
   for(let m=from;m<t;m+=15){const h=Math.floor((((m%1440)+1440)%1440)/60);L+=FC.lph(b,k,h,st)/4}
   return L/C.capacityL*100};
 FC.fullAt=(b,k,t,st)=>{const C=FC.cfg();let f=FC.fillAt(b,k,t,st);if(f>=100)return t;let L=f/100*C.capacityL;

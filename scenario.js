@@ -13,8 +13,11 @@ SC.median=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n?(n%2?s[(n-1)/2
 SC.metrics=(stations,bins)=>{const ds=stations.map(s=>SC.nearestDist(s,bins)[0]);
   return{n:stations.length,over100:ds.filter(d=>d>100).length,over200:ds.filter(d=>d>200).length,median:SC.median(ds),ds,
     actServed100:stations.reduce((a,s,i)=>a+(ds[i]<=100?(s.act||0):0),0),routesServed100:stations.reduce((a,s,i)=>a+(ds[i]<=100?(s.routes||0):0),0)}};
-SC.hotspots=(stations,bins)=>stations.filter(s=>s.t==='yb'&&s.act).map(s=>{const[d,b]=SC.nearestDist(s,bins);return{...s,nb:d,nbBin:b,gap:s.act*Math.max(0,d-CONFIG.hotspot.gapThresholdM)}})
-  .filter(h=>h.nb>CONFIG.hotspot.gapThresholdM).sort((a,b)=>b.gap-a.gap);
+// 查核優先序＝借還量 ×（直線距離 − 門檻）。與研究 repo 一致用直線距離；步行距離只當輔助顯示
+SC.lineNearest=(p,bins)=>{let m=1e9,bi=null;for(const b of bins){const d=hav(p.la,p.lo,b.la,b.lo);if(d<m){m=d;bi=b}}return[m,bi]};
+SC.hotspots=(stations,bins,thr=CONFIG.hotspot.gapThresholdM)=>stations.filter(s=>s.t==='yb'&&s.act).map(s=>{const[d,b]=SC.lineNearest(s,bins);return{...s,nb:d,nbBin:b,gap:s.act*Math.max(0,d-thr)}})
+  .filter(h=>h.nb>thr).sort((a,b)=>b.gap-a.gap);
+SC.walkNearest=(p,bins)=>{const r=SC.nearestDist(p,bins);return r[2]==='walk'?r[0]:null};
 SC.demandAround=(b,stations)=>stations.reduce((a,s)=>a+(s.t==='yb'&&hav(b.la,b.lo,s.la,s.lo)<=CONFIG.scenarioC.demandRadiusM?(s.act||0):0),0);
 SC.all=[]; // 全市站點（頁面載入後設定），檢查原位置附近新增缺口用
 SC.newGaps=(donor,binsBefore,binsAfter)=>{const C=CONFIG.scenarioC;return SC.all.filter(s=>hav(s.la,s.lo,donor.la,donor.lo)<=C.checkRadiusM&&SC.nearestDist(s,binsBefore)[0]<=C.noNewGapM&&SC.nearestDist(s,binsAfter)[0]>C.noNewGapM)};
@@ -33,7 +36,7 @@ SC.evaluate=(h,stations,bins)=>{
   const ovA=nb.map(b=>SC.overflow(b,stations,P.baseCapacityL,P.baseCollectionsPerDay,ex)),ovB=nb.map(b=>SC.overflow(b,stations,P.newCapacityL,P.newCollectionsPerDay,ex));
   const pk=SC.pickDonor(h,stations,bins);const donor=pk.infeasible?null:pk;let C=null,binsC=null,lost=[];
   if(donor){binsC=SC.applyC(h,bins,donor);C=SC.metrics(stations,binsC);lost=stations.filter((s,i)=>A.ds[i]<=100&&C.ds[i]>100)}
-  const R=CONFIG.suggestion;const rec=h.nb<=R.bIfBinWithinM?'B':(donor&&C&&A.over100-C.over100>=R.cMinReduction100?'C':'A');
+  const R=CONFIG.suggestion;const rec=h.nb<=R.bIfBinWithinM?'B1':(donor&&C&&A.over100-C.over100>=R.cMinReduction100?'C':'A');
   return{A,B:{...A,bins:nb,ovA,ovB},C,binsC,donor,pk,lost,rec}};
 SC.load=()=>{try{return JSON.parse(localStorage.getItem(CONFIG.storageKeys.scenario))}catch(e){return null}};
 SC.save=o=>localStorage.setItem(CONFIG.storageKeys.scenario,JSON.stringify(o));

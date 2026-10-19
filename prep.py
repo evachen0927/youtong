@@ -40,7 +40,9 @@ save([{"type":"Feature","geometry":mapping(v.simplify(0.0003)),"properties":{"na
 # --- bins: merge two resources
 bins=[];stat=collections.Counter()
 def addbin(r,src):
-    try: lon,lat=float(r['經度'].strip().lstrip('?？')),float(r['緯度'].strip().lstrip('?？'))  # 1 列有多餘 '?' 前綴
+    raw=r['經度'].strip()+r['緯度'].strip();bad=raw!=raw.replace('?','').replace('？','')
+    # 與研究 repo（taipei-city-lab youbike-bin-screening invalid-records.csv）一致：座標含 '?' 的列視為無效、不使用
+    try: lon,lat=float(r['經度'].strip().lstrip('?？')),float(r['緯度'].strip().lstrip('?？'))
     except: stat['bad_'+src]+=1;return
     if not(24.9<lat<25.25 and 121.4<lon<121.7): stat['bad_'+src]+=1;return
     late=False
@@ -54,7 +56,7 @@ def addbin(r,src):
             if src not in b['properties']['source']: b['properties']['source']+='+'+src
             return
     note=r['備註'].strip();m=re.match(r'(\d+)處',note)
-    bins.append(F(lon,lat,{"id":"","district":r['行政區'].strip().replace('台','臺'),"address":r['地址'].strip(),"note":note,"count":int(m.group(1)) if m else 1,"source":src,"_late":late}))
+    bins.append(F(lon,lat,{"id":"","district":r['行政區'].strip().replace('台','臺'),"address":r['地址'].strip(),"note":note,"count":int(m.group(1)) if m else 1,"source":src,"_late":late,"_bad":bad}))
 for r in csv.DictReader(open('bins_raw.csv',encoding='big5',errors='replace')): addbin(r,'main')
 for r in csv.DictReader(open('bins130_raw.csv',encoding='big5',errors='replace')): addbin(r,'scenic130')
 # id 保持舊版穩定：原本保留的列依序 B0000…，原本被 5m 去重吃掉的 17 列接在最後
@@ -67,7 +69,8 @@ for b in bins:  # 5m 內同清冊列數（地圖重疊點顯示「此處 N 列�
     bl,ba=b['geometry']['coordinates']
     if b['properties']['source'].startswith('main'):
         b['properties']['colocated']=sum(1 for o in bins if o['properties']['source'].startswith('main') and abs(o['geometry']['coordinates'][1]-ba)<1e-4 and hav(ba,bl,o['geometry']['coordinates'][1],o['geometry']['coordinates'][0])<5)
-bins=order
+bins=[b for b in order if not b['properties'].pop('_bad')]  # 先編 id 再剔除，id 保持穩定
+stat['invalid_coord_dropped']=len(order)-len(bins)
 print("bins",len(bins),dict(stat),collections.Counter(b['properties']['source'] for b in bins))
 save(bins,'bins.geojson')
 # --- youbike
@@ -75,7 +78,7 @@ act={o['sno']:o for o in json.load(open('youbike_activity_202607.json'))}
 yb=[]
 for s in json.load(open('youbike_raw.json')):
     lat,lon=float(s['latitude']),float(s['longitude'])
-    yb.append(F(lon,lat,{"id":s['sno'],"name":s['sna'].replace('YouBike2.0_',''),"district":dist_of(lon,lat) or s['sarea'],"address":s['ar'],"total":s.get('Quantity'),"rent":s.get('available_rent_bikes'),"ret":s.get('available_return_bikes'),"act":act[s['sno']]['activity_excl_0710_0711'] if act[s['sno']]['matched'] else None}))
+    yb.append(F(lon,lat,{"id":s['sno'],"name":s['sna'].replace('YouBike2.0_',''),"district":dist_of(lon,lat) or s['sarea'],"address":s['ar'],"total":s.get('Quantity'),"rent":s.get('available_rent_bikes'),"ret":s.get('available_return_bikes'),"act":act[s['sno']]['activity_all'] if act[s['sno']]['matched'] else None}))
 save(yb,'youbike.geojson')
 # --- bus stops (unique stopLocationId), district by polygon
 d=json.loads(gzip.open('busstop_raw.gz').read().decode('utf-8-sig'))['BusInfo'];g={}
