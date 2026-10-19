@@ -47,7 +47,7 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
  <h3>人流高 ≠ 查核優先</h3><div class="card" id="vs"></div>
  <label class="ck"><input type="checkbox" id="lyAnc"> 🔶 研究團隊觀察錨點（39 處，每區活動量前 3）</label>
  <h3>各行政區街道清冊點位</h3><div id="bars"></div>
- <div class="note">⚠️ 北投區街道清冊 0 列、南港區 4 列：<b>資料缺漏，非實際覆蓋率</b>。場域線索（紫色菱形，130 點）是場所約略位置，不計入桶數。</div>
+ <div class="note">⚠️ 北投區街道清冊 0 列、南港區 4 列：<b>資料缺漏，非實際覆蓋率</b>。場域線索（紫色菱形，120 點）是場所約略位置，不計入桶數。</div>
 </div>
 <div id="detail" hidden></div>
 <div class="foot">交通活動量是人流的推估，不等於垃圾量。示範區內距離為步行路網距離（OpenStreetMap，2026-10-18 預先計算）；全市數字與示範區外為直線距離。B2 的滿溢時數為模擬值（有桶團隊加的，不在研究 PRD 內）。方案定義依研究團隊「A 現況／B 原位改善指引／C 同桶數微調一處」。</div>
@@ -99,7 +99,7 @@ function render(){const h=cur,E=h.E,A=E.A,C=E.C,saved=SC.load();
   const row=(lab,a,b,c,better,b2)=>`<tr><td>${lab}</td><td>${a}</td><td>${b}</td><td>${b2===undefined?b:b2}</td><td class="${better?'good':''}">${c}</td></tr>`;
   const ovA=E.B.ovA.reduce((s,o)=>s+o.overflowH,0),ovB=E.B.ovB.reduce((s,o)=>s+o.overflowH,0);
   detail.innerHTML=`<button class="back" id="bk">← 回熱點清單</button>
-  <h2>${h.name}</h2><p class="sub">${h.d}・<b>最近街道清潔箱 ${Math.round(h.nb)}m，待現場查核</b>${(()=>{const w=SC.walkNearest(h,D.street);return w!=null?`（步行約 ${Math.round(w)}m，輔助）`:''})()}・2026-07 借＋還 ${fmt(h.act)} 次<span class="tag est">推估人流</span>${(()=>{const v=nearVenue(h);return v?`<br>◆ ${Math.round(v.d)}m 內有場域線索（130 點名單）：${v.v.addr}`:''})()}</p>
+  <h2>${h.name}</h2><p class="sub">${h.d}・<b>最近街道清潔箱 ${Math.round(h.nb)}m，待現場查核</b>${(()=>{const w=SC.walkNearest(h,D.street);return w!=null?`（步行約 ${Math.round(w)}m，輔助）`:''})()}・2026-07 借＋還 ${fmt(h.act)} 次<span class="tag est">推估人流</span>${(()=>{const v=nearVenue(h);return v?`<br>◆ ${Math.round(v.d)}m 內有場域線索（120 點名單）：${v.v.addr}`:''})()}</p>
   <div class="seg">${['A','B1','B2','C'].map(o=>`<button data-o="${o}" class="${opt===o?'on':''}">${OPT_NAME[o]}${E.rec===o?' ★':''}</button>`).join('')}</div>
   <p class="sub" id="optDesc"></p>
   <table class="cmp"><tr><th>示範區指標（${A.n} 站；距離＝步行）</th><th class="${E.rec==='A'?'rec':''}">A</th><th class="${E.rec==='B1'?'rec':''}">B1</th><th>B2</th><th class="${E.rec==='C'?'rec':''}">C</th></tr>
