@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020y"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020y"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020y"><link rel="stylesheet" href="tokens.css?v=20261020y"><link rel="stylesheet" href="ui.css?v=20261020y">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020z"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020z"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020z"><link rel="stylesheet" href="tokens.css?v=20261020z"><link rel="stylesheet" href="ui.css?v=20261020z">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -100,9 +100,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 #list .dist{display:block;margin:2px 0 0;font:400 14px/20px var(--font);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#list .dist b{font-size:14px;letter-spacing:0;color:var(--ink);font-weight:700}
 #list .acts{margin-top:10px}#list .acts .b{min-height:44px;height:44px;box-sizing:border-box}#list .acts .pri{flex:2}
 #list .acts .neu{flex:1;background:var(--surface);border:1.5px solid var(--ink-strong);color:var(--ink-strong)}
-#list .acts .done{flex:1;display:flex;align-items:center;justify-content:center;height:44px;color:var(--ink);font:600 15px/1.2 var(--font);white-space:nowrap}
+#list .acts .neu{flex:0 0 26%;min-width:0;padding:0 6px}#list .acts .done{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;height:44px;color:var(--ink);font:600 15px/1.2 var(--font);white-space:nowrap}
 #list.peek .more,#list.needm .main{display:none}
-.more .next{margin-top:12px}
+.r2{display:flex;align-items:baseline;gap:8px}.r2 .dist{flex:1;min-width:0}.r2{align-items:center;height:20px;margin-top:2px}.r2 .dist{margin:0!important}.r2 .qt{flex:none;padding-right:2px;text-align:right;font:500 13px/20px var(--font);color:var(--ink-2)} /* 問句靠右、在兩顆回報按鈕上方 */
+#list .acts .undo{flex:none;height:44px;min-width:44px;padding:0 10px;border:0;background:none;color:var(--ink-2);font:500 15px/1 var(--font);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .locsrc{display:flex;align-items:center;gap:2px;min-height:44px;margin-top:4px;font:400 13px/1.4 var(--font);color:var(--mute)}
 .locsrc .ib{width:44px;height:44px;margin:0 -10px;border:0;background:none;color:var(--mute);font:500 16px/1 var(--font);cursor:pointer}
 .locsrc.full{display:block;min-height:0;margin:0 0 4px;font-size:12px}
@@ -137,17 +138,17 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <ul><li><b>位置、地址、禁丟家用垃圾</b>：臺北市行人專用清潔箱（環保局，data.taipei，2026-09-30 版，欄位：行政區、地址、經度、緯度、備註）。</li>
   <li><b>一般垃圾＋資源回收</b>：開放資料<b>沒有逐桶類別欄位</b>；依環保局全市說明「全市共設有1943組『行人專用清潔箱』，每組包含一般垃圾箱與資源回收箱各1個，每個容量約為120公升」（資料截至 2025 年 2 月），每個點位皆標示為一般＋回收。個別點位實況可能不同。<br>
   來源：<a href="https://www.chinatimes.com/realtimenews/20250817001619-260405" target="_blank" rel="noopener">中國時報 2025-08-17</a>・<a href="https://udn.com/news/story/7266/8945553" target="_blank" rel="noopener">聯合報 2025-08-18</a>・<a href="https://money.udn.com/money/story/7307/8944421" target="_blank" rel="noopener">經濟日報</a></li>
-  <li>示範位置：捷運公館站公車站（公車站位資料，示範區內，45 條路線停靠），最近的清潔箱（羅斯福路4段106號(水源市場前)）步行約 102 公尺；在這裡按「回報滿了」，清潔隊頁看得到。點地圖任一處可手動設定位置。</li></ul>
+  <li>示範位置：捷運公館站公車站（公車站位資料，示範區內，45 條路線停靠），最近的清潔箱（羅斯福路4段106號(水源市場前)）步行約 102 公尺；在這裡按「滿了」，清潔隊頁看得到。點地圖任一處可手動設定位置。</li></ul>
   <h3>這裡需要垃圾桶</h3>
   <ul><li>按一下記錄目前位置與時間，可再選原因（一般垃圾／其他；選「其他」可再輸入 40 字內說明）；50 m 內已有回報只算一次。最近的桶步行超過 200 m 時按鈕會變醒目。設點規劃頁的「民眾回報需求」圖層看得到，只當佐證，不計入查核優先序。</li><li>需求回報只存在這台裝置，demo 用。「重設成原始狀態」與 ?reset=1 會清除。</li></ul>
   <h3>備用垃圾桶</h3>
   <ul><li>「備用垃圾桶」圖層（預設關閉）：景點商圈場域線索 120 點（原始 130 列、120 個不同座標，2026-08-18），青色菱形（暫定色）。場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證；不列入「最近的桶」與步行路線。</li></ul>
   <h3>回報</h3>
-  <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。按「回報滿了」會回報給清潔隊頁（列為「行人回報」、必清），地圖上該桶變紅、狀態改「已回報滿」，清運後恢復。示範區外也可回報。</li></ul>
+  <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。卡片問「這桶滿了嗎？」：「滿了」回報給清潔隊頁（列為「行人回報」、必清），地圖上該桶變紅、狀態改「已回報滿」；「還空著」也會寫入，以最新一筆為準，會蓋掉先前的「滿了」（不再紅、清潔隊頁不再強制必清）。「還空著」目前不影響滿度預測，只用來撤銷「已回報滿」。回報後可按「取消」移除自己剛送出的那一筆（換到別的桶前都可取消）；同一桶可以重複回報。示範區外也可回報。</li></ul>
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020y"></script><script src="common.js?v=20261020y"></script><script src="scenario.js?v=20261020y"></script><script src="routing.js?v=20261020y"></script><script src="bin-category.js?v=20261020y"></script><script src="ui.js?v=20261020y"></script><script src="bin-icons.js?v=20261020y"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020z"></script><script src="common.js?v=20261020z"></script><script src="scenario.js?v=20261020z"></script><script src="routing.js?v=20261020z"></script><script src="bin-category.js?v=20261020z"></script><script src="ui.js?v=20261020z"></script><script src="bin-icons.js?v=20261020z"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
@@ -161,7 +162,8 @@ const ren=L.canvas({padding:.3});
 
 // 「回報滿了」狀態直接由事件推得（binState＝reported → 顯示「✓ 已通知清潔隊」，清運後恢復按鈕）；舊的「每桶只問一次」紀錄不再使用
 try{localStorage.removeItem('有桶_asked_v1')}catch(e){}
-let mode='peek'; // 面板：peek 收合／open 展開／need 需求回報
+let mode='peek',myRep=(()=>{try{return JSON.parse(sessionStorage.getItem('有桶_myrep')||'null')}catch(e){return null}})();const saveRep=()=>{try{myRep?sessionStorage.setItem('有桶_myrep',JSON.stringify(myRep)):sessionStorage.removeItem('有桶_myrep')}catch(e){}}; // 跨頁（去清潔隊頁看再回來）仍可取消 // myRep：自己剛送出的那一筆（{id,bin,kind}），換到別的桶就清掉
+ // 面板：peek 收合／open 展開／need 需求回報
 let locFull=false;
 const NEED_REASONS=NEED_REASON_KEYS; // general／other（顯示文字見 common.js NEED_REASON）
 let needId=null,needNoteSent=false; // 這個位置剛回報的需求（換位置就重來）
@@ -226,14 +228,14 @@ function renderInner(fit){
   list.className=mode==='need'?'needm':mode;
   if(mode==='need'){list.innerHTML=g+`<div class="nhd"><b>這裡需要垃圾桶</b><button class="x" id="needClose" aria-label="關閉">✕</button></div>`+needHTML();kbFit();return}
   if(!P){list.innerHTML=g+`<div class="main"><div class="r1 dragz"><div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div></div><div class="acts"><button class="b" data-f="all">看全部</button></div></div><div class="more">${needHTML()}${locHTML()}</div>`;redraw();kbFit();return}
-  const p=P.f,rep=binState(p.id,ev)==='reported',cat=binCategory(p).cat,catT={both:'一般＋回收',general:'一般垃圾',recycle:'資源回收'}[cat]||BIN_CAT[cat].label;
+  const p=P.f,rep=binState(p.id,ev)==='reported',mine=myRep&&myRep.bin===p.id&&ev.some(e=>e.id===myRep.id)?myRep:null,cat=binCategory(p).cat,catT={both:'一般＋回收',general:'一般垃圾',recycle:'資源回收'}[cat]||BIN_CAT[cat].label;
   const extra=/家用垃圾/.test(p.note||'')?'・禁丟家用垃圾':'';
   list.innerHTML=g+`<div class="main"><div class="card item" data-id="${p.id}" style="border:0;padding:0;margin:0;cursor:default">
     <div class="dragz"><div class="r1"><div class="addr">${p.addr}</div>${stateChip(fillOf(p.id,ev),rep,!rep)}</div>
-    <div class="dist"><b>${mfmt(P.d)}</b>・${P.w?`步行 ${mins(P)} 分`:`直線・約 ${mins(P)} 分`}・${catT}${extra}</div></div>
-    <div class="acts"><a class="b pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">步行導航</a>${rep?`<div class="done" id="repDone" role="status">${SC.inArea(p.la,p.lo)?'✓ 已通知清潔隊':'✓ 已回報'}</div>`:`<button class="b neu" data-full="${p.id}">回報滿了</button>`}</div>
+    <div class="r2"><div class="dist"><b>${mfmt(P.d)}</b>・${P.w?`步行 ${mins(P)} 分`:`直線・約 ${mins(P)} 分`}・${catT}${extra}</div>${mine?'':'<span class="qt" id="qt">這桶滿了嗎？</span>'}</div></div>
+    <div class="acts"><a class="b pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">步行導航</a>${mine?`<div class="done" id="repDone" role="status">${mine.kind==='full'?(SC.inArea(p.la,p.lo)?'✓ 已通知清潔隊':'✓ 已回報'):'✓ 謝謝，已更新'}</div><button class="undo" id="repUndo">取消</button>`:`<button class="b neu" data-ok="${p.id}" aria-describedby="qt">還空著</button><button class="b neu" data-full="${p.id}" aria-describedby="qt">滿了</button>`}</div>
   </div></div>
-  <div class="more">${N?`<button class="next" data-next="${N.f.id}"><span>下一個</span><span class="t"><b>${N.f.addr}</b></span><span>${mfmt(N.d)}・${mins(N)} 分${N.w?'':'（直線）'} ›</span></button>`:''}${needHTML()}${locHTML()}</div>`;
+  <div class="more">${needHTML()}${locHTML()}</div>`;
   drawRoute(P);redraw();kbFit();
   if(fit)fitTarget()
 }
@@ -274,9 +276,10 @@ const ACC_DEFAULT_M=30;let accC=null,acc=ACC_DEFAULT_M;
 function setPos(p,label,accM){pos=p;needNoteSent=false;acc=accM>0?accM:ACC_DEFAULT_M;needId=null;where=label;dumped=false;mode='peek';locFull=false;if(me)me.remove();if(accC)accC.remove();
   accC=L.circle(p,{radius:acc,color:getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()||'#0f9d76',weight:1,opacity:.5,fillOpacity:.1,interactive:false,className:'acc'}).addTo(map);
   me=L.marker(p,{icon:L.divIcon({className:'me',iconSize:[18,18]}),zIndexOffset:2000,interactive:false}).addTo(map);render(true)}
-function focusBin(f){sel=f.id;dumped=false;if(mode!=='peek')setMode('peek',true);else render(true)} // 選了別的桶 → 面板回到收合 // 點地圖上的桶或「下一個」→ 成為目標：標籤、路線、卡片一起更新並重新框住
+function focusBin(f){if(myRep&&myRep.bin!==f.id){myRep=null;saveRep()}sel=f.id;dumped=false;if(mode!=='peek')setMode('peek',true);else render(true)} // 選了別的桶 → 面板回到收合 // 點地圖上的桶或「下一個」→ 成為目標：標籤、路線、卡片一起更新並重新框住
 list.onclick=e=>{
-  const fb=e.target.closest('[data-full]');if(fb){addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});sel=fb.dataset.full;render(false);return} // → 清潔隊頁「行人回報」
+  const fb=e.target.closest('[data-full],[data-ok]');if(fb){const full=!!fb.dataset.full,id=fb.dataset.full||fb.dataset.ok,r=addEvent({bin:id,kind:full?'full':'ok',...(full?{level:100}:{}),by:'行人'});myRep={id:r.id,bin:id,kind:r.kind};saveRep();sel=id;render(false);return} // 滿了 → 清潔隊頁「行人回報」；還空著 → 蓋掉已回報滿
+  if(e.target.closest('#repUndo')&&myRep){removeEvent(myRep.id);myRep=null;saveRep();render(false);return} // 取消：用 id 移除自己剛送出的那一筆
   if(e.target.closest('#needBtn')&&pos){if(!needId||!getNeeds().find(x=>x.id===needId))needId=addNeed(pos[0],pos[1]).rec.id;setMode('need');return}
   if(e.target.closest('#needClose')){if(document.activeElement)document.activeElement.blur();setMode('peek');return}
   if(e.target.closest('#locInfo')){locFull=!locFull;render(false);return}
