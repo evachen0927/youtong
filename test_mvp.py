@@ -33,11 +33,25 @@ with sync_playwright() as p:
     dist=pg.inner_text('.dist');print(name,'示範位置距離',dist.replace('\n',' '));assert '步行約' in dist and '直線' not in dist and '羅斯福路4段106號' in pg.inner_text('#list')
     card=pg.inner_text('#list');assert '桶數' not in card and '%' not in card and any(w in card for w in ('還有空間','快滿了','滿溢','已回報滿')),card  # 狀態字（不顯示 %）、不顯示行政區與桶數
     print(name,'只顯示現況',pg.locator('[data-m]').count()==0 and pg.locator('#delta').count()==0);assert pg.locator('[data-m]').count()==0
+    # 目標桶：放大＋光圈＋常駐標籤（步行距離＝卡片）；步行路線；其他桶縮小但 44px；地圖框住不被卡片蓋住
+    tl=pg.inner_text('#tlab');d0=pg.evaluate("Math.round(primary().d)");print(name,'目標標籤',tl,'| 路線',pg.evaluate("[routeInfo.snapped,routeInfo.pts.length]"));assert tl=='最近・%d m'%d0 and ('%d'%d0) in pg.inner_text('.dist') and pg.evaluate("routeInfo.snapped&&routeInfo.bin===primary().f.id")
+    tb=pg.locator('.binmk.tgt').bounding_box();ob=pg.locator('.binmk.oth').first.bounding_box();assert pg.locator('.binmk.tgt').count()==1 and tb['height']>=48 and ob['width']>=44 and ob['height']>=44 and pg.locator('.binmk.tgt .ring').count()==1,(tb,ob)
+    vis=pg.evaluate("(()=>{const top=list.getBoundingClientRect().top,r=list.getBoundingClientRect();return routeInfo.pts.every(p=>{const q=map.latLngToContainerPoint(p);return q.x>0&&q.x<innerWidth&&q.y>0&&(q.y<top||q.x<r.left)})})()");print(name,'路線在卡片外可見',vis);assert vis
+    if name=='mobile':pg.screenshot(path='/workspace/ped_target_390.png')
+    oid=pg.evaluate("(()=>{const P=primary();const o=nearestN(shown(),4).find(t=>t.f.id!==P.f.id);return o.f.id})()");pg.evaluate(f"focusBin(shown().find(b=>b.id==='{oid}'))");pg.wait_for_timeout(400)
+    tl2=pg.inner_text('#tlab');print(name,'點其他桶',tl2);assert tl2.startswith('目標・') and pg.evaluate("routeInfo.bin")==oid and pg.get_attribute('#list .card','data-id')==oid and ('%d'%pg.evaluate("Math.round(primary().d)")) in tl2
+    pg.evaluate("map.setZoom(16,{animate:false})");pg.wait_for_timeout(500)
+    pt=pg.evaluate("(()=>{const t=list.getBoundingClientRect().top;for(const e of document.querySelectorAll('.binmk.oth')){const r=e.getBoundingClientRect();if(r.top>140&&r.bottom<t&&r.left>0&&r.right<innerWidth)return [r.left+r.width/2,r.top+r.height/2]}return null})()");assert pt,'no visible bin'
+    (pg.touchscreen.tap if name=='mobile' else pg.mouse.click)(pt[0],pt[1]);pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin===sel&&primary().f.id===sel") and pg.get_attribute('#list .card','data-id')==pg.evaluate("sel")
+    nx=pg.get_attribute('[data-next]','data-next');pg.click('[data-next]');pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin")==nx and pg.get_attribute('#list .card','data-id')==nx;print(name,'下一個 → 目標',pg.inner_text('#tlab'))
+    pg.evaluate("drawRoute({...primary(),w:0})");assert pg.evaluate("routeInfo.snapped")==False and pg.evaluate("routeL.getLayers().length")==1  # 無法對應路網 → 虛線直線
+    pg.evaluate("sel=null;render(true)");pg.wait_for_timeout(300);assert pg.inner_text('#tlab').startswith('最近・')
     pg.goto(B+'pedestrian.html?mode=after');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(1500);assert 'pill sc' not in pg.content() and '調整後' not in pg.inner_text('#list')
     pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
     assert pg.locator('#doneBtn').count()==0 and '這桶滿了嗎？' in pg.inner_text('#list')
     h0=pg.locator('.q').bounding_box()['height'];pg.click('[data-full]');pg.wait_for_timeout(300);h1=pg.locator('.q').bounding_box()['height']
     assert '謝謝，已通知清潔隊' in pg.inner_text('#list') and pg.locator('[data-full]').count()==0 and abs(h1-h0)<1,(h0,h1)
+    assert pg.locator('.binmk.tgt.rep').count()==1 and pg.locator('.binmk.tgt .ring').count()==1 and pg.locator('#tlab').count()==1  # 回報滿：目標圖示仍是紅色（狀態色優先），光圈與標籤保留
     assert '有人回報滿了' in pg.inner_text('#list') and pg.locator('.binmk path[fill="var(--reported)"], .binmk path[fill="#e2574c"]').count()>=1
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
     # 這裡需要垃圾桶：?reset=1 後、示範位置（捷運公館站公車站）按一次 → 設點規劃圖層與公館熱點詳情都是 1 筆
