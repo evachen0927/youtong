@@ -61,4 +61,19 @@ RT.dist=(g,a,b,limit=1e9)=>{if(g.E){const sa=RT.snapE(g,a[0],a[1]),sb=RT.snapE(g
 RT.path=(g,a,b)=>{const sa=RT.snap(g,a[0],a[1]),sb=RT.snap(g,b[0],b[1]);if(!sa||!sb)return[a,b];const{prev,dist}=RT.from(g,sa[0]);if(!isFinite(dist[sb[0]]))return[a,b];
   const ns=[];for(let v=sb[0];v!==-1;v=prev[v])ns.push(v);ns.reverse();const out=[a];
   ns.forEach((v,i)=>{if(i){const gm=g.geom[ns[i-1]+','+v];if(gm)out.push(...gm)}out.push(g.nodes[v])});out.push(b);return out};
+// 路徑座標（與 RT.dist 同一套「投影到最近路段」）：起點＝a（使用者位置）→ 投影點 → 節點序列 → 目標的投影點 → b（目標）
+// 回傳 {pts,d} 或 null（任一端無法對應路網）；pts[0] 必為 a、最後一點必為 b
+RT.pathE=(g,a,b)=>{if(!g.E){const p=RT.path(g,a,b);return p.length>2?{pts:p,d:null}:null}
+  const sa=RT.snapE(g,a[0],a[1]),sb=RT.snapE(g,b[0],b[1]);if(!sa||!sb)return null;
+  const N=g.nodes,proj=s=>{const p=N[s.a],q=N[s.b];return[p[0]+(q[0]-p[0])*s.t,p[1]+(q[1]-p[1])*s.t]},pa=proj(sa),pb=proj(sb);
+  let best=Infinity,end=null;if(sa.k===sb.k){best=Math.abs(sa.ta-sb.ta);end='same'}
+  const n=N.length,D=new Float64Array(n).fill(Infinity),prev=new Int32Array(n).fill(-1),H=[];
+  const push=x=>{H.push(x);let i=H.length-1;while(i){const p=(i-1)>>1;if(H[p][0]<=H[i][0])break;[H[p],H[i]]=[H[i],H[p]];i=p}};
+  const pop=()=>{const t=H[0],l=H.pop();if(H.length){H[0]=l;let i=0;for(;;){const x=2*i+1,y=x+1;let m=i;if(x<H.length&&H[x][0]<H[m][0])m=x;if(y<H.length&&H[y][0]<H[m][0])m=y;if(m===i)break;[H[m],H[i]]=[H[i],H[m]];i=m}}return t};
+  D[sa.a]=sa.ta;push([sa.ta,sa.a]);if(sa.L-sa.ta<D[sa.b]){D[sa.b]=sa.L-sa.ta;push([D[sa.b],sa.b])}
+  while(H.length){const[d,u]=pop();if(d>D[u])continue;if(d>best)break;const A=g.adj[u];for(let k=0;k<A.length;k+=2){const v=A[k],nd=d+A[k+1];if(nd<D[v]){D[v]=nd;prev[v]=u;push([nd,v])}}}
+  const ca=D[sb.a]+sb.ta,cb=D[sb.b]+sb.L-sb.ta;if(ca<best){best=ca;end=sb.a}if(cb<best){best=cb;end=sb.b}
+  if(!isFinite(best))return null;const pts=[a,pa];
+  if(end!=='same'){const ns=[];for(let v=end;v!==-1;v=prev[v])ns.push(v);ns.reverse();for(const v of ns)pts.push(N[v])} // prev 從起點邊的兩端開始，重建時順序＝使用者 → 目標
+  pts.push(pb,b);return{pts,d:best+sa.off+sb.off}};
 RT.walkMin=m=>Math.max(1,Math.round(m/RT.WALK_M_PER_MIN));

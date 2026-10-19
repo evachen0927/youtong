@@ -48,6 +48,20 @@ with sync_playwright() as p:
     (pg.touchscreen.tap if name=='mobile' else pg.mouse.click)(pt[0],pt[1]);pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin===sel&&primary().f.id===sel") and pg.get_attribute('#list .card','data-id')==pg.evaluate("sel")
     if name=='mobile':pg.evaluate("render(true)");pg.wait_for_timeout(400);pg.screenshot(path='/workspace/ped_target_390_v2_other.png')
     nx=pg.get_attribute('[data-next]','data-next');pg.click('[data-next]');pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin")==nx and pg.get_attribute('#list .card','data-id')==nx;print(name,'下一個 → 目標',pg.inner_text('#tlab'))
+    # 路線只在「你的位置 ↔ 目標」之間：換多個目標（含已回報滿），首點＝你的位置、末點＝目標、沒有點超出步行距離＋容差；點桶不移動你的位置；兩者相距 ≥48px
+    p0=pg.evaluate("pos.slice()");ids=pg.evaluate("nearestN(shown(),6).map(t=>t.f.id)");pg.evaluate(f"addEvent({{bin:'{ids[3]}',kind:'full',level:100,by:'行人'}})")
+    for bid in ids:
+      pg.evaluate(f"focusBin(shown().find(b=>b.id==='{bid}'))");pg.wait_for_timeout(250)
+      r=pg.evaluate("""(()=>{const P=primary(),b=[P.f.la,P.f.lo],R=routeInfo.pts,h=(p,q)=>hav(p[0],p[1],q[0],q[1]),A=map.latLngToContainerPoint(pos),T=map.latLngToContainerPoint(b),F=map.latLngToContainerPoint(R[0]);
+        return {id:P.f.id,d:P.d,snapped:routeInfo.snapped,first_px:F.distanceTo(A),last_m:h(R[R.length-1],b),maxFromStart:Math.max(...R.map(p=>h(p,pos))),maxFromEnd:Math.max(...R.map(p=>h(p,b))),sep:A.distanceTo(T),rep:!!document.querySelector('.binmk.tgt.rep')}})()""")
+      assert r['id']==bid and r['snapped'] and r['first_px']<=1 and r['last_m']<=3 and r['maxFromStart']<=r['d']+25 and r['maxFromEnd']<=r['d']+25 and r['sep']>=48,r
+      print(name,'路線',bid,'%dm'%r['d'],'起點偏差 %.1fpx'%r['first_px'],'最遠 %d/%d m'%(r['maxFromStart'],r['maxFromEnd']),'間距 %dpx'%r['sep'],'已回報滿' if r['rep'] else '')
+    assert pg.evaluate("pos")==p0
+    pg.evaluate("(()=>{const f=shown().find(b=>b.addr==='羅斯福路4段124號');focusBin(f)})()");pg.wait_for_timeout(300)
+    pt=pg.evaluate("(()=>{for(const e of document.querySelectorAll('.binmk.oth')){const r=e.getBoundingClientRect();if(r.top>140&&r.bottom<list.getBoundingClientRect().top&&r.left>0&&r.right<innerWidth)return [r.left+r.width/2,r.top+r.height/2]}return null})()")
+    if pt:(pg.touchscreen.tap if name=='mobile' else pg.mouse.click)(pt[0],pt[1]);pg.wait_for_timeout(300);assert pg.evaluate("pos")==p0,'tap moved pos'
+    pg.evaluate("(()=>{const f=shown().find(b=>b.addr==='羅斯福路4段124號');focusBin(f)})()");pg.wait_for_timeout(400)
+    if name=='mobile':pg.screenshot(path='/workspace/ped_target_390_v3_other.png')
     pg.evaluate("drawRoute({...primary(),w:0})");assert pg.evaluate("routeInfo.snapped")==False and pg.evaluate("routeL.getLayers().length")==1  # 無法對應路網 → 虛線直線
     pg.evaluate("sel=null;render(true)");pg.wait_for_timeout(300);assert pg.inner_text('#tlab').startswith('最近・')
     pg.goto(B+'pedestrian.html?mode=after');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(1500);assert 'pill sc' not in pg.content() and '調整後' not in pg.inner_text('#list')
