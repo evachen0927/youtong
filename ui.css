@@ -71,6 +71,9 @@ button,input,select,textarea,optgroup{font-family:inherit}
 .crow{top:calc(var(--row2) + env(safe-area-inset-top))!important}
 html body .top{padding-top:calc(var(--row2) + env(safe-area-inset-top))!important}
 @media (max-width:760px){.lychips{top:var(--row2)!important}.leaflet-bottom.leaflet-left{top:calc(var(--row2) + 2px)!important}}
+/* 滿度狀態 chip（取代 %） */
+.stchip{display:inline-flex;align-items:center;gap:5px;font:600 13px/1 var(--font);color:var(--ink);background:var(--gray-1);padding:5px 9px;border-radius:999px;white-space:nowrap}.stchip i{width:9px;height:9px;border-radius:50%;flex:none}
+.stchip.st-reported{background:var(--reported-soft);color:var(--reported-ink)}
 /* logo 徽章：綠色圓角方塊內＝白色桶圖示＋白色粗體「有桶」（HTML 系統字）；比 44px 切換器大 */
 .roles .wm{background:var(--brand)!important;border-radius:14px;width:48px;height:56px!important;padding:0!important;margin-top:0;gap:0;justify-content:center;filter:none;box-shadow:var(--shadow-1)!important}
 .roles .wm img{width:34px!important;height:34px!important;margin:-3px 0 -2px}

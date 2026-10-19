@@ -26,7 +26,7 @@ function addEvent(e){const a=getEvents();a.push({...e,ts:Date.now()});localStora
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定
 function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin===id){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}
 const fillColor=f=>typeof rampColor==='function'?rampColor(f):(f>=100?'#d9731f':f>=70?'#e8b931':'#8cc9a8'); // 色階定義在 ui.js
-const fillPill=f=>`<span class="pill ${f>=100?'full':f>=70?'mid':'ok'}">${f}%</span>`;
+const fillPill=f=>`<span class="pill ${f>=100?'full':f>=70?'mid':'ok'}">${typeof rampState==='function'?rampState(f).t:f>=100?'滿溢':f>=70?'快滿了':'還有空間'}</span>`;
 const timeStr=ts=>new Date(ts).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
 
 // 示範資料：街道清冊垃圾桶（不含場域線索）、示範區站點

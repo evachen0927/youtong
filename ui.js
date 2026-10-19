@@ -4,6 +4,10 @@ const RAMP={low:'#8cc9a8',mid:'#e8b931',high:'#d9731f',over:'#d9731f'};
 const REPORTED='#e2574c'; // 只用於「被回報滿了」
 // 地圖不再有「溢出」狀態：<70% low、70–99% mid、≥100% high；over 參數保留相容但忽略。RAMP.over 只給收運量按鈕等非地圖用途。
 const rampColor=(f,over)=>f>=100?RAMP.high:f>=70?RAMP.mid:RAMP.low;
+// 對使用者只顯示 4 種狀態字，不顯示 %（門檻只在內部）
+const STATE_LABEL={low:'還有空間',mid:'快滿了',high:'滿溢',reported:'已回報滿'};
+const rampState=(f,reported)=>{const k=reported?'reported':f>=100?'high':f>=70?'mid':'low';return{k,t:STATE_LABEL[k],c:k==='reported'?REPORTED:RAMP[k]}};
+const stateChip=(f,reported,sim)=>{const s=rampState(f,reported);return `<span class="stchip st-${s.k}"><i style="background:${s.c}"></i>${s.t}${sim?'<span class="sim" title="模擬值"></span>':''}</span>`};
 const rampLabel=(f,over)=>f>=100?'已滿':f>=70?'將滿':'尚有空間';
 // 安靜底圖：OSM 圖磚＋CSS 去飽和（CARTO 需 API key）
 function quietMap(center,zoom,opt={}){
@@ -18,7 +22,7 @@ function legend(map,items,pos='bottomleft'){
     L.DomEvent.disableClickPropagation(d);return d};C.addTo(map);return C}
 // 底部抽屜（sheet）：開/關；點背景關閉
 function sheetOpen(id){const s=document.getElementById(id);s.hidden=false;s.onclick=e=>{if(e.target===s)s.hidden=true};s.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>s.hidden=true)}
-const RAMP_LEGEND=[{c:RAMP.low,t:'綠 <70%'},{c:RAMP.mid,t:'黃 70–99%'},{c:RAMP.high,t:'深橘 ≥100%'}];
+const RAMP_LEGEND=[{c:RAMP.low,t:STATE_LABEL.low},{c:RAMP.mid,t:STATE_LABEL.mid},{c:RAMP.high,t:STATE_LABEL.high+'（估計）'}];
 const REPORTED_LEGEND={c:REPORTED,t:'紅色＝已被回報滿了'};
 // 角色切換（示範導覽）：常駐分段控制「行人｜清潔隊｜設點規劃」；host 給定時放進該容器，否則固定在左上
 const ROLES=[['pedestrian.html','行人'],['crew.html','清潔隊'],['index.html','設點規劃']];

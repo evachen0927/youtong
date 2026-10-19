@@ -87,7 +87,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   來源：<a href="https://www.chinatimes.com/realtimenews/20250817001619-260405" target="_blank" rel="noopener">中國時報 2025-08-17</a>・<a href="https://udn.com/news/story/7266/8945553" target="_blank" rel="noopener">聯合報 2025-08-18</a>・<a href="https://money.udn.com/money/story/7307/8944421" target="_blank" rel="noopener">經濟日報</a></li>
   <li>示範位置：興雅國中公車站（公車站位資料），最近的清潔箱（松仁路32號）步行約 190 公尺（直線 179 公尺）。點地圖任一處可手動設定位置。</li></ul>
   <h3>回報</h3>
-  <ul><li>行人頁不顯示滿度（臺北市沒有清潔箱滿溢偵測資料）。地圖上的垃圾桶一律同色；<b>紅色</b>＝有人回報滿了、尚未清運。「我丟好了 → 回報滿了／沒滿」的回報會提供給清潔隊頁。</li></ul>
+  <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。「我丟好了 → 回報滿了／沒滿」的回報會提供給清潔隊頁。</li></ul>
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
@@ -98,7 +98,7 @@ roleSwitch('pedestrian.html');
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);
 rhint.innerHTML=REPORTED_HINT().map(i=>`<span>${i.html}${i.t}</span>`).join('');
-legendIntoSheet('infoSheet',[{html:_sm(pedBinSVG(false)),t:'垃圾桶'},{html:_sm(pedBinSVG(true)),t:'紅＝已被回報滿了（尚未清運）'},{c:'var(--brand)',t:'你的位置'}]);
+legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:'var(--brand)',t:'你的位置'}]);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 document.getElementById('map').classList.add('desat');
 const ren=L.canvas({padding:.3});
@@ -108,13 +108,12 @@ const binL=L.layerGroup().addTo(map),ybL=L.layerGroup(),busL=L.layerGroup();
 const bins=()=>binsBefore; // 行人頁只顯示現況
 const shown=()=>bins().filter(b=>binAccepts(b,filter));
 
-// ---- 標記：行人頁不顯示滿度——一律中性色；只有被回報滿了（尚未清運）的桶為紅（--reported）----
+// ---- 標記：4 種狀態色（bin-icons.js 的 binDivIcon）；pedBinSVG 保留未用 ----
 function pedBinSVG(rep){const body=rep?'var(--reported)':'var(--faint)',lid=rep?'var(--reported-ink)':'var(--mute)';
   return `<svg width="28" height="34" viewBox="0 0 28 34" aria-hidden="true" style="overflow:visible"><ellipse cx="14" cy="31.4" rx="10" ry="2.3" fill="#000" opacity=".13"/><g transform="translate(3 1.8)" style="${BIN_POP}"><rect x="8" y="0.6" width="6" height="3.6" rx="1.6" fill="${lid}"/><rect x="0" y="3" width="22" height="5.2" rx="2.4" fill="${lid}"/><path d="${BIN_BODY}" fill="${body}"/>${rep?'<rect x="7" y="13.4" width="8" height="2.4" rx="1.2" fill="#ffffffcc"/>':''}</g></svg>`}
 const iconCache={};
-function pinIcon(b,ev,near){const rep=binState(b.id,ev)==='reported',small=map.getZoom()<15&&!near,k=near?1.2:small?.78:1,key=(rep?1:0)+'|'+(near?1:0)+(small?'s':'');
-  return iconCache[key]||(iconCache[key]=L.divIcon({className:'binmk'+(near?' near':''),iconSize:[28*k,34*k],iconAnchor:[14*k,31.4*k],
-    html:`<div class="w" style="width:28px;transform:scale(${k});transform-origin:0 0">${near?'<span class="halo"></span>':''}${pedBinSVG(rep)}</div>`}))}
+function pinIcon(b,ev,near){const st=binState(b.id,ev),f=st?0:Math.round(fillOf(b.id,ev)/10)*10,small=map.getZoom()<15&&!near;
+  const key=f+'|'+st+'|'+(near?1:0)+(small?'s':'');return iconCache[key]||(iconCache[key]=binDivIcon(f,near,st,small))}
 function drawBins(){binL.clearLayers();const bd=map.getBounds().pad(.3),ev=getEvents(),nid=primary()&&primary().f.id;
   for(const f of shown())if(bd.contains([f.la,f.lo])){const near=f.id===nid;
     L.marker([f.la,f.lo],{icon:pinIcon(f,ev,near),zIndexOffset:near?900:0,keyboard:false,title:f.addr}).on('click',()=>focusBin(f)).addTo(binL)}}
@@ -132,7 +131,7 @@ function nextOf(p){return nearestN(shown()).find(t=>!p||t.f.id!==p.f.id)||null}
 const ago=ts=>{const m=Math.round((Date.now()-ts)/60000);return m<1?'剛剛':m<60?m+' 分鐘前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前'};
 function catBadge(b){const c=binCategory(b).cat;const dots=c==='both'?`<i style="background:var(--gen)"></i><i style="background:var(--rec)"></i>`:`<i style="background:${BIN_CAT[c].color}"></i>`;return `<span class="cat">${dots}${BIN_CAT[c].label}</span>`}
 // 只顯示回報狀態（不顯示滿度）
-function freshness(b,ev){const last=ev.filter(e=>e.bin===b.id).slice(-1)[0];if(!last)return'';
+function freshness(b,ev){const last=ev.filter(e=>e.bin===b.id).slice(-1)[0];if(!last)return stateChip(fillOf(b.id,ev),false,true);
   return last.kind==='full'?`<span class="rep">有人回報滿了・${ago(last.ts)}</span>`:last.kind==='clear'?`<span>已清運・${ago(last.ts)}${last.by}回報</span>`:''}
 function render(fit){
   const ev=getEvents();if(!pos)return;

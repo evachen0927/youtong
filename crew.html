@@ -119,7 +119,7 @@ function fitTop(n=3){const pts=route.slice(0,n).map(e=>[e.b.la,e.b.lo]);if(!pts.
   if(state==='B'){const ci=curIdx();if(ci>=0){const b=route[ci].b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot;pts.length=0;pts.push(prev,[b.la,b.lo])}}
   map.fitBounds(pts,{paddingTopLeft:[50,topUIBottom()+30],paddingBottomRight:innerWidth>760?[card.getBoundingClientRect().width+50,40]:[50,cardH()+30],maxZoom:17})}
 function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=doneSet(),ci=curIdx(),ids=new Set(route.map(e=>e.b.id)),small=map.getZoom()<15;
-  for(const e of E)if(!ids.has(e.b.id)){const f=Math.round(e.fill);L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev),small),title:`${e.b.addr}・預測 ${f}%`}).addTo(binL)}
+  for(const e of E)if(!ids.has(e.b.id)){const f=Math.round(e.fill);L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev),small),title:`${e.b.addr}・預測${rampState(f).t}`}).addTo(binL)}
   if(route.length){L.polyline(DR?route.reduce((a,e,i)=>{const p=i?[route[i-1].b.la,route[i-1].b.lo]:depot;return a.concat(RT.path(DR,p,[e.b.la,e.b.lo]))},[]):[depot,...route.map(e=>[e.b.la,e.b.lo])],{color:css('--ink-2'),weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
     L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點',interactive:false}).addTo(rtL);
     route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:i<3&&state==='A'?28:24;
@@ -134,7 +134,7 @@ function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=d
   allClear.disabled=!(state==='B'&&ci>=0);renderCard(ev,done,ci);renderLists()}
 function renderCard(ev,done,ci){card.dataset.state=state;const k=day(),t=FC.fmt(T()),st=FC.state();
   if(state==='A'){const nM=route.filter(e=>e.must).length,nR=route.length-nM;
-    const li=(e,i)=>`<li><span class="n${e.must?' must':''}" style="background:${rampColor(e.fill)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${i+1}</span><span class="t"><b>${e.b.addr}</b><span>預計滿 ${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}${e.must?' <span class="flag must">必清</span>':''}${st.cal[e.b.id]?' <span class="flag cal">已校正</span>':''}</span></span><span class="p">${Math.round(e.fill)}%</span></li>`;
+    const li=(e,i)=>`<li><span class="n${e.must?' must':''}" style="background:${rampColor(e.fill)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${i+1}</span><span class="t"><b>${e.b.addr}</b><span>預計滿 ${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}${e.must?' <span class="flag must">必清</span>':''}${st.cal[e.b.id]?' <span class="flag cal">已校正</span>':''}</span></span><span class="p">${stateChip(e.fill)}</span></li>`;
     cardBody.innerHTML=`<div class="k"><span class="lbl" id="cardTitle">必清 ${nM} 站・順路 ${nR} 站</span></div>
      <div class="small" id="crewSub">給領班的參考排序，全部為模擬</div>
      ${route.length?`<ol class="top3" id="mustList">${route.map((e,i)=>e.must?li(e,i):'').join('')}</ol>${nR?`<div class="subh">順路</div><ol class="top3" id="wayList">${route.map((e,i)=>e.must?'':li(e,i)).join('')}</ol>`:''}
@@ -143,14 +143,14 @@ function renderCard(ev,done,ci){card.dataset.state=state;const k=day(),t=FC.fmt(
   const e=route[ci],b=e.b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot,d=dd(prev,[b.la,b.lo]),v=Math.round(FC.fillAt(b,k,T(),st));
   cardBody.innerHTML=`<div class="k"><button class="back" id="backBtn" aria-label="回到路線">‹</button><span class="lbl">下一站</span><span class="no">${ci+1} / ${route.length}</span>${e.must?'<span class="flag must">必清</span>':''}<a class="nav" target="_blank" rel="noopener" aria-label="導航到這一站" href="https://www.google.com/maps/dir/?api=1&destination=${b.la},${b.lo}&travelmode=driving"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 11L21 3l-8 18-2-8z" fill="currentColor"/></svg></a></div>
    <div class="addr">${b.addr}</div>
-   <div class="meta"><span><b>${fmtM(d)}</b>・車程約 ${Math.max(1,Math.round(d/1000/20*60))} 分</span><span><span class="fb"><i style="width:${Math.max(6,Math.min(100,v))}%;background:${rampColor(v,v>100)}"></i></span>預測 <b>${v}%</b><span class="sim" title="模擬值"></span></span>${st.cal[b.id]?'<span class="flag cal">已校正 ×'+st.cal[b.id].k+'</span>':''}</div>
+   <div class="meta"><span><b>${fmtM(d)}</b>・車程約 ${Math.max(1,Math.round(d/1000/20*60))} 分</span><span><span class="fb"><i style="width:${Math.max(6,Math.min(100,v))}%;background:${rampColor(v,v>100)}"></i></span>預測 <b>${rampState(v).t}</b><span class="sim" title="模擬值"></span></span>${st.cal[b.id]?'<span class="flag cal">已校正 ×'+st.cal[b.id].k+'</span>':''}</div>
    <div class="small" id="orderNote">依 ${t} 預測・必清優先，層內行車路網排序</div>
    <div class="q">這桶實際多滿？點一下即完成此站（並校正預測）</div>
    <div class="amts">${AMT.map(a=>`<button class="amt" data-amt="${a[0]}" data-pct="${a[2]}" aria-label="收運量：${a[1]}">${binIconSVG(a[2],a[2]>100?'overflow':null).html}${a[1]}</button>`).join('')}</div>`}
 function renderLists(){const st=FC.state(),A=Object.fromEntries(AMT.map(a=>[a[0],a[1]]));
   const cb=P.filter(b=>st.cal[b.id]);calList.innerHTML=cb.length?cb.map(b=>`<div data-calid="${b.id}">${b.addr}・產生量 ×${st.cal[b.id].k}（${st.cal[b.id].n} 次回報）</div>`).join(''):'尚無';
   const ids=new Set(P.map(b=>b.id)),ev=getEvents().filter(e=>ids.has(e.bin)).reverse().slice(0,12);
-  hist.innerHTML=ev.length?ev.map(e=>{const b=P.find(x=>x.id===e.bin);return `<div>${timeStr(e.ts)}・<b>${e.by}</b> ${e.kind==='full'?'回報已滿':e.kind==='clear'?'已清運'+(e.amount?'・實際 '+A[e.amount]:'')+(e.predPct!=null?'（預測 '+e.predPct+'%）':''):'回報 '+e.level+'%'}<br>${b?b.addr:e.bin}</div>`}).join(''):'尚無紀錄'}
+  hist.innerHTML=ev.length?ev.map(e=>{const b=P.find(x=>x.id===e.bin);return `<div>${timeStr(e.ts)}・<b>${e.by}</b> ${e.kind==='full'?'回報已滿':e.kind==='clear'?'已清運'+(e.amount?'・實際 '+A[e.amount]:'')+(e.predPct!=null?'（預測'+rampState(e.predPct).t+'）':''):'回報'+rampState(e.level).t}<br>${b?b.addr:e.bin}</div>`}).join(''):'尚無紀錄'}
 function setState(s){state=s;card.classList.remove('collapsed');saveUI();draw();requestAnimationFrame(()=>fitTop())}
 let undoT=null;
 function record(id,amount,pct){const b=P.find(x=>x.id===id),st=FC.state(),r=FC.clearAndCalibrate(b,day(),T(),pct,st);
@@ -158,7 +158,7 @@ function record(id,amount,pct){const b=P.find(x=>x.id===id),st=FC.state(),r=FC.c
   const ts=getEvents().slice(-1)[0].ts;draw();fitTop();
   let u=document.querySelector('.undo');if(u)u.remove();clearTimeout(undoT);
   u=document.createElement('div');u.className='undo';u.setAttribute('role','status');
-  u.innerHTML=`<span>已完成・實際 ${AMT.find(a=>a[0]===amount)[1]}・預測 ${Math.round(r.pred)}%</span><button>復原</button>`;u.style.bottom=(cardH()+22)+'px';document.body.appendChild(u);
+  u.innerHTML=`<span>已完成・實際 ${AMT.find(a=>a[0]===amount)[1]}・預測${rampState(r.pred).t}</span><button>復原</button>`;u.style.bottom=(cardH()+22)+'px';document.body.appendChild(u);
   u.querySelector('button').onclick=()=>{localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents().filter(e=>!(e.ts===ts&&e.bin===id))));const s2=FC.state();if(r.old===1&&s2.cal[id]&&s2.cal[id].n===1)delete s2.cal[id];else if(s2.cal[id])s2.cal[id]={k:r.old,n:s2.cal[id].n-1};delete s2.clear[id];FC.save(s2);u.remove();clearTimeout(undoT);draw();fitTop()};
   undoT=setTimeout(()=>u.remove(),3000)}
 card.onclick=e=>{const a=e.target.closest('[data-amt]');if(a){record(route[curIdx()].b.id,a.dataset.amt,+a.dataset.pct);return}
