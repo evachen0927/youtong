@@ -24,12 +24,21 @@ function toast(t){let e=document.querySelector('.toast');if(!e){e=document.creat
 const getEvents=()=>{try{const v=JSON.parse(localStorage.getItem(LS_EVENTS));return Array.isArray(v)?v.filter(e=>e&&typeof e==='object'&&typeof e.bin==='string'):[]}catch(e){return[]}}; // 舊版／壞掉的存檔不會讓頁面掛掉
 // 「這裡需要垃圾桶」民眾回報：只存在這台裝置（localStorage，有桶_ 前綴 → 重設／?reset=1 會清除），沒有預設資料
 const LS_NEEDS='有桶_needs_v1',NEED_DEDUP_M=50;
-const getNeeds=()=>{try{const v=JSON.parse(localStorage.getItem(LS_NEEDS));return Array.isArray(v)?v.filter(n=>n&&typeof n.la==='number'&&typeof n.lo==='number'):[]}catch(e){return[]}};
+// 原因存穩定的 key；顯示文字另查。舊資料（存顯示文字）讀取時遷移：飲料杯／外帶餐盒 → general，其他 → other，無法辨識 → null（未選）
+const NEED_REASON={general:'一般垃圾',household:'家用垃圾',other:'其他'},NEED_REASON_KEYS=Object.keys(NEED_REASON);
+const NEED_LEGACY={'飲料杯':'general','外帶餐盒':'general','其他':'other','一般垃圾':'general','家用垃圾':'household'};
+const migrateReason=r=>r==null?null:NEED_REASON[r]?r:(NEED_LEGACY[r]||null);
+const getNeeds=()=>{try{const v=JSON.parse(localStorage.getItem(LS_NEEDS));if(!Array.isArray(v))return[];let ch=false;
+  const a=v.filter(n=>n&&typeof n.la==='number'&&typeof n.lo==='number').map(n=>{const r=migrateReason(n.reason??null);if(r!==(n.reason??null)){ch=true;return{...n,reason:r}}return n});
+  if(ch)try{localStorage.setItem(LS_NEEDS,JSON.stringify(a))}catch(e){}return a}catch(e){return[]}};
+// 200 m 內等統計：總數＋各類（含「未選」），只列 ≥1 的類別
+const needBreakdown=A=>{const c={};for(const n of A){const k=n.reason||'none';c[k]=(c[k]||0)+1}return[...NEED_REASON_KEYS,'none'].filter(k=>c[k]).map(k=>[k,k==='none'?'未選':NEED_REASON[k],c[k]])};
 // 50 m 內已有回報 → 不重複計數，回傳既有那筆
 function addNeed(la,lo){const a=getNeeds(),d=a.find(n=>hav(la,lo,n.la,n.lo)<=NEED_DEDUP_M);if(d)return{rec:d,dup:true};
   const rec={id:'N'+Date.now().toString(36),la,lo,ts:Date.now(),reason:null};a.push(rec);localStorage.setItem(LS_NEEDS,JSON.stringify(a.slice(-500)));return{rec,dup:false}}
 function removeNeed(id){localStorage.setItem(LS_NEEDS,JSON.stringify(getNeeds().filter(x=>x.id!==id)))}
-function setNeedReason(id,reason){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a))}
+const NEED_NOTE_MAX=40;function setNeedNote(id,t){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.note=String(t||'').trim().slice(0,NEED_NOTE_MAX)||null;localStorage.setItem(LS_NEEDS,JSON.stringify(a))} // 「其他」的說明文字：只存 localStorage，存檔前裁到 40 字
+function setNeedReason(id,reason){if(!NEED_REASON[reason])return;const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a))}
 function addEvent(e){const a=getEvents();a.push({...e,ts:Date.now()});localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)))}
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定
 function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin===id){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}

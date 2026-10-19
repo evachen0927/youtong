@@ -82,7 +82,17 @@ with sync_playwright() as p:
     assert '✓ 謝謝，已給設點規劃參考' in pg.inner_text('#list') and '原因（可不選）' in pg.inner_text('#need')
     assert pg.locator('#needUndo').bounding_box()['height']>=44;pg.click('#needUndo');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds().length")==0 and pg.locator('#needBtn').is_visible()
     pg.click('#needBtn');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds().length")==1
-    pg.click('[data-reason="外帶餐盒"]');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].reason")=='外帶餐盒' and pg.get_attribute('[data-reason="外帶餐盒"]','aria-pressed')=='true'
+    assert [pg.inner_text(f'[data-reason="{k}"]') for k in ('general','household','other')]==['一般垃圾','家用垃圾','其他']
+    pg.click('[data-reason="household"]');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].reason")=='household' and pg.get_attribute('[data-reason="household"]','aria-pressed')=='true' and pg.locator('#needNote').count()==0
+    # 其他：展開單行輸入（16px、maxlength 40、placeholder）＋送出 44px；可留空送出；存檔前裁 40 字
+    pg.click('[data-reason="other"]');pg.wait_for_timeout(300);ni=pg.locator('#needNote')
+    assert ni.is_visible() and ni.get_attribute('maxlength')=='40' and ni.get_attribute('placeholder')=='例：狗便、菸蒂' and pg.evaluate("parseFloat(getComputedStyle(needNote).fontSize)")>=16 and pg.locator('#needNoteSend').bounding_box()['height']>=44
+    if name=='mobile':pg.wait_for_timeout(400);pg.screenshot(path='/workspace/ped_other_input_390.png')
+    vis=pg.evaluate("(()=>{const r=needNote.getBoundingClientRect(),v=window.visualViewport;return r.top>=0&&r.bottom<=(v?v.height+v.offsetTop:innerHeight)})()");assert vis
+    pg.click('#needNoteSend');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].note")==None and pg.locator('#noteDone').count()==1  # 留空也能送出
+    pg.evaluate("setNeedNote(getNeeds()[0].id,'x'.repeat(50))");assert pg.evaluate("getNeeds()[0].note.length")==40
+    pg.click('[data-reason="household"]');pg.click('[data-reason="other"]');pg.wait_for_timeout(200);pg.fill('#needNote','<img src=x onerror=alert(1)>');pg.click('#needNoteSend');pg.wait_for_timeout(200)
+    assert pg.evaluate("getNeeds()[0]")['note']=='<img src=x onerror=alert(1)>' and pg.evaluate("getNeeds()[0].reason")=='other'
     dup=pg.evaluate("(()=>{const r=addNeed(pos[0]+0.0002,pos[1]);return [r.dup,getNeeds().length]})()");assert dup==[True,1],dup  # 50 m 內只算一次
     pg.evaluate("(()=>{const s=D.yb.find(x=>x.name==='捷運大安站(4號出口)');setPos([s.la,s.lo],'手動設定的位置')})()");pg.wait_for_timeout(500)
     q=pg.inner_text('#needQ') if pg.locator('#needQ').count() else '';print(name,'遠處',q,'| 卡片',pg.inner_text('.dist').replace('\n',' '));assert pg.evaluate("RT.walkMin(nearestN(shown(),1)[0].d)")==int(q.split('走 ')[1].split(' ')[0]) and ('步行約 %s 分'%q.split('走 ')[1].split(' ')[0]) in pg.inner_text('.dist')
@@ -92,8 +102,18 @@ with sync_playwright() as p:
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);lt=pg.inner_text('[data-ly="need"]');print(name,'規劃圖層',lt);assert '1 筆' in lt and pg.get_attribute('[data-ly="need"]','aria-pressed')=='true'
     dot=pg.evaluate("getComputedStyle(document.querySelector('[data-ly=need] i')).backgroundColor");mk=pg.locator('.needmk');bb=mk.first.bounding_box();bg=pg.evaluate("getComputedStyle(document.querySelector('.needmk')).backgroundColor");print(name,'需求點',mk.count(),bb['width'],dot,bg);assert mk.count()==1 and 10<=bb['width']<=12 and dot==bg=='rgb(122, 92, 196)'
     assert pg.evaluate("getComputedStyle(document.querySelector('#thrSeg button.on')).backgroundColor")=='rgb(43, 51, 51)' and min(pg.evaluate("[...document.querySelectorAll('#thrSeg button')].map(b=>b.getBoundingClientRect().height)"))>=44
-    pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆'
+    pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆（其他 1）',nn
+    dlg=[];dh=lambda d:(dlg.append(d.message),d.dismiss());pg.on('dialog',dh);pg.click('#needOther summary');pg.wait_for_timeout(500)
+    li=pg.locator('#needOther li').all_inner_texts();print(name,'其他說明',li);assert li==['<img src=x onerror=alert(1)>'] and pg.locator('#needOther img').count()==0 and not dlg and pg.evaluate("document.querySelectorAll('#detail img[src=x]').length")==0
+    pg.remove_listener('dialog',dh)
     if name=='mobile':pg.screenshot(path='shot_planner_need_mobile.png')
+    # 舊資料遷移：飲料杯／外帶餐盒 → general、其他 → other、無原因 → 未選；各類只列 ≥1
+    saved=pg.evaluate("localStorage.getItem('有桶_needs_v1')")
+    pg.evaluate("(()=>{const s=D.yb.find(x=>x.name==='捷運公館站(2號出口)'),t=Date.now();localStorage.setItem('有桶_needs_v1',JSON.stringify([['飲料杯',0],['外帶餐盒',0.0006],['其他',-0.0006],[null,0.0012]].map(([r,d],i)=>({id:'old'+i,la:s.la+d,lo:s.lo,ts:t,reason:r}))))})()")
+    pg.reload();pg.wait_for_selector('#hot .card',timeout=20000);pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp')
+    nb=pg.inner_text('#needNear');st=pg.evaluate("JSON.parse(localStorage.getItem('有桶_needs_v1')).map(n=>n.reason)");print(name,'遷移',nb,st);assert nb=='200 m 內民眾回報需求 4 筆（一般垃圾 2・其他 1・未選 1）' and st==['general','general','other',None]
+    if name=='mobile':pg.locator('#needNear').scroll_into_view_if_needed();pg.screenshot(path='/workspace/planner_need_breakdown.png')
+    pg.evaluate(f"localStorage.setItem('有桶_needs_v1',{saved!r})");pg.reload();pg.wait_for_selector('#hot .card',timeout=20000);pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp')
     pg.evaluate("(()=>{const n=getNeeds()[0];addNeed(n.la+0.0006,n.lo);addNeed(n.la,n.lo+0.0007)})()");pg.click('#bk');pg.wait_for_timeout(1200);pg.evaluate("map.stop();map.setView([getNeeds()[0].la,getNeeds()[0].lo],14,{animate:false})");pg.wait_for_timeout(900)
     cl=pg.evaluate("[...document.querySelectorAll('.needmk')].map(e=>e.innerText)");print(name,'合併',pg.evaluate("[getNeeds().length,map.getZoom(),getNeeds().map(n=>[n.la,n.lo])]"),'筆 →',cl);assert cl==['3']
     pg.evaluate("localStorage.setItem('有桶_needs_v1',JSON.stringify(getNeeds().slice(0,1)))")
