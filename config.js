@@ -13,7 +13,7 @@ window.CONFIG={
     caveat:'清冊不等於現場完整現況；北投 0 列、南港 4 列為資料缺漏。「近 3,000 組減到約 800 組」是官方題目的問題陳述。'
   },
   demoArea:{name:'公館–大安',bounds:[[25.0075,121.5240],[25.0400,121.5560]],center:[25.0215,121.5380],zoom:15},
-  fallbackLocation:{name:'捷運大安站(信義)公車站',latlng:[25.033404,121.543827]}, // 行人頁定位失敗時的示範位置
+  fallbackLocation:{name:'興雅國中公車站',latlng:[25.037232,121.568269]}, // 行人頁定位失敗時的示範位置
   hotspot:{gapThresholdM:100, maxList:8},          // 查核優先序：最近街道清潔箱（直線）> 100m
   scenarioB:{ // B 原位改善：模擬參數（假設，可調整）
     baseCapacityL:80, newCapacityL:120,            // 容量（公升）
