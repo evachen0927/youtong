@@ -9,6 +9,7 @@
 .ftop .role{font-size:12px;color:var(--mute);background:#ffffffd9;padding:4px 10px;border-radius:999px}
 .mk.hot{background:var(--ink);box-shadow:0 0 0 2px #fff,0 1px 4px #0003;border:0}
 .app main{height:100dvh}
+.binmk{background:none;border:0}.binmk .w svg{display:block}
 .insight{padding:4px 0 6px}.insight .eyebrow{font-size:12px;font-weight:600;color:var(--mute);letter-spacing:.5px}
 .insight .big{font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1.1;margin:6px 0 2px}.insight .big small{font-size:18px;color:var(--mute);font-weight:500;letter-spacing:0}
 .insight .lead{font-size:17px;font-weight:600;margin:4px 0 6px;line-height:1.45}.insight .lead2{font-size:14px;color:var(--ink-2);margin:0 0 8px;line-height:1.55}
@@ -51,7 +52,7 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
   <li><b>推估</b>：借＋還次數與停靠路線數只是人流的代理指標，不等於垃圾量；距離皆為直線距離。</li>
   <li><b>模擬</b>（標 <span class="sim"></span>）：B 方案容量／清運參數與滿溢時數、本工具的方案建議規則，皆為可調整的假設。</li></ul>
 </div></div>
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="ui.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="ui.js"></script><script src="bin-icons.js"></script>
 <script>
 nav('index.html');sheet();menu.onclick=()=>sheetOpen('menuSheet');
 const map=quietMap(CONFIG.demoArea.center,CONFIG.demoArea.zoom),ren=L.canvas({padding:.3});
@@ -68,7 +69,10 @@ function drawBase(bins){baseL.clearLayers();
   for(const s of D.yb){if(!map.getBounds().pad(.5).contains([s.la,s.lo]))continue;const r=s.act?Math.max(3,Math.sqrt(s.act)/22):3;
     L.circleMarker([s.la,s.lo],{renderer:ren,radius:r,color:'#fff',weight:1,fillColor:'#d9a441',fillOpacity:.7}).bindPopup(`🚲 <b>${s.name}</b><br>2026-07 借＋還 ${s.act?fmt(s.act):'無配對'} 次`).addTo(baseL)}
   for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk',iconSize:[10,10]})}).bindPopup(`◆ 場域線索：${v.addr}`).addTo(baseL);
-  for(const b of bins)L.circleMarker([b.la,b.lo],{renderer:ren,radius:b.moved?8:5,color:'#fff',weight:1.5,fillColor:b.moved?'#7b5cc4':'#3f4549',fillOpacity:.95}).bindPopup(`🗑 ${b.addr}`).addTo(baseL)}
+  const z=map.getZoom(),vb=map.getBounds().pad(.3);
+  for(const b of bins){if(z>=15&&!b.moved){if(vb.contains([b.la,b.lo]))L.marker([b.la,b.lo],{icon:PL_BIN[z>=16?0:1],keyboard:false}).bindPopup(`🗑 ${b.addr}`).addTo(baseL)}
+    else L.circleMarker([b.la,b.lo],{renderer:ren,radius:b.moved?8:4,color:'#fff',weight:1.5,fillColor:b.moved?'#7b5cc4':'#8d9397',fillOpacity:.95}).bindPopup(`🗑 ${b.addr}`).addTo(baseL)}}
+const PL_BIN=[binDivIcon(0,false,null,false),binDivIcon(0,false,null,true)];
 function home(){cur=null;detail.hidden=true;document.getElementById('home').hidden=false;chgL.clearLayers();drawBase(D.street);drawHot()}
 function drawHot(){hotL.clearLayers();HS.slice(0,CONFIG.hotspot.maxList).forEach((h,i)=>L.marker([h.la,h.lo],{icon:L.divIcon({className:'mk hot',html:i+1,iconSize:[26,26]}),zIndexOffset:800}).on('click',()=>open(h)).addTo(hotL))}
 function open(h){cur=h;const saved=SC.load();const E=SC.evaluate(h,ST,D.street);h.E=E;opt=(saved&&saved.hotspotId===h.id)?saved.option:E.rec;
@@ -118,7 +122,7 @@ loadCore().then(d=>{D=d;SC.all=[...D.yb,...D.bus];
   lyAnc.onchange=()=>lyAnc.checked?ancL.addTo(map):ancL.remove();
   const cnt={};D.street.forEach(b=>cnt[b.d]=(cnt[b.d]||0)+1);const ds=['士林區','中正區','內湖區','萬華區','信義區','松山區','大安區','中山區','文山區','大同區','南港區','北投區'];const mx=Math.max(...Object.values(cnt));
   bars.innerHTML=ds.map(n=>`<div class="bar"><span>${n.replace('區','')}</span><i class="${['北投區','南港區'].includes(n)?'gap':''}" style="width:${Math.max(1,(cnt[n]||0)/mx*100)}%"></i><span>${cnt[n]||0}${['北投區','南港區'].includes(n)?' ⚠️':''}</span></div>`).join('');
-  legend(map,[{c:'#3f4549',t:'清冊垃圾桶'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'缺口熱點'},{c:'#e2574c',t:'100 m 範圍',shape:'ring'}]);
+  legend(map,[{html:binIconSVG(0).html.replace('width="28" height="34"','width="14" height="17"'),t:'清冊垃圾桶（遠看為灰點）'},{c:'#d9a441',t:'YouBike（大小＝借還量）'},{c:'#8a84c9',t:'公車站'},{c:'#7b5cc4',t:'場域線索',shape:'diamond'},{c:'#1c1f21',t:'缺口熱點'},{c:'#e2574c',t:'100 m 範圍',shape:'ring'}]);
   home();map.on('moveend',()=>drawBase(cur!==null&&opt==='C'&&cur.E.binsC?cur.E.binsC:D.street));
   const q=new URLSearchParams(location.search);if(q.has('hotspot'))open(HS[+q.get('hotspot')]);
 }).catch(e=>toast('資料載入失敗：'+e.message));

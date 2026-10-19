@@ -115,7 +115,7 @@ nav('pedestrian.html'); // 導覽列放在「更多」面板內
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);
-legend(map,[{html:binIconSVG('both',-1).html.replace('width="36" height="34"','width="20" height="19"'),t:'清潔箱（一般＋回收）'},{c:'var(--brand)',t:'你的位置'},{html:'<b style="font-weight:600">滿度</b>',t:''},...RAMP_LEGEND],'topleft');
+legend(map,[...BIN_LEGEND(),{c:'var(--brand)',t:'你的位置'}],'topleft');
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 document.getElementById('map').classList.add('desat');
 const ren=L.canvas({padding:.3});
@@ -127,8 +127,8 @@ const shown=()=>bins().filter(b=>binAccepts(b,filter));
 
 // ---- 標記：正面垃圾桶（bin-icons.js）；zoom ≥16 或最近的桶才顯示桶內滿度 ----
 const iconCache={};
-function pinIcon(b,ev,near){const cat=binCategory(b).cat,show=map.getZoom()>=16||near,f=show?fillOf(b.id,ev):-1,fq=f<0?-1:Math.round(f/10)*10;
-  const key=cat+'|'+fq+'|'+(near?1:0);return iconCache[key]||(iconCache[key]=binDivIcon(cat,fq,near))}
+function pinIcon(b,ev,near){const st=binState(b.id,ev),f=st?0:Math.round(fillOf(b.id,ev)/10)*10,small=map.getZoom()<15&&!near;
+  const key=f+'|'+st+'|'+(near?1:0)+(small?'s':'');return iconCache[key]||(iconCache[key]=binDivIcon(f,near,st,small))}
 function drawBins(){binL.clearLayers();const bd=map.getBounds().pad(.3),ev=getEvents(),nid=primary()&&primary().f.id;
   for(const f of shown())if(bd.contains([f.la,f.lo])){const near=f.id===nid;
     L.marker([f.la,f.lo],{icon:pinIcon(f,ev,near),zIndexOffset:near?900:0,keyboard:false,title:f.addr}).on('click',()=>focusBin(f)).addTo(binL)}}
