@@ -46,12 +46,34 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 .stack{display:grid;gap:8px}
 .leaflet-top.leaflet-left{top:calc(102px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:240px}
 @media (min-width:761px){#next{left:auto;right:16px;bottom:16px;width:400px}.top{right:auto;width:460px}}
+/* 預測調度（新增控制項）*/
+.fcbtn{pointer-events:auto;height:var(--touch);padding:0 14px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);font:700 14px/1 var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}.fcbtn[aria-pressed=true]{background:var(--ink);color:#fff}
+#fc{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow-2);padding:14px 16px;max-width:520px;margin:0 auto;max-height:58vh;overflow-y:auto}
+#fc .fld{margin:0 0 10px}#fc input[type=range]{width:100%;accent-color:var(--ink-2);height:36px}
+#fc .tv{font:700 22px/1 var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}
+#fc .note{font-size:12px;color:var(--mute);line-height:1.5;margin:6px 0 10px}
+.fci{padding:10px 0;border-top:1px solid var(--line)}.fci .a{font-weight:700;font-size:15px;line-height:1.35}.fci .m{font-size:13px;color:var(--mute);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.flag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}.flag.last{background:var(--fill-high-soft);color:var(--fill-over)}.flag.cal{background:var(--gray-1);color:var(--ink-2)}
+.fca{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.fca button{min-height:44px;border:0;border-radius:10px;background:var(--surface-2);font:700 14px var(--font);cursor:pointer}
+.fcsum{display:flex;gap:16px;font-size:13px;color:var(--mute);margin:4px 0 6px}.fcsum b{display:block;font-size:20px;color:var(--ink)}
+@media (min-width:761px){#fc{left:auto;right:16px;bottom:16px;width:420px;max-height:calc(100vh - 110px)}}
 </style></head>
 <body>
 <div id="map"></div>
-<div class="top"><div class="prog" id="prog" aria-live="polite">載入中…</div><button class="fab" id="menu" aria-label="調度設定">⋯</button></div>
+<div class="top"><div class="prog" id="prog" aria-live="polite">載入中…</div><button class="fcbtn" id="fcBtn" aria-pressed="false">🕒 預測</button><button class="fab" id="menu" aria-label="調度設定">⋯</button></div>
 <button class="infochip info" id="infoBtn">資料說明</button>
 <section id="next" aria-live="polite"><div class="addr" style="color:var(--mute);font-weight:500">正在產生今日清運路線…</div></section>
+<section id="fc" hidden aria-label="預測調度">
+  <div class="k"><span class="lbl">預測調度・示範區</span><span id="fcArea"></span></div>
+  <div class="fld" style="margin-top:8px"><div class="seg"><label><input type="radio" name="fcd" value="wk" checked>平日</label><label><input type="radio" name="fcd" value="we">週末</label></div></div>
+  <div class="fld"><label for="fcT" style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mute)">時間 <span class="tv" id="fcTV">08:00</span></label><input type="range" id="fcT" min="0" max="1425" step="15" value="480"></div>
+  <div class="fld"><label for="fcTh" style="font-size:13px;color:var(--mute)">清運門檻：填充度 ≥ <b id="fcThV">70</b>%</label><input type="range" id="fcTh" min="10" max="100" step="5" value="70"></div>
+  <div class="fcsum" id="fcSum"></div>
+  <div class="note">人流由交通活動推估（YouBike 2026-07 借還＋公車路線數）・產生量為假設，可調整（每 1,000 人次 5 公升）・填充度為模擬<span class="sim" title="模擬值"></span></div>
+  <div id="fcCal" class="note" hidden></div>
+  <div id="fcList"></div>
+</section>
+
 
 <div class="sheet" id="setSheet" hidden><div class="sh" role="dialog" aria-label="調度設定">
   <div class="hd"><b>調度設定</b><button class="x" data-close aria-label="關閉">✕</button></div>
@@ -171,4 +193,45 @@ Promise.all([loadJSON('bins.geojson'),loadJSON('districts.geojson')]).then(([b,d
   if(ui.startMode==='gps')document.querySelector('[name=st][value=gps]').checked=true;
   if(ui.route&&ui.route.length&&ui.gen){route=ui.route.map(id=>bins.find(x=>x.id===id)).filter(Boolean);start=ui.start;gen=ui.gen;startMode=ui.startMode||'center';show(true)}
   else genRoute()}).catch(e=>toast('資料載入失敗：'+e.message));
+</script>
+<script src="forecast.js"></script>
+<script>
+// ===== 預測調度：時間滑桿＋平日/週末，優先順序（預計滿的時間）、最近鄰路線、已清運＋回報校正 =====
+(function(){
+const fcL=L.layerGroup(),LSF='有桶_fc_ui',C=CONFIG.forecast,AM=[['空',0],['半',50],['滿',100],['溢出',120]];
+let P=null,on=false,openId=null;const depot=C.depot||CONFIG.demoArea.center;
+const fu=JSON.parse(localStorage.getItem(LSF)||'{}');const q=new URLSearchParams(location.search);
+const day=()=>document.querySelector('[name=fcd]:checked').value;
+function setUI(){if(q.get('day'))fu.day=q.get('day');if(q.get('t'))fu.t=FC.hm(q.get('t'));
+  document.querySelector(`[name=fcd][value=${fu.day||'wk'}]`).checked=true;fcT.value=fu.t??FC.hm(C.shiftStart);fcTh.value=fu.th||C.threshold;fcArea.textContent=CONFIG.demoArea.name}
+function saveF(){localStorage.setItem(LSF,JSON.stringify({on,day:day(),t:+fcT.value,th:+fcTh.value}))}
+function render(){if(!P)return;const k=day(),t=+fcT.value,th=+fcTh.value,st=FC.state();fcTV.textContent=FC.fmt(t);fcThV.textContent=th;
+  const E=FC.evaluate(P,k,t,st);fcL.clearLayers();
+  for(const e of E){const f=Math.round(e.fill);L.circleMarker([e.b.la,e.b.lo],{radius:f>=100?9:f>=th?7:5,color:'#fff',weight:1.5,fillColor:rampColor(f,f>100),fillOpacity:.95}).bindTooltip(`${e.b.addr}<br>${f}%・預計滿 ${isFinite(e.fullAt)?FC.fmt(e.fullAt):'48 小時內不會滿'}`).addTo(fcL)}
+  const pick=E.filter(e=>e.fill>=th),R=FC.nnRoute(depot,pick);let km=0,cur=depot;for(const e of R){km+=hav(cur[0],cur[1],e.b.la,e.b.lo);cur=[e.b.la,e.b.lo]}
+  if(R.length)L.polyline([depot,...R.map(e=>[e.b.la,e.b.lo])],{color:'#3f4549',weight:3,opacity:.6}).addTo(fcL);
+  L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點'}).addTo(fcL);
+  R.forEach((e,i)=>L.marker([e.b.la,e.b.lo],{icon:L.divIcon({className:'stopw',iconSize:[22,22],html:`<div class="stop" style="width:22px;height:22px;background:${rampColor(e.fill,e.fill>100)}">${i+1}</div>`}),zIndexOffset:500}).addTo(fcL));
+  const over=E.filter(e=>e.fill>100).length,last=E.filter(e=>e.last).length;
+  fcSum.innerHTML=`<span><b>${pick.length}</b>達門檻</span><span><b>${(km/1000).toFixed(1)} km</b>路線（最近鄰）</span><span><b>${over}</b>溢出</span><span><b>${last}</b>收班前最後一輪</span>`;
+  fcList.innerHTML=E.slice(0,10).map((e,i)=>`<div class="fci" data-id="${e.b.id}"><div class="a">${i+1}. ${e.b.addr}</div><div class="m"><span><span class="fb"><i style="width:${Math.max(6,Math.min(100,e.fill))}%;background:${rampColor(e.fill,e.fill>100)}"></i></span><b>${Math.round(e.fill)}%</b></span><span>預計滿 <b>${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}</b></span>${e.last?'<span class="flag last">收班前最後一輪</span>':''}${e.cal?`<span class="flag cal">已校正 ×${st.cal[e.b.id].k}</span>`:''}</div>
+   ${openId===e.b.id?`<div class="fca">${AM.map(a=>`<button data-fca="${a[1]}" aria-label="回報滿度 ${a[0]}">${a[0]}</button>`).join('')}</div>`:`<button class="b" style="min-height:40px;margin-top:8px;font-size:14px" data-fco>已清運＋回報滿度</button>`}</div>`).join('');
+  const cb=P.filter(b=>st.cal[b.id]);fcCal.hidden=!cb.length;fcCal.innerHTML=cb.length?'已校正：'+cb.map(b=>`<span class="flag cal" data-calid="${b.id}">${b.addr} ×${st.cal[b.id].k}</span>`).join(' '):'';
+  saveF()}
+function show(v){on=v;fcBtn.setAttribute('aria-pressed',v);fc.hidden=!v;next.hidden=v;const u=document.querySelector('.undo');if(u)u.remove();
+  if(v){map.removeLayer(rtL);map.removeLayer(binL);fcL.addTo(map);map.fitBounds(CONFIG.demoArea.bounds,{paddingTopLeft:[20,80],paddingBottomRight:[innerWidth>760?440:20,innerWidth>760?20:fc.offsetHeight+20]});render()}
+  else{fcL.remove();rtL.addTo(map);binL.addTo(map)}saveF()}
+fcBtn.onclick=()=>show(!on);
+document.querySelectorAll('[name=fcd]').forEach(r=>r.onchange=render);fcT.oninput=render;fcTh.oninput=render;
+fcList.onclick=e=>{const it=e.target.closest('.fci');if(!it)return;
+  if(e.target.closest('[data-fco]')){openId=it.dataset.id;render();return}
+  const a=e.target.closest('[data-fca]');if(a){const b=P.find(x=>x.id===it.dataset.id),pct=+a.dataset.fca,st=FC.state(),r=FC.clearAndCalibrate(b,day(),+fcT.value,pct,st);
+    addEvent({bin:b.id,kind:'clear',level:0,by:'清潔隊',amount:['empty','half','full','overflow'][[0,50,100,120].indexOf(pct)],amountPct:pct,predPct:Math.round(r.pred),calib:+r.k.toFixed(3),fcDay:day(),fcMin:+fcT.value});
+    openId=null;toast(`已清運；預測 ${Math.round(r.pred)}%、回報 ${pct}% → 產生量校正 ×${r.k.toFixed(2)}`);render()}};
+Promise.all([loadJSON('bins.geojson'),loadJSON('footfall_hourly.json'),loadJSON('busstops_taipei.geojson')]).then(([b,h,s])=>{
+  const bins=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address})).filter(x=>SC_in(x.la,x.lo));
+  const bus=s.features.map(f=>({la:ll(f)[0],lo:ll(f)[1],routes:f.properties.routes}));
+  P=FC.prepare(bins,h,bus);setUI();if(q.get('fc')==='1'||fu.on)show(true)}).catch(e=>toast('預測資料載入失敗：'+e.message));
+function SC_in(la,lo){const[[a,b],[c,d]]=CONFIG.demoArea.bounds;return la>=a&&la<=c&&lo>=b&&lo<=d}
+})();
 </script></body></html>

@@ -17,7 +17,7 @@
 |---|---|---|
 | 規劃（主頁） | `index.html` | 開場數字（來自 `config.js`）、示範區缺口熱點、點熱點看 A/B/C 指標對照與地圖變化，「採用」後存入 localStorage |
 | 行人 | `pedestrian.html` | 定位（拒絕時改用示範位置 興雅國中公車站（`config.js > fallbackLocation`），可點地圖手動設定）、最近 5 個垃圾桶＋Google Maps 步行導航、「調整前／調整後」距離比較、回報「滿了」 |
-| 清潔隊 | `crew.html` | 單一頁面：依行政區產生清運順序，逐站回報收運量（空／半滿／滿／溢出）並標記已清運，可復原。舊網址 `crew-route.html` 會自動導向 `crew.html` |
+| 清潔隊 | `crew.html` | 單一頁面：依行政區產生清運順序，逐站回報收運量（空／半滿／滿／溢出）並標記已清運，可復原。舊網址 `crew-route.html` 會自動導向 `crew.html`。右上「🕒 預測」開啟**預測調度**（示範區）：平日／週末切換＋時間滑桿，即時更新各桶預測填充度顏色、依「預計幾點滿」排序的優先清單、「收班前最後一輪」標記、達門檻桶的最近鄰路線；「已清運＋回報滿度」會歸零並校正該桶產生量（標「已校正」） |
 
 ## 怎麼執行
 ```bash
@@ -34,14 +34,26 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 | `config.js` | 可編輯設定（開場數字、示範區、方案參數、假設） |
 | `common.js` | 資料載入、距離、localStorage 事件、填充度（工程邏輯） |
 | `scenario.js` | A/B/C 方案引擎 |
+| `forecast.js` | 清潔隊預測調度（人流、累積、預計滿、最近鄰路線、校正） |
+| `footfall_hourly.json` | 示範區 YouBike 站 × 平日/週末 × 24 小時平均借＋還（`aggregate_hourly.py` 產生，約 100 KB） |
 | `tokens.css` | 設計 token（顏色、間距、字級） |
 | `ui.css` | 共用元件樣式（⋯ 選單、抽屜、圖例） |
 | `ui.js` | 視覺層：滿度色階 `rampColor()`、去飽和底圖 `quietMap()`、圖例、抽屜 |
 | `bin-category.js`、`bin-icons.js` | 垃圾桶類別與地圖圖示（行人頁） |
 | `common.css` | 舊版共用樣式 |
 
+### 預測調度的計算（`forecast.js`，參數在 `config.js > forecast`）
+- 每小時人流 `F(h)` = 桶 200m 內 YouBike 站該小時每日平均借＋還次數的**平均** ＋ Σ 200m 內公車站停靠路線數 × 20 × 全市 YouBike 該小時占比。平日 22 天、週末 7 天（2026-07，排除 7/10、7/11）。
+- 每小時產生量 = `F(h)` × 15（每次借還代表的行人，假設）× 5 公升 / 1,000 人次（假設）× 該桶校正係數。
+- 填充度 = 起始量（模擬 0–30%）＋ 自上次清運（預設當天 08:00 上班時）起累積量 ÷ 容量 120 公升；以 15 分鐘步進推算「預計幾點滿」。
+- 優先順序 = 預計滿時間由早到晚。「收班前最後一輪」= 預計在收班 16:30 之後、隔天 08:00 上班前滿的桶（時間設定在 `config.js`）。
+- 路線 = 填充度 ≥ 門檻（預設 70%）的桶，從清潔隊出發點（預設示範區中心）以最近鄰排序；**不做最佳化**。
+- 「已清運＋回報滿度」：該桶歸零，校正係數 `k ← 0.7·k + 0.3·k·(回報% ÷ 預測%)`（限 0.2–5），標示「已校正」。
+- 以同一日型延續推算隔天（平日接平日、週末接週末）。
+- 測試網址：`crew.html?fc=1&day=we&t=19:00`（週六傍晚）。
+
 ### localStorage 事件格式
-`{bin, kind:'full'|'level'|'clear', level, by:'行人'|'清潔隊', ts, amount, amountPct}`；清潔隊回報收運量時 `amount` 為 `empty|half|full|overflow`，`amountPct` 對應 0／50／100／120。
+`{bin, kind:'full'|'level'|'clear', level, by:'行人'|'清潔隊', ts, amount, amountPct}`；預測調度回報另加 `predPct`（預測滿度）、`calib`（新校正係數）、`fcDay`（wk/we）、`fcMin`（滑桿時間，分鐘）。校正係數另存 `localStorage['有桶_forecast_v1']`；清潔隊回報收運量時 `amount` 為 `empty|half|full|overflow`，`amountPct` 對應 0／50／100／120。
 
 重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）。測試：`python test_mvp.py`（Playwright，桌面 1280×800＋手機 390×844）。行人頁的熱點／調整前後在「⋯ 更多」面板（`#more` → `#hotBtn`、`[data-m=after]`，`#advClose` 關閉，`#doneBtn` → `[data-full]` 回報滿了）；清潔隊頁用 `#next [data-amt]` 回報收運量。
 
@@ -66,6 +78,10 @@ TDX 公車 API 需申請金鑰（未使用）。
 | 公車每站停靠路線數 | **推估**（路線數不是上下車人數） |
 | **交通活動量是人流的推估，不等於垃圾量** | — |
 | 垃圾桶填充度、滿溢告警 | **模擬**（依桶編號固定產生；行人與清潔隊回報會覆蓋）——目前唯一的模擬資料欄位 |
+| 每小時人流（預測調度） | **推估**：由交通活動推估——200m 內 YouBike 站 2026-07 每小時「每日平均借＋還次數」（真實紀錄彙總，`footfall_hourly.json`）＋公車停靠路線數權重，不是實測人流 |
+| 垃圾產生量（每 1,000 人次 5 公升、每次借還≈15 位行人、每條路線≈每日 20 次借還） | **假設，可調整**（`config.js > forecast`） |
+| 預測填充度、預計滿時間、起始量 0–30% | **模擬** |
+| 校正係數 | 由清潔隊回報的實際滿度 ÷ 預測滿度，以 EMA（α=0.3）更新；存在 localStorage |
 | B 方案模擬參數與滿溢假設（容量、清運頻率、每千次借還產生公升數） | **模擬／假設**，參數在 `config.js` |
 | C 方案移桶、行人頁「調整後」 | **情境模擬**，不是實際設置 |
 | 距離 | 直線距離，不是步行距離 |

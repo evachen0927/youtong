@@ -36,6 +36,17 @@ with sync_playwright() as p:
     pg.screenshot(path=f'shot_crew_{name}.png')
     pg.click('#menu');pg.once('dialog',lambda d:d.accept());pg.click('#allClear');pg.wait_for_timeout(300)
     print(name,'清潔隊',a0.replace('\n',' '),'→',a1.replace('\n',' '),'→ 復原',a2.replace('\n',' '),'| 收運量事件',amt,'| 全部清運後完成卡',pg.locator('#next .done').count()>0)
+    # 預測調度：開啟、平日/週末切換、時間滑桿、已清運＋回報校正
+    pg.goto(B+'crew.html');pg.wait_for_selector('#fcBtn');pg.click('#fcBtn');pg.wait_for_selector('#fcList .fci',timeout=20000)
+    pg.click('label:has([name=fcd][value=wk])');pg.eval_on_selector('#fcT',"e=>{e.value=600;e.dispatchEvent(new Event('input'))}");s1=pg.inner_text('#fcSum').replace('\n',' ')
+    pg.click('label:has([name=fcd][value=we])');pg.eval_on_selector('#fcT',"e=>{e.value=1140;e.dispatchEvent(new Event('input'))}");pg.wait_for_timeout(300);s2=pg.inner_text('#fcSum').replace('\n',' ')
+    print(name,'預測 平日10:00',s1,'| 週末19:00',s2,'| 時間',pg.inner_text('#fcTV'));assert s1!=s2
+    pg.screenshot(path=f'shot_crew_forecast_sat_{name}.png')
+    first=pg.locator('.fci').first;bid=first.get_attribute('data-id');first.locator('[data-fco]').click();pg.locator(f'.fci[data-id="{bid}"] [data-fca="50"]').click();pg.wait_for_timeout(300)
+    cal=pg.evaluate(f"FC.state().cal['{bid}']");ev=pg.evaluate("getEvents().slice(-1)[0]")
+    flag=pg.locator(f'[data-calid="{bid}"]').count()
+    print(name,'校正',bid,cal,'event',{k:ev.get(k) for k in ('kind','amount','amountPct','predPct','calib')},'已校正標記',flag);assert cal and cal['n']==1 and ev['predPct'] is not None and flag==1
+    pg.click('#fcBtn')
     pg.goto(B+'crew-route.html');pg.wait_for_selector('#next',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
     print(name,'ERRORS',errs);ok&=not errs;c.close()
   br.close()
