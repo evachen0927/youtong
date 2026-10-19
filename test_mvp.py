@@ -88,6 +88,8 @@ with sync_playwright() as p:
     pg.click('#menu');pg.click('#thSeg label:has([value="100"])');pg.wait_for_timeout(400);pg.click('#setSheet [data-close]')
     cb=pg.inner_text('#card');print(name,'空狀態 reset 後 平日08:30',cb.replace('\n',' ')[:60]);assert '目前沒有滿溢的桶' in cb and '43 桶中列入 0 桶' in cb and pg.locator('#cardTitle').count()==0 and '必清 0 站' not in cb
     pg.click('#toNear');pg.wait_for_timeout(500);assert pg.locator('#cardTitle').count()==1 and pg.evaluate("document.querySelector('[name=thr][value=\"70\"]').checked") and pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')).th")==70
+    # 例行清運時間（假設）：config 與資料說明一致
+    assert pg.evaluate("CONFIG.forecast.routineClears.join(',')")=='05:00,08:00,12:00,16:00' and '例行清運時間 05:00／08:00／12:00／16:00 為假設；官方公開資料只提到一天 3–6 次，沒有公布時間' in pg.content()
     pg.goto(B+'crew-route.html');pg.wait_for_selector('#card',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
     print(name,'ERRORS',errs);ok&=not errs;c.close()
   br.close()

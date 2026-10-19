@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020h"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020h"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020h"><link rel="stylesheet" href="tokens.css?v=20261020h"><link rel="stylesheet" href="ui.css?v=20261020h">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020i"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020i"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020i"><link rel="stylesheet" href="tokens.css?v=20261020i"><link rel="stylesheet" href="ui.css?v=20261020i">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
@@ -88,12 +88,12 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <div class="hd"><b>資料說明</b><button class="x" data-close aria-label="關閉">✕</button></div>
   <p class="sub">到桶的距離用步行計算；半徑內的數量用直線計算。</p>
   <h3>真實資料</h3><ul><li>垃圾桶位置與地址：臺北市行人專用清潔箱街道清冊（2026-09-30）。</li><li>每小時交通活動：YouBike 2.0 租借紀錄 2026-07，200m 內站點每小時每日平均借＋還（平日 22 天、週末 7 天，排除 7/10、7/11）。</li></ul>
-  <h3>推估與假設</h3><ul><li>人流由交通活動推估，不是實測人流。</li><li>產生量每次借還 <b id="iLpr"></b> 公升（<b>假設，不是觀測到的垃圾量</b>）：<a id="iSrc" target="_blank" rel="noopener">用官方公開的每日清運頻率校準，仍是假設</a>（環保局：每箱約 120 公升、每日清運 3–6 次；假設示範區人流中位數的桶平日一天滿 3 次：3 × 120 ÷ 361.1）。</li><li>例行清運 08:00／12:00／16:00（假設）；預測從最近一次清運起累積。</li></ul>
+  <h3>推估與假設</h3><ul><li>人流由交通活動推估，不是實測人流。</li><li>產生量每次借還 <b id="iLpr"></b> 公升（<b>假設，不是觀測到的垃圾量</b>）：<a id="iSrc" target="_blank" rel="noopener">用官方公開的每日清運頻率校準，仍是假設</a>（環保局：每箱約 120 公升、每日清運 3–6 次；假設示範區人流中位數的桶平日一天滿 3 次：3 × 120 ÷ 361.1）。</li><li>例行清運時間 05:00／08:00／12:00／16:00 為假設；官方公開資料只提到一天 3–6 次，沒有公布時間。預測從最近一次清運起累積。</li></ul>
   <h3>模擬資料（標 <span class="sim"></span>）</h3><ul><li>填充度與預計滿時間是模擬；清潔隊回報的實際滿度會校正該桶產生量（EMA）。</li></ul>
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020h"></script><script src="common.js?v=20261020h"></script><script src="ui.js?v=20261020h"></script><script src="bin-icons.js?v=20261020h"></script><script src="forecast.js?v=20261020h"></script><script src="routing.js?v=20261020h"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020i"></script><script src="common.js?v=20261020i"></script><script src="ui.js?v=20261020i"></script><script src="bin-icons.js?v=20261020i"></script><script src="forecast.js?v=20261020i"></script><script src="routing.js?v=20261020i"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
