@@ -40,6 +40,20 @@ with sync_playwright() as p:
     assert '謝謝，已通知清潔隊' in pg.inner_text('#list') and pg.locator('[data-full]').count()==0 and abs(h1-h0)<1,(h0,h1)
     assert '有人回報滿了' in pg.inner_text('#list') and pg.locator('.binmk path[fill="var(--reported)"], .binmk path[fill="#e2574c"]').count()>=1
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"))
+    # 這裡需要垃圾桶：?reset=1 後、示範位置（捷運公館站公車站）按一次 → 設點規劃圖層與公館熱點詳情都是 1 筆
+    pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
+    assert pg.evaluate("getNeeds().length")==0 and pg.locator('#needBtn').is_visible() and pg.locator('#needBtn').bounding_box()['height']>=44
+    near=pg.locator('#need.far').count();print(name,'需求按鈕 示範位置 醒目',near)
+    pg.click('#needBtn');pg.wait_for_timeout(300);assert '謝謝，已給設點規劃參考' in pg.inner_text('#list') and pg.evaluate("getNeeds().length")==1
+    assert pg.locator('[data-reason]').count()==3 and pg.locator('[data-reason]').first.bounding_box()['height']>=44
+    pg.click('[data-reason="外帶餐盒"]');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].reason")=='外帶餐盒' and pg.get_attribute('[data-reason="外帶餐盒"]','aria-pressed')=='true'
+    dup=pg.evaluate("(()=>{const r=addNeed(pos[0]+0.0002,pos[1]);return [r.dup,getNeeds().length]})()");assert dup==[True,1],dup  # 50 m 內只算一次
+    pg.evaluate("(()=>{const s=D.yb.find(x=>x.name==='捷運大安站(4號出口)');setPos([s.la,s.lo],'手動設定的位置')})()");pg.wait_for_timeout(500)
+    q=pg.inner_text('#needQ') if pg.locator('#needQ').count() else '';print(name,'遠處',q);assert pg.locator('#need.far #needBtn').count()==1 and '最近的桶要走' in q and '需要這裡多一個嗎？' in q
+    pg.screenshot(path=f'shot_pedestrian_need_{name}.png')
+    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);lt=pg.inner_text('[data-ly="need"]');print(name,'規劃圖層',lt);assert '1 筆' in lt and pg.get_attribute('[data-ly="need"]','aria-pressed')=='true'
+    pg.locator('[data-vs="0"]').click();pg.wait_for_selector('.cmp');nn=pg.inner_text('#needNear');print(name,'公館詳情',pg.inner_text('#detail h2'),nn);assert nn=='200 m 內民眾回報需求 1 筆'
+    if name=='mobile':pg.screenshot(path='shot_planner_need_mobile.png')
     # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回
     pg.goto(B+'crew.html?fc=1&day=we&t=15:30');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)
     assert '溢出' not in pg.content();sA=pg.inner_text('#cardTitle');n3=pg.locator('.top3 li').count();print(name,'A 規劃',sA,'top3',n3,'chip',pg.inner_text('#tChip'));assert n3>=1 and '必清' in sA and '週六 15:30' in pg.inner_text('#tChip')
@@ -79,9 +93,9 @@ with sync_playwright() as p:
     pg.click('#infoBtn');pg.once('dialog',lambda d:d.accept());pg.click('#resetAll');pg.wait_for_load_state();pg.wait_for_timeout(800)
     left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");ui=pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')||'{}')");print(name,'重設前事件',n0,'重設後殘留鍵',left,'事件',pg.evaluate("getEvents().length"),'校正',pg.evaluate("FC.state()"),'crew ui',ui.get('state'),'url',pg.url.split('/')[-1])
     assert n0>0 and set(left)<={'有桶_crew_ui_v2'} and ui.get('state','A')=='A' and pg.evaluate("getEvents().length")==0 and pg.evaluate("Object.keys(FC.state().cal).length")==0 and '?' not in pg.url  # 清潔隊頁載入時會重新寫入預設 UI 狀態
-    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.evaluate("addEvent({bin:'B0002',kind:'full',level:100,by:'行人'});SC.save({hotspotId:'x',option:'A'})")
+    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.evaluate("addEvent({bin:'B0002',kind:'full',level:100,by:'行人'});SC.save({hotspotId:'x',option:'A'});addNeed(25.02,121.54)")
     pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_timeout(800)
-    left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");print(name,'?reset=1 殘留鍵',left);assert left==[]
+    left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");print(name,'?reset=1 殘留鍵',left);assert left==[] and pg.evaluate("getNeeds().length")==0
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.click('#menu');assert pg.locator('#menuSheet #resetAll').count()==1;pg.click('#menuSheet [data-close]')
     # 空狀態重現（?reset=1 之後）：平日 08:30 + 只清滿溢
     pg.goto(B+'crew.html?reset=1');pg.wait_for_url('**/crew.html');pg.goto(B+'crew.html?fc=1&day=wk&t=08:30');pg.wait_for_selector('#card[data-state=A]',timeout=20000);pg.wait_for_timeout(600)
