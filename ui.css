@@ -1,0 +1,33 @@
+/* ===== 有桶・共用元件（浮動控制、抽屜、圖例、角色切換）===== */
+html,body{font-family:var(--font)}
+#map.quiet .leaflet-tile-pane{filter:grayscale(1) contrast(.62) brightness(1.2);opacity:.8}
+.leaflet-container{background:var(--map-bg);font-family:var(--font)}
+.leaflet-control-attribution{font-size:9px;background:#ffffffb0!important;color:#8a8f92}.leaflet-control-attribution a{color:#8a8f92}
+.fab{flex:none;width:var(--touch);height:var(--touch);border:0;border-radius:50%;background:var(--surface);box-shadow:var(--shadow-1);font:600 20px/1 var(--font);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;pointer-events:auto;text-decoration:none}
+.pillbtn{display:inline-flex;align-items:center;gap:6px;height:var(--touch);padding:0 14px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);font:500 14px/1 var(--font);color:var(--ink);cursor:pointer;pointer-events:auto;white-space:nowrap}
+.infochip{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 10px;border:0;border-radius:999px;background:#ffffffe6;box-shadow:var(--shadow-1);font:500 12px/1 var(--font);color:var(--mute);cursor:pointer;pointer-events:auto}
+.infochip::before{content:"i";display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--gray-2);color:var(--ink-2);font:700 10px/1 Georgia,serif}
+.sim{font-size:.82em;color:var(--faint);margin-left:2px;font-weight:400}.sim::before{content:"＊"}
+/* 抽屜 */
+.sheet{position:fixed;inset:0;z-index:2500;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
+.sheet>.sh{width:100%;max-width:560px;max-height:88%;overflow-y:auto;background:var(--surface);border-radius:var(--r) var(--r) 0 0;padding:6px 18px calc(22px + env(safe-area-inset-bottom))}
+.sheet .hd{display:flex;align-items:center;justify-content:space-between;min-height:52px}.sheet .hd b{font-size:17px}
+.sheet .x{width:var(--touch);height:var(--touch);border:0;border-radius:50%;background:var(--gray-1);font:16px var(--font);cursor:pointer;color:var(--ink)}
+.sheet h3{font-size:13px;color:var(--mute);font-weight:600;margin:18px 0 8px}
+.sheet p,.sheet li{font-size:14px;line-height:1.65;color:var(--ink-2)}.sheet ul{padding-left:18px;margin:6px 0}
+.sheet a{color:var(--brand-ink)}
+@media (min-width:761px){.sheet{align-items:center}.sheet>.sh{border-radius:var(--r);max-height:80%}}
+/* 角色切換（示範導覽）：common.js nav() 輸出放在抽屜裡 */
+.rolenav header{display:block;height:auto;padding:0;border:0;margin:0;background:none}
+.rolenav header .brand{display:none}
+.rolenav nav.tabs{position:static;display:flex;gap:8px;padding:0;border:0;background:none;justify-content:flex-start}
+.rolenav nav.tabs a{flex:1;flex-direction:row;justify-content:center;min-height:var(--touch);font-size:14px;padding:0 10px;border-radius:var(--r-sm);background:var(--gray-1);color:var(--ink-2)}
+.rolenav nav.tabs a.on{background:var(--ink);color:#fff;font-weight:600}
+.rolenav .cap{font-size:11px;color:var(--faint);margin:0 0 6px}
+/* 圖例 */
+.lgd{display:flex;flex-wrap:wrap;gap:4px 10px;max-width:300px;padding:6px 10px;border-radius:12px;background:#ffffffe6;box-shadow:var(--shadow-1);font:12px/1.4 var(--font);color:var(--ink-2)}
+.lgd span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.lgd i.line{width:16px;height:3px;border-radius:2px}.lgd i.ring{background:none;box-shadow:inset 0 0 0 2px var(--c)}.lgd i.diamond{width:8px;height:8px;border-radius:1px;transform:rotate(45deg)}.lgd i.sq{border-radius:3px}
+.leaflet-bottom.leaflet-left .lgd{margin-left:10px;margin-bottom:10px}
+.toast{background:var(--ink);border-radius:var(--r-sm)}
