@@ -23,7 +23,7 @@ window.CONFIG={
   scenarioC:{donorRadiusM:1000, demandRadiusM:200, noNewGapM:200, checkRadiusM:600},
   // C：只從熱點 1km 內挑桶；移走後原位置附近（600m 內）不得有站點新增「200m 內無桶」；符合者中挑周邊 200m 活動量最低者
   suggestion:{bIfBinWithinM:100, cMinReduction100:1}, // 建議規則（假設，可調整）：熱點 ≤100m 有桶→B；C 可行且減少 ≥1 個 100m 無桶站→C；否則 A
-  compare:[{name:'捷運公館站(2號出口)',label:'人流最高'},{name:'捷運大安站(4號出口)',label:'查核優先序第 1'}], // 「人流高 ≠ 查核優先」比較卡
+  compare:[{name:'捷運公館站(2號出口)',label:'人流最高',short:'公館'},{name:'捷運大安站(4號出口)',label:'查核優先序第 1',short:'大安 4 號出口'}], // 「人流最高 ≠ 最優先」比較卡
   // ===== 清潔隊「預測調度」（示範區）=====
   // 每桶每小時人流 = 200m 內 YouBike 站該小時「每日平均借＋還次數」的平均（2026-07 實際紀錄；人流由交通活動推估）
   // 每小時產生量(L) = 人流 × litersPerRide × 該桶校正係數；填充度 = 自上次（例行或手動）清運起累積量 / capacityL

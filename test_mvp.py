@@ -15,6 +15,7 @@ with sync_playwright() as p:
     pg.click('#how summary');print(name,'怎麼算的',pg.inner_text('#formula')[:30],'|',pg.inner_text('#sens').replace('\n',' '))
     for t in (200,300,100):
       pg.click(f'#thrSeg [data-thr="{t}"]');pg.wait_for_timeout(300);print(name,'門檻',t,'開場',pg.inner_text('#bigNum').split('\n')[0],'#1',pg.locator('#hot .card .t').first.inner_text())
+      vl=pg.inner_text('#vsLine');print(name,'比較句',t,vl);assert ('未列入' in vl)==(t!=100) and '活動量全市第 1' in vl
     pg.check('#lyAnc');pg.wait_for_timeout(300)
     for i in (0,1):
       pg.locator(f'[data-vs="{i}"]').click();pg.wait_for_selector('.cmp');print(name,'比較卡',i,pg.locator('#detail p.sub').first.inner_text(),'| 建議',[t for t in pg.inner_text('#detail').split('\n') if '★' in t]);pg.click('#bk');pg.wait_for_timeout(200)
