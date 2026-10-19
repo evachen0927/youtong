@@ -29,6 +29,6 @@ function roleSwitch(active,host){const n=document.createElement('nav');n.classNa
 const legendHTML=items=>`<div class="lgd static">${items.map(i=>`<span>${i.html||`<i class="${i.shape||'dot'}" style="--c:${i.c}"></i>`}${i.t}</span>`).join('')}</div>`;
 function legendIntoSheet(sheetId,items){const sh=document.querySelector('#'+sheetId+' .sh'),hd=sh&&sh.querySelector('.hd');if(!hd)return;
   const d=document.createElement('div');d.innerHTML='<h3>圖例</h3>'+legendHTML(items);hd.after(...d.childNodes)}
-const REPORTED_HINT=()=>[{html:binIconSVG(0,'reported').html.replace('width="28" height="34"','width="12" height="15"'),t:'紅色＝有人回報滿了'}];
+const REPORTED_HINT=()=>[{html:`<i style="--c:${REPORTED}"></i>`,t:'已回報滿'}];
 // 上方浮動 UI 的底部位置（地圖 padding 用，確保最近的桶與光圈不被遮住）
 function topUIBottom(){let b=0;document.querySelectorAll('.roles,.top>*,.infochip,.leaflet-top .lgd,.prog,.tchip').forEach(e=>{const r=e.getBoundingClientRect();if(r.height&&r.bottom<innerHeight/2)b=Math.max(b,r.bottom)});return b}

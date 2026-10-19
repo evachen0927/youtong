@@ -73,11 +73,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 @media (min-width:761px){#list{left:auto;right:16px;bottom:16px;width:380px}.top{right:auto;width:520px}}
 .top{justify-content:flex-end}
 .crow{position:fixed;top:calc(62px + env(safe-area-inset-top));left:12px;right:12px;z-index:1000;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px 0 6px}.crow::-webkit-scrollbar{display:none}
-.lchip{flex:none;display:inline-flex;align-items:center;gap:6px;height:var(--touch);padding:0 12px;border:0;border-radius:999px;background:var(--surface);color:var(--mute);box-shadow:var(--shadow-1);font:500 13px/1 var(--font);cursor:pointer}
+.lchip{flex:none;display:inline-flex;align-items:center;gap:6px;height:var(--touch);padding:0 10px;border:0;border-radius:999px;background:var(--surface);color:var(--mute);box-shadow:var(--shadow-1);font:500 13px/1 var(--font);cursor:pointer}
 .lchip i{width:8px;height:8px;border-radius:50%;background:var(--c);opacity:.35}.lchip.on{color:var(--ink)}.lchip.on i{opacity:1}
 .seg2{flex:none;display:flex;padding:3px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);height:var(--touch);box-sizing:border-box}
-.seg2 button{border:0;background:none;border-radius:999px;padding:0 12px;font:500 13px/1 var(--font);color:var(--ink-2);cursor:pointer}.seg2 button.on{background:var(--ink);color:#fff;font-weight:600}
-.crow .lhint{flex:none;height:var(--touch);box-sizing:border-box}
+.seg2 button{border:0;background:none;border-radius:999px;padding:0 9px;font:500 13px/1 var(--font);color:var(--ink-2);cursor:pointer}.seg2 button.on{background:var(--ink);color:#fff;font-weight:600}
+.crow .lhint{flex:none;height:var(--touch);box-sizing:border-box;padding:0 9px;gap:4px}
 </style></head>
 <body>
 <div id="map"></div>
@@ -89,7 +89,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   </div>
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
-<div class="crow" id="crow"><button class="lchip on" data-ly="lyYb" aria-pressed="true"><i style="--c:#d9a441"></i>YouBike</button><button class="lchip on" data-ly="lyBus" aria-pressed="true"><i style="--c:#8a84c9"></i>公車站</button><div class="seg2" id="seg" role="group" aria-label="情境"><button data-m="before" class="on">現況</button><button data-m="after">改善後</button></div><span class="lgd lhint" id="rhint"></span></div>
+<div class="crow" id="crow" style="gap:5px"><button class="lchip on" data-ly="lyYb" aria-pressed="true"><i style="--c:#d9a441"></i>YouBike</button><button class="lchip on" data-ly="lyBus" aria-pressed="true"><i style="--c:#8a84c9"></i>公車站</button><div class="seg2" id="seg" role="group" aria-label="情境"><button data-m="before" class="on">現況</button><button data-m="after">改善後</button></div><span class="lgd lhint" id="rhint"></span></div>
 <section id="list" aria-live="polite"><div class="k"><span class="brandm">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <div class="adv" id="adv" hidden><div class="sh" role="dialog" aria-label="更多">
