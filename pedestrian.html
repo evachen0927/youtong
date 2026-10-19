@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020t"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020t"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020t"><link rel="stylesheet" href="tokens.css?v=20261020t"><link rel="stylesheet" href="ui.css?v=20261020t">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020u"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020u"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020u"><link rel="stylesheet" href="tokens.css?v=20261020u"><link rel="stylesheet" href="ui.css?v=20261020u">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -64,6 +64,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 
 .toast{top:calc(116px + env(safe-area-inset-top));bottom:auto!important}
 .leaflet-top.leaflet-left{top:calc(112px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:250px}
+#list{max-height:calc(100dvh - var(--bar,76px) - 18px - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box}#list.scroll{padding-bottom:22px} /* 捲動時底部多留 8px（14＋8） */
 @media (min-width:761px){#list{left:auto;right:16px;bottom:16px;width:380px}.top{right:auto;width:520px}}
 .top{justify-content:flex-end}
 .crow{position:fixed;top:calc(62px + env(safe-area-inset-top));left:12px;right:12px;z-index:1000;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px 0 6px}.crow::-webkit-scrollbar{display:none}
@@ -96,7 +97,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
 <div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip" data-ly="lyBus" aria-pressed="false"><i style="--c:#5b6f9c"></i>公車站</button><span class="lgd lhint" id="rhint"></span></div>
-<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020t" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
+<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020u" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <input type="checkbox" id="lyYb" hidden><input type="checkbox" id="lyBus" hidden><!-- 圖層狀態（由上方 chip 切換） -->
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
@@ -113,7 +114,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020t"></script><script src="common.js?v=20261020t"></script><script src="scenario.js?v=20261020t"></script><script src="routing.js?v=20261020t"></script><script src="bin-category.js?v=20261020t"></script><script src="ui.js?v=20261020t"></script><script src="bin-icons.js?v=20261020t"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020u"></script><script src="common.js?v=20261020u"></script><script src="scenario.js?v=20261020u"></script><script src="routing.js?v=20261020u"></script><script src="bin-category.js?v=20261020u"></script><script src="ui.js?v=20261020u"></script><script src="bin-icons.js?v=20261020u"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
@@ -183,7 +184,7 @@ function render(fit){if(!D)return;try{renderInner(fit)}catch(e){console.error('[
 function renderInner(fit){
   const ev=getEvents();if(!pos)return;
   const P=primary(),N=nextOf(P);
-  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020t" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
+  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261020u" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
   if(!P){list.innerHTML=head+`<div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div><div class="acts"><button class="b" data-f="all">看全部</button></div>`+needHTML();redraw();return}
   const p=P.f,cs=binCategory(p).simulated;
   const real=[];if(/家用垃圾/.test(p.note||''))real.push('禁丟家用垃圾');const fr=freshness(p,ev);
@@ -196,7 +197,7 @@ function renderInner(fit){
     <div class="q" data-q="${p.id}"><div class="qt">這桶滿了嗎？</div>${asked[p.id]?`<div class="qd">${asked[p.id]==='full'&&SC.inArea(p.la,p.lo)?'✓ 謝謝，已通知清潔隊':'✓ 謝謝回報'}</div>`:`<div class="qb"><button id="okBtn" data-ok="${p.id}">還能丟</button><button data-full="${p.id}">滿了</button></div>`}</div>
   </div>
   ${N?`<button class="next" data-next="${N.f.id}"><span>下一個</span><span class="t"><b>${N.f.addr}</b></span><span>${fmtM(N.d)}・${mins(N)} 分${N.w?'':'（直線）'} ›</span></button>`:''}${needHTML()}`;
-  drawRoute(P);redraw();
+  drawRoute(P);redraw();kbFit();
   if(fit)fitTarget()
 }
 // 「這裡需要垃圾桶」：卡片下方常駐；最近的桶（不分類別）步行 >200 m 時改醒目並加一句
@@ -231,11 +232,16 @@ list.onclick=e=>{
 // 手機鍵盤：用 visualViewport 把卡片抬到鍵盤上方、限制高度可捲動，並把輸入框捲進可視範圍
 list.addEventListener('input',e=>{if(e.target.id!=='needNote')return;const n=e.target.value.length,c=noteCnt;c.hidden=n<30;c.textContent=n+'/40';e.target.parentNode.classList.toggle('cnt',n>=30)}); // 30 字起顯示 N/40
 list.addEventListener('keydown',e=>{if(e.target.id==='needNote'&&e.key==='Enter'){e.preventDefault();needNoteSend.click()}});
-// 卡片頂端不高於頂列（logo＋角色切換）的實際底邊；放不下時卡片內部捲動
-function kbFit(){const vv=window.visualViewport;if(!vv)return;const kb=Math.max(0,innerHeight-vv.height-vv.offsetTop);
-  if(kb>40){const r=document.querySelector('.roles'),bar=r?r.getBoundingClientRect().bottom:76,visBot=vv.offsetTop+vv.height-8;
-    list.style.bottom=(innerHeight-visBot)+'px';list.style.maxHeight=Math.max(120,visBot-bar-8)+'px';list.style.overflowY='auto'}else{list.style.bottom='';list.style.maxHeight='';list.style.overflowY=''}
+// 卡片頂端任何情況都不高於頂列（logo＋角色切換）的實際底邊：視窗 resize（Android 鍵盤會縮 layout viewport）、
+// visualViewport 縮小（iOS 鍵盤）、視窗本身很矮；放不下時卡片內部捲動，捲動時底部多留 8px
+function kbFit(){const vv=window.visualViewport,r=document.querySelector('.roles'),bar=r?Math.ceil(r.getBoundingClientRect().bottom):76;
+  document.documentElement.style.setProperty('--bar',bar+'px');
+  const vb=vv?Math.min(innerHeight,vv.offsetTop+vv.height):innerHeight,kb=innerHeight-vb>40,bot=kb?vb-8:null;
+  list.style.bottom=kb?(innerHeight-bot)+'px':'';
+  const bottomEdge=kb?bot:list.getBoundingClientRect().bottom;list.style.maxHeight=Math.max(44,Math.floor(bottomEdge-bar-8))+'px';
+  list.classList.toggle('scroll',list.scrollHeight>list.clientHeight+1);
   const i=document.activeElement;if(i&&i.id==='needNote')i.scrollIntoView({block:'nearest'})}
+addEventListener('resize',kbFit);
 if(window.visualViewport){visualViewport.addEventListener('resize',kbFit);visualViewport.addEventListener('scroll',kbFit)}
 list.addEventListener('focusin',e=>{if(e.target.id==='needNote')setTimeout(()=>{kbFit();e.target.scrollIntoView({block:'nearest'})},300)});
 function setFilter(f){filter=f;sel=null;chips.querySelectorAll('.chip').forEach(c=>{const on=c.dataset.f===f;c.classList.toggle('on',on);c.setAttribute('aria-checked',on)});render(!!pos)}

@@ -94,7 +94,15 @@ with sync_playwright() as p:
       const L=list.getBoundingClientRect(),bar=document.querySelector('.roles').getBoundingClientRect().bottom,i=needNote.getBoundingClientRect();return {vh,top:L.top,bottom:L.bottom,bar,scroll:list.scrollHeight>list.clientHeight,ov:getComputedStyle(list).overflowY,inTop:i.top,inBot:i.bottom}})()""")
     print(name,'鍵盤模擬',kb);assert kb['top']>=kb['bar'] and kb['bottom']<=kb['vh'] and kb['ov']=='auto' and kb['inTop']>=kb['top'] and kb['inBot']<=kb['bottom'],kb
     if name=='mobile':pg.wait_for_timeout(300);pg.screenshot(path='/workspace/ped_kb_small.png')
-    pg.evaluate("delete window.visualViewport;kbFit();list.style.bottom='';list.style.maxHeight='';list.style.overflowY=''")
+    pg.evaluate("delete window.visualViewport;kbFit()")
+    # 視窗本身變矮（Android 鍵盤縮 layout viewport）：390×400、390×300 → 卡片頂端 ≥ 頂列底邊、內部捲動、底部多留 8px
+    vp0=pg.viewport_size
+    for hgt in (400,300):
+      pg.set_viewport_size({'width':390,'height':hgt});pg.wait_for_timeout(500)
+      rz=pg.evaluate("(()=>{const L=list.getBoundingClientRect(),bar=document.querySelector('.roles').getBoundingClientRect().bottom;return {h:innerHeight,top:L.top,bottom:L.bottom,bar,scroll:list.classList.contains('scroll'),pb:getComputedStyle(list).paddingBottom,ov:getComputedStyle(list).overflowY}})()")
+      print(name,'視窗',hgt,rz);assert rz['top']>=rz['bar'] and rz['bottom']<=rz['h'] and rz['scroll'] and rz['pb']=='22px' and rz['ov']=='auto',rz
+      if name=='mobile' and hgt==400:pg.screenshot(path='/workspace/ped_kb_resize.png')
+    pg.set_viewport_size(vp0);pg.wait_for_timeout(500);assert pg.evaluate("list.getBoundingClientRect().top>=document.querySelector('.roles').getBoundingClientRect().bottom")
     vis=pg.evaluate("(()=>{const r=needNote.getBoundingClientRect(),v=window.visualViewport;return r.top>=0&&r.bottom<=(v?v.height+v.offsetTop:innerHeight)})()");assert vis
     pg.click('#needNoteSend');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].note")==None and pg.inner_text('#noteDone')=='✓ 已送出說明' and pg.evaluate("(()=>{const c=getComputedStyle(noteDone);return [c.color,c.fontWeight]})()")==['rgb(28, 31, 33)','600']  # 留空也能送出
     pg.evaluate("setNeedNote(getNeeds()[0].id,'x'.repeat(50))");assert pg.evaluate("getNeeds()[0].note.length")==40
