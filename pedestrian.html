@@ -18,7 +18,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .dot{width:10px;height:10px;border-radius:50%;flex:none}.dot.gen{background:var(--gen)}.dot.rec{background:var(--rec)}
 .chip.on .dot.gen{background:#fff}
 .icon-btn{flex:none;width:44px;height:44px;border:0;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0000001f;font:600 20px/1 var(--font);color:var(--ink);cursor:pointer;pointer-events:auto;display:flex;align-items:center;justify-content:center}
-.simtag{position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px;z-index:1001;height:44px;min-height:44px;padding:0 14px}
+.simtag{position:fixed;top:calc(62px + env(safe-area-inset-top));left:12px;z-index:1001;height:44px;min-height:44px;padding:0 14px}
 .top{justify-content:flex-end}
 /* 底部：最近垃圾桶卡片 */
 #list{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:#fff;border-radius:var(--r);box-shadow:0 6px 24px #0000001f,0 1px 3px #00000014;padding:16px 16px 14px;max-width:520px;margin:0 auto}
@@ -68,8 +68,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .delta{background:var(--accent-l);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.6}.delta b{font-size:17px}
 .adv label.ck{min-height:44px}
 .adv .b{flex:none;width:100%}
-.toast{top:calc(70px + env(safe-area-inset-top));bottom:auto!important}
-.leaflet-top.leaflet-left{top:calc(62px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:250px}
+.toast{top:calc(116px + env(safe-area-inset-top));bottom:auto!important}
+.leaflet-top.leaflet-left{top:calc(112px + env(safe-area-inset-top))}.leaflet-top.leaflet-left .lgd{margin:0 0 0 12px;max-width:250px}
 @media (min-width:761px){#list{left:auto;right:16px;bottom:16px;width:380px}.top{right:auto;width:520px}}
 </style></head>
 <body>
@@ -87,7 +87,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 
 <div class="adv" id="adv" hidden><div class="sh" role="dialog" aria-label="更多">
   <div class="hd"><b>有桶・更多</b><button class="icon-btn" id="advClose" aria-label="關閉" style="box-shadow:none;background:#f3f3f1;font-size:16px">✕</button></div>
-  <h3>示範導覽・切換角色</h3><div class="rolenav"><header></header></div>
+  <header hidden></header>
   <h3>規劃情境比較（模擬）</h3>
   <div class="seg" id="seg"><button data-m="before" class="on">調整前</button><button data-m="after">調整後</button></div>
   <div id="delta"></div>
@@ -111,7 +111,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 
 <script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="bin-category.js"></script><script src="ui.js"></script><script src="bin-icons.js"></script>
 <script>
-nav('pedestrian.html'); // 導覽列放在「更多」面板內
+nav('pedestrian.html');roleSwitch('pedestrian.html'); // 導覽列放在「更多」面板內
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);

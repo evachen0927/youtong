@@ -5,7 +5,7 @@
 .tag{font-size:11px;padding:1px 6px;border-radius:6px;background:#eef1f3;color:var(--mute);margin-left:4px}.tag.sim{background:#f3e8ff;color:#7b3fbf}.tag.est{background:#e8f0fe;color:#2a5fc1}
 .back{border:0;background:none;color:var(--accent);font-size:14px;padding:0;margin-bottom:8px;cursor:pointer;font-family:inherit}
 .vmk{width:9px!important;height:9px!important;background:#7b5cc4;transform:rotate(45deg);border:1.5px solid #fff}.xmk{color:#646b70;font-weight:900;font-size:20px;text-shadow:0 0 3px #fff}.ftop{position:absolute;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:8px;pointer-events:none}
-.ftop .wm{display:inline-flex;align-items:center;height:44px;padding:0 16px;border-radius:999px;background:#fff;box-shadow:var(--shadow-1);font-weight:700;font-size:16px;letter-spacing:.5px}
+
 .ftop .role{font-size:12px;color:var(--mute);background:#ffffffd9;padding:4px 10px;border-radius:999px}
 .mk.hot{background:var(--ink);box-shadow:0 0 0 2px #fff,0 1px 4px #0003;border:0}
 .app main{height:100dvh}
@@ -23,10 +23,10 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 .stat{border:0;background:var(--surface-2);border-radius:var(--r)}.card{border-radius:var(--r)}
 @media (min-width:1024px){.panel{width:40%;min-width:420px;padding:72px 32px 32px}}
 @media (min-width:761px) and (max-width:1023px){main{flex-direction:column}#map{flex:none;height:52vh}.panel{width:auto;border-left:0;border-top:1px solid var(--line);flex:1;padding:20px 24px 32px}}
-@media (max-width:760px){.leaflet-bottom.leaflet-left{top:64px;bottom:auto}.app main{padding-bottom:0}.panel{bottom:0;height:50%}.insight .big{font-size:36px}}
+@media (max-width:760px){.ftop{right:12px}.ftop #menu{margin-left:auto}.leaflet-bottom.leaflet-left{top:64px;bottom:auto}.app main{padding-bottom:0}.panel{bottom:0;height:50%}.insight .big{font-size:36px}}
 </style></head>
 <body><div class="app"><main>
-<div class="ftop"><span class="wm">有桶</span><span class="role">規劃</span><button class="fab" id="menu" aria-label="選單">⋯</button></div>
+<div class="ftop"><button class="fab" id="menu" aria-label="選單">⋯</button></div>
 <div id="map"></div>
 <aside class="panel"><button class="handle" aria-label="展開面板"></button>
 <div id="home">
@@ -46,7 +46,7 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 </aside></main></div>
 <div class="sheet" id="menuSheet" hidden><div class="sh" role="dialog" aria-label="選單">
   <div class="hd"><b>有桶</b><button class="x" data-close aria-label="關閉">✕</button></div>
-  <h3>示範導覽・切換角色</h3><div class="rolenav"><header></header></div>
+  <header hidden></header>
   <h3>資料說明</h3>
   <ul><li><b>真實資料</b>：垃圾桶位置（臺北市行人專用清潔箱街道清冊，2026-09-30）、YouBike 站點與 2026-07 借還次數、公車站位、景點商圈場域線索（2026-08-18）。</li>
   <li><b>推估</b>：借＋還次數與停靠路線數只是人流的代理指標，不等於垃圾量；距離皆為直線距離。</li>
@@ -54,7 +54,7 @@ h3.sec{font-size:15px;color:var(--ink);margin:26px 0 6px}
 </div></div>
 <script src="vendor/leaflet/leaflet.js"></script><script src="config.js"></script><script src="common.js"></script><script src="scenario.js"></script><script src="ui.js"></script><script src="bin-icons.js"></script>
 <script>
-nav('index.html');sheet();menu.onclick=()=>sheetOpen('menuSheet');
+nav('index.html');sheet();roleSwitch('index.html',document.querySelector('.ftop'));menu.onclick=()=>sheetOpen('menuSheet');
 const map=quietMap(CONFIG.demoArea.center,CONFIG.demoArea.zoom),ren=L.canvas({padding:.3});
 const baseL=L.layerGroup().addTo(map),hotL=L.layerGroup().addTo(map),chgL=L.layerGroup().addTo(map),ancL=L.layerGroup();
 let D,ST,HS,cur=null,opt='A';const curH=()=>cur;

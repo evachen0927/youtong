@@ -33,3 +33,12 @@ html,body{font-family:var(--font)}
 .toast{background:var(--ink);border-radius:var(--r-sm)}
 .pill.ok{background:var(--fill-low-soft);color:#4e6666}.pill.mid{background:var(--fill-mid-soft);color:#8a5a00}.pill.full{background:var(--fill-high-soft);color:#9a4d10}.pill.rep{background:var(--reported-soft);color:var(--reported-ink)}.pill-x{color:var(--fill-over)}
 .num{background:var(--ink)}
+/* 常駐角色切換 */
+.roles{display:flex;align-items:center;gap:10px;pointer-events:auto;z-index:1100}
+.roles.fixed{position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px}
+.roles .wm{display:none;font-weight:700;font-size:16px;letter-spacing:.5px;color:var(--ink);background:#ffffffe6;height:var(--touch);align-items:center;padding:0 14px;border-radius:999px;box-shadow:var(--shadow-1)}
+.roles .seg3{display:flex;padding:3px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1)}
+.roles a{display:flex;align-items:center;justify-content:center;min-width:58px;height:38px;padding:0 12px;border-radius:999px;color:var(--ink-2);text-decoration:none;font:500 14px/1 var(--font);white-space:nowrap}
+.roles a.on{background:var(--ink);color:#fff;font-weight:700}
+.roles .seg3{min-height:var(--touch);box-sizing:border-box}
+@media (min-width:761px){.roles .wm{display:inline-flex}}
