@@ -39,7 +39,9 @@ function addNeed(la,lo){const a=getNeeds(),d=a.find(n=>hav(la,lo,n.la,n.lo)<=NEE
 function removeNeed(id){localStorage.setItem(LS_NEEDS,JSON.stringify(getNeeds().filter(x=>x.id!==id)))}
 const NEED_NOTE_MAX=40;function setNeedNote(id,t){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.note=String(t||'').trim().slice(0,NEED_NOTE_MAX)||null;localStorage.setItem(LS_NEEDS,JSON.stringify(a))} // 「其他」的說明文字：只存 localStorage，存檔前裁到 40 字
 function setNeedReason(id,reason){if(!NEED_REASON[reason])return;const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a))}
-function addEvent(e){const a=getEvents();a.push({...e,ts:Date.now()});localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)))}
+function addEvent(e){const a=getEvents(),r={...e,id:e.id||('ev'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),ts:Date.now()};a.push(r);localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)));return r}
+// 依 id 撤回一筆事件（行人「取消」自己剛送出的回報）
+function removeEvent(id){localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents().filter(e=>e.id!==id)))}
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定
 function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin===id){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}
 const fillColor=f=>typeof rampColor==='function'?rampColor(f):(f>=100?'#d9731f':f>=70?'#e8b931':'#8cc9a8'); // 色階定義在 ui.js

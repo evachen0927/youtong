@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021c"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021c"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021c"><link rel="stylesheet" href="tokens.css?v=20261021c"><link rel="stylesheet" href="ui.css?v=20261021c">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021d"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021d"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021d"><link rel="stylesheet" href="tokens.css?v=20261021d"><link rel="stylesheet" href="ui.css?v=20261021d">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -88,6 +88,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .crow.ovf{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)} /* 放不下才出現右緣漸層 */
 .vmk{width:9px!important;height:9px!important;background:#1f8fa3;transform:rotate(45deg);border:1.5px solid #fff}.vmk.hit{background:none;border:0;width:44px!important;height:44px!important;display:flex;align-items:center;justify-content:center}.vmk.hit i{display:block;width:9px;height:9px;background:#1f8fa3;border:1.5px solid #fff;box-shadow:0 0 0 1px #1f8fa355}
 .crow .lhint{flex:none;height:var(--touch);box-sizing:border-box;padding:0 9px;gap:4px}
+.q .qd{justify-content:space-between;gap:8px}.q .qd .undo{flex:none;min-width:44px;height:44px;margin-right:-6px;padding:0 8px;border:0;background:none;color:var(--ink-2);font:500 15px/1 var(--font);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.tog{display:flex;align-items:center;justify-content:center;width:calc(100% + 32px);height:44px;margin:-14px -16px -8px;padding:0;border:0;background:none;cursor:pointer} /* 把手：點擊範圍 44px（整列） */
+#list.col{padding-bottom:12px}
+@media (min-width:761px){.tog{height:32px;margin-bottom:-4px}}
 </style></head>
 <body>
 <div id="map"></div>
@@ -100,7 +104,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
 <div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip" data-ly="lyBus" aria-pressed="false"><i style="--c:#5b6f9c"></i>公車站</button><button class="lchip" data-ly="lyVen" aria-pressed="false"><i class="dia" style="--c:#1f8fa3"></i>備用垃圾桶</button><span class="lgd lhint" id="rhint"></span></div>
-<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021c" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
+<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021d" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <input type="checkbox" id="lyYb" hidden><input type="checkbox" id="lyBus" hidden><input type="checkbox" id="lyVen" hidden><!-- 圖層狀態（由上方 chip 切換） -->
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
@@ -115,11 +119,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <h3>備用垃圾桶</h3>
   <ul><li>「備用垃圾桶」圖層（預設關閉）：景點商圈場域線索 120 點（原始 130 列、120 個不同座標，2026-08-18），青色菱形。場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證；不列入「最近的桶」與步行路線。</li></ul>
   <h3>回報</h3>
-  <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。卡片直接問「這桶滿了嗎？」：「滿了」會回報給清潔隊頁（地圖上該桶變紅），「還能丟」不記錄；每個桶只問一次（「重設成原始狀態」會清除）。</li></ul>
+  <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。卡片直接問「這桶滿了嗎？」：「滿了」會回報給清潔隊頁（地圖上該桶變紅），「還能丟」不記錄；每個桶只問一次；回報後可按「取消」撤回自己那一筆（換到別的桶前都可取消），撤回後可再問一次（「重設成原始狀態」會清除）。手機一開頁卡片收合，只顯示「步行導航」，點上方把手展開。</li></ul>
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021c"></script><script src="common.js?v=20261021c"></script><script src="scenario.js?v=20261021c"></script><script src="routing.js?v=20261021c"></script><script src="bin-category.js?v=20261021c"></script><script src="ui.js?v=20261021c"></script><script src="bin-icons.js?v=20261021c"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021d"></script><script src="common.js?v=20261021d"></script><script src="scenario.js?v=20261021d"></script><script src="routing.js?v=20261021d"></script><script src="bin-category.js?v=20261021d"></script><script src="ui.js?v=20261021d"></script><script src="bin-icons.js?v=20261021d"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
@@ -133,7 +137,12 @@ const ren=L.canvas({padding:.3});
 
 // 一步回報：每個桶只問一次（localStorage，有桶_ 前綴，重設會清除）
 const ASK_KEY='有桶_asked_v1';let asked={};try{const v=JSON.parse(localStorage.getItem(ASK_KEY)||'{}');if(v&&typeof v==='object'&&!Array.isArray(v))asked=v}catch(e){}
-const setAsked=(id,v)=>{asked[id]=v;try{localStorage.setItem(ASK_KEY,JSON.stringify(asked))}catch(e){}};
+const setAsked=(id,v)=>{if(v==null)delete asked[id];else asked[id]=v;try{localStorage.setItem(ASK_KEY,JSON.stringify(asked))}catch(e){}};
+// 取消：myRep＝自己剛送出的那一筆（{bin,kind,id}；「還能丟」不寫事件、沒有 id）；換到別的桶才清掉；跨頁（去清潔隊頁看再回來）仍保留
+let myRep=(()=>{try{return JSON.parse(sessionStorage.getItem('有桶_myrep')||'null')}catch(e){return null}})();
+const saveRep=()=>{try{myRep?sessionStorage.setItem('有桶_myrep',JSON.stringify(myRep)):sessionStorage.removeItem('有桶_myrep')}catch(e){}};
+// 卡片收合：手機一開頁收合（只剩全寬「步行導航」＋展開把手），桌機展開；點把手切換後重新 fit
+let collapsed=matchMedia('(max-width:760px)').matches;
 const NEED_REASONS=NEED_REASON_KEYS; // general／other（顯示文字見 common.js NEED_REASON）
 let needId=null,needNoteSent=false; // 這個位置剛回報的需求（換位置就重來）
 let D,binsBefore=[],me=null,pos=null,sel=null,filter='all',dumped=false,demoLoc=null;
@@ -186,19 +195,22 @@ function freshness(b,ev){const last=ev.filter(e=>e.bin===b.id).slice(-1)[0];if(!
   return last.kind==='full'?`<span class="rep">有人回報滿了・${ago(last.ts)}</span>`:last.kind==='clear'?`<span>已清運・${ago(last.ts)}${last.by}回報</span>`:''}
 // render 包一層：資料未就緒先不畫；任何例外都顯示真正的錯誤（不再卡在「定位中」）
 function render(fit){if(!D)return;try{renderInner(fit)}catch(e){console.error('[有桶] render 失敗',e);list.innerHTML=`<div class="addr">畫面載入失敗</div><p class="sub">${e.message}（可試「資料說明 → 重設成原始狀態」）</p>`}}
+const TOG=()=>`<button class="tog" id="cardTog" aria-expanded="${!collapsed}" aria-label="${collapsed?'展開卡片':'收合卡片'}"><svg width="20" height="12" viewBox="0 0 20 12"><path d="${collapsed?'M3 9l7-6 7 6':'M3 3l7 6 7-6'}" fill="none" stroke="#9aa0a4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
 function renderInner(fit){
   const ev=getEvents();if(!pos)return;
   const P=primary();
-  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021c" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
+  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021d" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
   if(!P){list.innerHTML=head+`<div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div><div class="acts"><button class="b" data-f="all">看全部</button></div>`+needHTML();redraw();return}
   const p=P.f,cs=binCategory(p).simulated;
+  list.classList.toggle('col',collapsed);
+  if(collapsed){list.innerHTML=TOG()+`<div class="card item" data-id="${p.id}" style="border:0;padding:0;margin:0;cursor:default"><div class="acts" style="margin-top:4px"><a class="b pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">步行導航</a></div></div>`;drawRoute(P);redraw();kbFit();if(fit)fitTarget();return}
   const real=[];if(/家用垃圾/.test(p.note||''))real.push('禁丟家用垃圾');const fr=freshness(p,ev);
-  list.innerHTML=head+`<div class="card item" data-id="${p.id}" style="border:0;padding:0;margin:8px 0 0;cursor:default">
+  list.innerHTML=TOG()+head+`<div class="card item" data-id="${p.id}" style="border:0;padding:0;margin:8px 0 0;cursor:default">
     <div class="addr">${p.addr}</div>
     <div class="dist"><b>${fmtM(P.d).replace(' ','\u2009')}</b><span>${dlab(P)}</span></div>
     ${fr?`<div class="meta">${fr}</div>`:''}${real.length?`<div class="meta" style="margin-top:2px">${real.join('・')}</div>`:''}
     <div class="acts"><a class="b pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">步行導航</a></div>
-    <div class="q" data-q="${p.id}"><div class="qt">這桶滿了嗎？</div>${asked[p.id]?`<div class="qd">${asked[p.id]==='full'&&SC.inArea(p.la,p.lo)?'✓ 謝謝，已通知清潔隊':'✓ 謝謝回報'}</div>`:`<div class="qb"><button id="okBtn" data-ok="${p.id}">還能丟</button><button data-full="${p.id}">滿了</button></div>`}</div>
+    <div class="q" data-q="${p.id}"><div class="qt">這桶滿了嗎？</div>${asked[p.id]?`<div class="qd"><span>${asked[p.id]==='full'&&SC.inArea(p.la,p.lo)?'✓ 謝謝，已通知清潔隊':'✓ 謝謝回報'}</span>${myRep&&myRep.bin===p.id?'<button class="undo" id="repUndo">取消</button>':''}</div>`:`<div class="qb"><button id="okBtn" data-ok="${p.id}">還能丟</button><button data-full="${p.id}">滿了</button></div>`}</div>
   </div>
   ${needHTML()}`;
   drawRoute(P);redraw();kbFit();
@@ -229,10 +241,12 @@ const ACC_DEFAULT_M=30;let accC=null,acc=ACC_DEFAULT_M;
 function setPos(p,label,accM){pos=p;needNoteSent=false;acc=accM>0?accM:ACC_DEFAULT_M;needId=null;where=label;dumped=false;if(me)me.remove();if(accC)accC.remove();
   accC=L.circle(p,{radius:acc,color:getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()||'#0f9d76',weight:1,opacity:.5,fillOpacity:.1,interactive:false,className:'acc'}).addTo(map);
   me=L.marker(p,{icon:L.divIcon({className:'me',iconSize:[18,18]}),zIndexOffset:2000,interactive:false}).addTo(map);render(true)}
-function focusBin(f){sel=f.id;dumped=false;render(true)} // 點地圖上的桶→ 成為目標：標籤、路線、卡片一起更新並重新框住
+function focusBin(f){if(myRep&&myRep.bin!==f.id){myRep=null;saveRep()}sel=f.id;dumped=false;render(true)} // 點地圖上的桶→ 成為目標：標籤、路線、卡片一起更新並重新框住
 list.onclick=e=>{
-  const fb=e.target.closest('[data-full]');if(fb){addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});setAsked(fb.dataset.full,'full');sel=fb.dataset.full;render(false);return}
-  const ob=e.target.closest('[data-ok]');if(ob){setAsked(ob.dataset.ok,'ok');sel=ob.dataset.ok;render(false);return}
+  if(e.target.closest('#cardTog')){collapsed=!collapsed;render(true);return} // 收合／展開後重新 fit（下緣＝當下卡片上緣＋24）
+  const fb=e.target.closest('[data-full]');if(fb){const r=addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});setAsked(fb.dataset.full,'full');myRep={bin:fb.dataset.full,kind:'full',id:r.id};saveRep();sel=fb.dataset.full;render(false);return}
+  const ob=e.target.closest('[data-ok]');if(ob){setAsked(ob.dataset.ok,'ok');myRep={bin:ob.dataset.ok,kind:'ok'};saveRep();sel=ob.dataset.ok;render(false);return}
+  if(e.target.closest('#repUndo')&&myRep){if(myRep.id)removeEvent(myRep.id);setAsked(myRep.bin,null);sel=myRep.bin;myRep=null;saveRep();render(false);return} // 用 id 撤回自己那一筆 → 清潔隊頁的已回報滿／行人回報／必清一起解除；卡片回到問句
   if(e.target.closest('#needBtn')&&pos){needId=addNeed(pos[0],pos[1]).rec.id;render(false);return}
   if(e.target.closest('#needNoteSend')&&needId){setNeedNote(needId,needNote.value.slice(0,NEED_NOTE_MAX));needNoteSent=true;render(false);return}
   if(e.target.closest('#needUndo')&&needId){needNoteSent=false;removeNeed(needId);needId=null;render(false);return}
