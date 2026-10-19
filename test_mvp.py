@@ -31,6 +31,15 @@ with sync_playwright() as p:
     pg.screenshot(path=f'shot_planner_compare_{name}.png')
     pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     print(name,'行人',pg.inner_text('#where'))
+    if name=='mobile':  # 自動縮放：目標標記與標籤頂端在 chip 列下緣以下；位置點光暈與卡片上緣 ≥24px（390、375；含遠處較高的卡片）
+      FIT="(()=>{const c=crow.getBoundingClientRect().bottom,t=document.querySelector('.binmk.tgt .w').getBoundingClientRect(),r=document.querySelector('.binmk.tgt .ring').getBoundingClientRect(),l=tlab.getBoundingClientRect(),m=document.querySelector('.leaflet-marker-pane .me').getBoundingClientRect();return {mk:Math.min(t.top,r.top)-c,lab:l.top-c,halo:list.getBoundingClientRect().top-(m.bottom+8)}})()"
+      for vw,vh in ((390,844),(375,667)):
+        pg.set_viewport_size({'width':vw,'height':vh});pg.wait_for_timeout(300)
+        for spot in ('demo','JG'):
+          pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)" if spot=='demo' else "(()=>{const b=D.street.find(x=>x.addr==='建國南路2段306號');setPos([b.la-0.0027,b.lo+0.0006],'你的目前位置')})()");pg.wait_for_timeout(500)
+          r=pg.evaluate(FIT);print(name,'fit',vw,vh,spot,r);assert r['mk']>=0 and r['lab']>=0 and r['halo']>=24,r
+          if spot=='JG':pg.screenshot(path=f'/workspace/ped_fit_{vw}.png')
+      pg.set_viewport_size({'width':390,'height':844});pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(500)
     dist=pg.inner_text('.dist');print(name,'示範位置距離',dist.replace('\n',' '));assert '步行約' in dist and '直線' not in dist and '羅斯福路4段106號' in pg.inner_text('#list')
     card=pg.inner_text('#list');assert '桶數' not in card and '%' not in card and any(w in card for w in ('還有空間','快滿了','滿溢','已回報滿')),card  # 狀態字（不顯示 %）、不顯示行政區與桶數
     print(name,'只顯示現況',pg.locator('[data-m]').count()==0 and pg.locator('#delta').count()==0);assert pg.locator('[data-m]').count()==0
