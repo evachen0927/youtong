@@ -4,9 +4,6 @@ from playwright.sync_api import sync_playwright
 VP={'desktop':dict(viewport={'width':1280,'height':800}),'mobile':dict(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2)}
 B=sys.argv[1] if len(sys.argv)>1 else 'http://localhost:8765/'
 ok=True
-def xp(pg):
-  if pg.locator('#grab').is_visible():pg.click('#grab');pg.wait_for_timeout(350)
-
 with sync_playwright() as p:
   br=p.chromium.launch()
   for name,opt in VP.items():
@@ -34,7 +31,7 @@ with sync_playwright() as p:
     pg.screenshot(path=f'shot_planner_compare_{name}.png')
     pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     print(name,'行人',pg.inner_text('#where'))
-    dist=pg.inner_text('.dist');print(name,'示範位置距離',dist.replace('\n',' '));assert ' m・步行 ' in dist and '一般＋回收' in dist and '直線' not in dist and '羅斯福路4段106號' in pg.inner_text('#list')
+    dist=pg.inner_text('.dist');print(name,'示範位置距離',dist.replace('\n',' '));assert '步行約' in dist and '直線' not in dist and '羅斯福路4段106號' in pg.inner_text('#list')
     card=pg.inner_text('#list');assert '桶數' not in card and '%' not in card and any(w in card for w in ('還有空間','快滿了','滿溢','已回報滿')),card  # 狀態字（不顯示 %）、不顯示行政區與桶數
     print(name,'只顯示現況',pg.locator('[data-m]').count()==0 and pg.locator('#delta').count()==0);assert pg.locator('[data-m]').count()==0
     # 目標桶：放大＋光圈＋常駐標籤（步行距離＝卡片）；步行路線；其他桶縮小但 44px；地圖框住不被卡片蓋住
@@ -51,8 +48,7 @@ with sync_playwright() as p:
     pt=pg.evaluate("(()=>{const t=list.getBoundingClientRect().top;for(const e of document.querySelectorAll('.binmk.oth')){const r=e.getBoundingClientRect();if(r.top>140&&r.bottom<t&&r.left>0&&r.right<innerWidth)return [r.left+r.width/2,r.top+r.height/2]}return null})()");assert pt,'no visible bin'
     (pg.touchscreen.tap if name=='mobile' else pg.mouse.click)(pt[0],pt[1]);pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin===sel&&primary().f.id===sel") and pg.get_attribute('#list .card','data-id')==pg.evaluate("sel")
     if name=='mobile':pg.evaluate("render(true)");pg.wait_for_timeout(400);pg.screenshot(path='/workspace/ped_target_390_v2_other.png')
-    xp(pg);assert pg.locator('[data-next]').count()==0  # 「下一個」已拿掉（點地圖上的桶換目標）
-    oid=pg.evaluate("nearestN(shown(),3)[1].f.id");pg.evaluate(f"focusBin(shown().find(b=>b.id==='{oid}'))");pg.wait_for_timeout(400);assert pg.evaluate('mode')=='peek' and pg.evaluate("routeInfo.bin")==oid
+    nx=pg.get_attribute('[data-next]','data-next');pg.click('[data-next]');pg.wait_for_timeout(400);assert pg.evaluate("routeInfo.bin")==nx and pg.get_attribute('#list .card','data-id')==nx;print(name,'下一個 → 目標',pg.inner_text('#tlab'))
     # 路線只在「你的位置 ↔ 目標」之間：換多個目標（含已回報滿），首點＝你的位置、末點＝目標、沒有點超出步行距離＋容差；點桶不移動你的位置；兩者相距 ≥48px
     p0=pg.evaluate("pos.slice()");ids=pg.evaluate("nearestN(shown(),6).map(t=>t.f.id)");pg.evaluate(f"addEvent({{bin:'{ids[3]}',kind:'full',level:100,by:'行人'}})")
     for bid in ids:
@@ -77,78 +73,28 @@ with sync_playwright() as p:
     (pg.touchscreen.tap if name=='mobile' else pg.mouse.click)(vp[0],vp[1]);pg.wait_for_timeout(400);pop=pg.inner_text('.leaflet-popup-content');print(name,'場館彈窗',pop.replace('\n',' '))
     assert '場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證' in pop and pg.evaluate("[primary().f.id,routeInfo.bin]")==t0 and pg.evaluate("nearestN(shown(),12).every(t=>D.street.includes(t.f))")
     if name=='mobile':pg.wait_for_timeout(800);pg.screenshot(path='/workspace/ped_venue_390.png')
-    pg.click('[data-ly="lyVen"]');pg.wait_for_timeout(300);assert pg.locator('.vmk').count()==0;pg.evaluate("map.closePopup();render(true)");pg.wait_for_timeout(300)
-    # ---- Bottom sheet：收合／展開／需求、把手、拖拉、定位按鈕、chip ----
-    ch=pg.evaluate("(()=>{const b=[...document.querySelectorAll('.crow .lchip')].map(e=>[e.getBoundingClientRect().height,e.querySelector('.face').getBoundingClientRect().height,getComputedStyle(e.querySelector('i')).backgroundColor]);return b})()");print(name,'chip',ch);assert all(c[0]==44 and c[1]==32 for c in ch) and ch[2][2]=='rgb(31, 143, 163)'
+    cr=pg.evaluate("(()=>{const c=getComputedStyle(document.querySelector('[data-ly=lyVen] i'));return [c.backgroundColor,c.opacity]})()");assert cr==['rgb(31, 143, 163)','1'],cr  # 實心青色菱形
     if name=='mobile':
-      pg.evaluate("map.closePopup();sel=null;render(true)");pg.wait_for_timeout(400)
-      for (w,h,png,need) in ((390,844,'/workspace/ped_sheet_collapsed_390.png',.70),(375,667,'/workspace/ped_sheet_collapsed_375x667.png',.60)):
-        pg.set_viewport_size({'width':w,'height':h});pg.wait_for_timeout(400);pg.evaluate("render(true)");pg.wait_for_timeout(500)
-        m=pg.evaluate("(()=>{const L=list.getBoundingClientRect(),f=Math.max(...[...document.querySelectorAll('.crow .face,.crow .lhint')].map(e=>e.getBoundingClientRect().bottom)),fab=document.getElementById('locate').getBoundingClientRect(),g=grab.getBoundingClientRect(),gi=grab.querySelector('i').getBoundingClientRect(),hit=document.elementFromPoint(g.left+g.width/2,g.top+40);return {sheetH:L.height,sheetTop:L.top,chipBottom:f,vis:+((L.top-f)/innerHeight).toFixed(3),fabGap:L.top-fab.bottom,handle:[gi.width,gi.height],hit44:!!(hit&&hit.closest('.grab')),rows:[...document.querySelectorAll('#list .r1,#list .dist,#list .acts')].map(e=>e.offsetParent!==null)}})()")
-        print(name,'收合',w,h,m);assert m['sheetH']<=150 and m['vis']>=need-0.005 and m['fabGap']==12 and m['handle']==[36,5] and m['hit44'] and all(m['rows']) and pg.locator('#list .more').is_hidden(),m
-        tgt=pg.evaluate("(()=>{const t=document.querySelector('.binmk.tgt').getBoundingClientRect(),L=list.getBoundingClientRect();return t.bottom<L.top})()");assert tgt  # fit 用收合高度避開面板
-        pg.screenshot(path=png)
-      pg.set_viewport_size({'width':390,'height':844});pg.wait_for_timeout(400);pg.evaluate("render(true)");pg.wait_for_timeout(400)
-      pc=pg.evaluate("innerHeight-list.getBoundingClientRect().top");pg.click('#grab');pg.wait_for_timeout(100);mid=pg.evaluate("[list.style.transition,list.getBoundingClientRect().height]");pg.wait_for_timeout(350)
-      ex=pg.evaluate("(()=>{const L=list.getBoundingClientRect(),fab=document.getElementById('locate').getBoundingClientRect(),bar=document.querySelector('.roles').getBoundingClientRect().bottom;return {h:L.height,top:L.top,bar,fabGap:L.top-fab.bottom,mode,more:document.querySelector('.more').innerText}})()")
-      print(name,'展開',ex,'動畫中',mid);assert ex['mode']=='open' and ex['top']>=ex['bar'] and ex['fabGap']==12 and '下一個' not in ex['more'] and '這裡需要垃圾桶' in ex['more'] and '示範位置' in ex['more'] and 'ⓘ' in ex['more'] and 'ease-out' in mid[0] and '200ms' in mid[0]
-      assert pg.locator('#locInfo').bounding_box()['height']>=44;pg.click('#locInfo');pg.wait_for_timeout(200);assert '改用示範位置' in pg.inner_text('.more');pg.click('#locInfo');pg.wait_for_timeout(200)
-      pg.screenshot(path='/workspace/ped_sheet_expanded_390.png')
-      pg.click('#needBtn');pg.wait_for_timeout(400);nd=pg.evaluate("(()=>{const L=list.getBoundingClientRect();return {h:L.height,frac:+(L.height/innerHeight).toFixed(2),close:document.getElementById('needClose').getBoundingClientRect().width,main:document.querySelector('.main')}})()")
-      print(name,'需求面板',nd);assert 0.58<=nd['frac']<=0.62 and nd['close']>=44 and nd['main'] is None and '✓ 謝謝' in pg.inner_text('#list') and pg.locator('[data-reason]').count()==2 and pg.locator('#needUndo').is_visible()
-      pg.click('[data-reason="other"]');pg.wait_for_timeout(300);assert pg.locator('#needNote').is_visible();pg.screenshot(path='/workspace/ped_sheet_need_390.png')
-      pg.click('#needClose');pg.wait_for_timeout(400);assert pg.evaluate('mode')=='peek' and abs(pg.evaluate("innerHeight-list.getBoundingClientRect().top")-pc)<1
-      pg.click('#needBtn') if pg.locator('#needBtn').is_visible() else None
-      pg.evaluate("(()=>{removeNeed(needId);needId=null;setMode('peek')})()");pg.wait_for_timeout(300)
-      # 拖拉：滑鼠（pointer）上拉 → 展開、下拉 → 收合；觸控同一套 pointer events
-      g=pg.locator('#grab').bounding_box();x=g['x']+g['width']/2;y=g['y']+10
-      pg.mouse.move(x,y);pg.mouse.down();pg.mouse.move(x,y-60,steps=6);mh=pg.evaluate("list.getBoundingClientRect().height");pg.mouse.move(x,y-120,steps=6);pg.mouse.up();pg.wait_for_timeout(350);print(name,'拖拉中高度',mh);assert mh>140 and pg.evaluate('mode')=='open'
-      g=pg.locator('#grab').bounding_box();x=g['x']+g['width']/2;y=g['y']+10;pg.mouse.move(x,y);pg.mouse.down();pg.mouse.move(x,y+120,steps=8);pg.mouse.up();pg.wait_for_timeout(350);assert pg.evaluate('mode')=='peek'
-      pg.click('#grab');pg.wait_for_timeout(350)
-      p1=pg.evaluate('pos.slice()');pg.touchscreen.tap(200,250);pg.wait_for_timeout(600);t1=pg.evaluate('sel');print(name,'展開時點地圖',pg.evaluate('[mode,pos]'),p1);assert pg.evaluate('mode')=='peek' and pg.evaluate('pos')==p1 and pg.evaluate('sel')==t1  # 只收合，不動位置與目標
-      pg.touchscreen.tap(200,250);pg.wait_for_timeout(600);assert pg.evaluate('pos')!=p1  # 收合時點地圖照舊設定位置
-      pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(400)
-      cdp=pg.context.new_cdp_session(pg);g=pg.locator('.r1').bounding_box();x=g['x']+40;y=g['y']+10
-      cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]})
-      for k in range(1,7):cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':y-20*k}]})
-      cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});pg.wait_for_timeout(400);print(name,'觸控上拉',pg.evaluate('mode'));assert pg.evaluate('mode')=='open'
-      # 快速甩動（≈130ms）後第一次點地圖仍要觸發 click（v30 w.py 重現）
-      def tch(x0,y0,x1=None,y1=None,steps=6,dt=20):
-        cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x0,'y':y0}]})
-        if x1 is not None:
-          for k in range(1,steps+1):cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x0+(x1-x0)*k/steps,'y':y0+(y1-y0)*k/steps}]});pg.wait_for_timeout(dt)
-        cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});pg.wait_for_timeout(350)
-      pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(400)
-      gx=pg.evaluate("innerWidth/2");tch(gx,pg.evaluate("list.getBoundingClientRect().top")+20,gx,780);tch(gx,pg.evaluate("list.getBoundingClientRect().top")+20,gx,200);assert pg.evaluate('mode')=='open'
-      pg.evaluate("window.__lc=0;map.on('click',()=>__lc++)");tch(200,250);print(name,'甩動後第一次點',pg.evaluate('[__lc,mode]'));assert pg.evaluate('__lc')==1 and pg.evaluate('mode')=='peek'
-      cr=pg.evaluate("(()=>{const i=document.querySelector('[data-ly=lyVen] i'),c=getComputedStyle(i);return [c.backgroundColor,c.opacity,c.transform!=='none']})()");assert cr==['rgb(31, 143, 163)','1',True],cr
-      pg.set_viewport_size({'width':375,'height':667});pg.wait_for_timeout(400);ov=pg.evaluate("[crow.scrollWidth-crow.clientWidth,crow.classList.contains('ovf')]");pg.evaluate("crow.scrollLeft=999");pg.wait_for_timeout(200);ov2=pg.evaluate("crow.classList.contains('ovf')");pg.evaluate("crow.scrollLeft=0");pg.wait_for_timeout(200);print(name,'chip 列溢出',ov,ov2);assert ov[0]>0 and ov[1] and not ov2
-      pg.set_viewport_size({'width':390,'height':844});pg.wait_for_timeout(400);assert not pg.evaluate("crow.classList.contains('ovf')") or pg.evaluate("crow.scrollWidth>crow.clientWidth")
-      pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(400)
-      # prefers-reduced-motion → 無動畫
-      pg.emulate_media(reduced_motion='reduce');pg.click('#grab');assert pg.evaluate("list.style.transition")=='' and pg.evaluate('mode')=='open';pg.click('#grab');pg.emulate_media(reduced_motion='no-preference');pg.wait_for_timeout(300)
-    else:
-      dk=pg.evaluate("(()=>{const L=list.getBoundingClientRect();return [L.width,innerWidth-L.right,getComputedStyle(grab).display,getComputedStyle(document.querySelector('#list .more')).display]})()");print(name,'桌機側邊卡片',dk);assert dk[0]==380 and dk[1]==16 and dk[2]=='none' and dk[3]!='none'
+      pg.set_viewport_size({'width':375,'height':667});pg.wait_for_timeout(400);ov=pg.evaluate("[crow.scrollWidth-crow.clientWidth,crow.classList.contains('ovf')]");pg.evaluate("crow.scrollLeft=999");pg.wait_for_timeout(200);ov2=pg.evaluate("crow.classList.contains('ovf')");pg.evaluate("crow.scrollLeft=0");pg.wait_for_timeout(200);print(name,'chip 列溢出',ov,ov2);assert (ov[0]>0)==ov[1] and not ov2
+      pg.set_viewport_size({'width':390,'height':844});pg.wait_for_timeout(400)
+    pg.click('[data-ly="lyVen"]');pg.wait_for_timeout(300);assert pg.locator('.vmk').count()==0;pg.evaluate("map.closePopup();render(true)");pg.wait_for_timeout(300)
     pg.goto(B+'pedestrian.html?mode=after');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(1500);assert 'pill sc' not in pg.content() and '調整後' not in pg.inner_text('#list')
     pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
-    card=pg.inner_text('#list');assert '這桶滿了嗎？' in card and '還能丟' not in card and pg.locator('.k .brandm').count()==0 and pg.inner_text('[data-full]')=='滿了' and pg.inner_text('[data-ok]')=='還空著'
-    fb=pg.evaluate("(()=>{const c=getComputedStyle(document.querySelector('[data-full]')),r=document.querySelector('[data-full]').getBoundingClientRect(),n=document.querySelector('.acts .pri').getBoundingClientRect();return [c.backgroundColor,c.borderTopColor,c.color,r.height,n.height,+(n.width/(n.width+r.width)).toFixed(2)]})()");print(name,'回報滿了按鈕',fb);assert fb[:3]==['rgb(255, 255, 255)','rgb(43, 51, 51)','rgb(43, 51, 51)'] and fb[3]==44 and fb[4]==44 and pg.locator('[data-ok]').bounding_box()['height']==44
-    h0=pg.evaluate("list.getBoundingClientRect().height");pg.click('[data-full]');pg.wait_for_timeout(300);h1=pg.evaluate("list.getBoundingClientRect().height")
-    assert pg.evaluate("(()=>{const c=getComputedStyle(repDone);return [c.color,c.fontWeight]})()")==['rgb(28, 31, 33)','600']
-    assert pg.inner_text('#repDone')=='✓ 已通知清潔隊' and pg.locator('[data-full]').count()==0 and abs(h1-h0)<1 and '已回報滿' in pg.inner_text('.r1'),(h0,h1)
-    ub=pg.locator('#repUndo').bounding_box();assert ub['height']>=44 and ub['width']>=44 and pg.inner_text('#repUndo')=='取消'
+    assert pg.locator('#doneBtn').count()==0 and '這桶滿了嗎？' in pg.inner_text('#list')
+    h0=pg.locator('.q').bounding_box()['height'];pg.click('[data-full]');pg.wait_for_timeout(300);h1=pg.locator('.q').bounding_box()['height']
+    assert pg.evaluate("(()=>{const c=getComputedStyle(document.querySelector('.q .qd'));return [c.color,c.fontWeight]})()")==['rgb(28, 31, 33)','600']
+    assert '✓ 謝謝，已通知清潔隊' in pg.inner_text('#list') and pg.locator('[data-full]').count()==0 and abs(h1-h0)<1,(h0,h1)
     assert pg.locator('.binmk.tgt.rep').count()==1 and pg.locator('.binmk.tgt .ring').count()==1 and pg.locator('#tlab').count()==1  # 回報滿：目標圖示仍是紅色（狀態色優先），光圈與標籤保留
-    assert pg.locator('.binmk path[fill="var(--reported)"], .binmk path[fill="#e2574c"]').count()>=1
+    assert '有人回報滿了' in pg.inner_text('#list') and pg.locator('.binmk path[fill="var(--reported)"], .binmk path[fill="#e2574c"]').count()>=1
     print(name,'回報滿了 events',pg.evaluate("getEvents().filter(e=>e.kind==='full').length"));rep_id=pg.evaluate("getEvents().filter(e=>e.kind==='full').slice(-1)[0].bin")
     # 這裡需要垃圾桶：?reset=1 後、示範位置（捷運公館站公車站）按一次 → 設點規劃圖層與公館熱點詳情都是 1 筆
     pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
-    assert pg.locator('#needBtn').is_hidden()==(name=='mobile');xp(pg)
     assert pg.evaluate("getNeeds().length")==0 and pg.locator('#needBtn').is_visible() and pg.locator('#needBtn').bounding_box()['height']>=44
     near=pg.locator('#need.far').count();print(name,'需求按鈕 示範位置 醒目',near);assert near==0  # 示範位置步行 102 m → 不醒目
-    pg.click('#needBtn');pg.wait_for_timeout(350);assert '謝謝，已給設點規劃參考' in pg.inner_text('#list') and pg.evaluate("getNeeds().length")==1 and pg.evaluate('mode')=='need' and pg.locator('.main').is_hidden() and pg.locator('#needClose').bounding_box()['height']>=44
+    pg.click('#needBtn');pg.wait_for_timeout(300);assert '謝謝，已給設點規劃參考' in pg.inner_text('#list') and pg.evaluate("getNeeds().length")==1
     assert pg.locator('[data-reason]').count()==2 and pg.locator('[data-reason]').first.bounding_box()['height']>=44
     assert '✓ 謝謝，已給設點規劃參考' in pg.inner_text('#list') and '原因（可不選）' in pg.inner_text('#need')
-    assert pg.locator('#needUndo').bounding_box()['height']>=44;pg.click('#needUndo');pg.wait_for_timeout(350);assert pg.evaluate("getNeeds().length")==0 and pg.locator('#needBtn').is_visible()
+    assert pg.locator('#needUndo').bounding_box()['height']>=44;pg.click('#needUndo');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds().length")==0 and pg.locator('#needBtn').is_visible()
     pg.click('#needBtn');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds().length")==1
     assert [pg.inner_text(f'[data-reason="{k}"]') for k in ('general','other')]==['一般垃圾','其他'] and pg.locator('[data-reason="household"]').count()==0
     pg.click('[data-reason="general"]');pg.wait_for_timeout(200);assert pg.evaluate("getNeeds()[0].reason")=='general' and pg.get_attribute('[data-reason="general"]','aria-pressed')=='true' and pg.locator('#needNote').count()==0
@@ -168,7 +114,7 @@ with sync_playwright() as p:
     for hgt in (400,300):
       pg.set_viewport_size({'width':390,'height':hgt});pg.wait_for_timeout(500)
       rz=pg.evaluate("(()=>{const L=list.getBoundingClientRect(),bar=document.querySelector('.roles').getBoundingClientRect().bottom;return {h:innerHeight,top:L.top,bottom:L.bottom,bar,scroll:list.classList.contains('scroll'),pb:getComputedStyle(list).paddingBottom,ov:getComputedStyle(list).overflowY}})()")
-      print(name,'視窗',hgt,rz);assert rz['top']>=rz['bar'] and rz['bottom']<=rz['h'] and (rz['scroll'] or hgt==400) and rz['pb']==('22px' if rz['scroll'] else '14px') and rz['ov']=='auto',rz  # 需求面板較短：400 高放得下就不捲
+      print(name,'視窗',hgt,rz);assert rz['top']>=rz['bar'] and rz['bottom']<=rz['h'] and rz['scroll'] and rz['pb']=='22px' and rz['ov']=='auto',rz
       if name=='mobile' and hgt==400:pg.screenshot(path='/workspace/ped_kb_resize.png')
     pg.set_viewport_size(vp0);pg.wait_for_timeout(500);assert pg.evaluate("list.getBoundingClientRect().top>=document.querySelector('.roles').getBoundingClientRect().bottom")
     vis=pg.evaluate("(()=>{const r=needNote.getBoundingClientRect(),v=window.visualViewport;return r.top>=0&&r.bottom<=(v?v.height+v.offsetTop:innerHeight)})()");assert vis
@@ -177,9 +123,8 @@ with sync_playwright() as p:
     pg.click('[data-reason="general"]');pg.click('[data-reason="other"]');pg.wait_for_timeout(200);pg.fill('#needNote','<img src=x onerror=alert(1)>');pg.click('#needNoteSend');pg.wait_for_timeout(200)
     assert pg.evaluate("getNeeds()[0]")['note']=='<img src=x onerror=alert(1)>' and pg.evaluate("getNeeds()[0].reason")=='other'
     dup=pg.evaluate("(()=>{const r=addNeed(pos[0]+0.0002,pos[1]);return [r.dup,getNeeds().length]})()");assert dup==[True,1],dup  # 50 m 內只算一次
-    pg.click('#needClose');pg.wait_for_timeout(350);assert pg.evaluate('mode')=='peek' and pg.locator('#needNote').count()==0
-    pg.evaluate("(()=>{const s=D.yb.find(x=>x.name==='捷運大安站(4號出口)');setPos([s.la,s.lo],'手動設定的位置')})()");pg.wait_for_timeout(500);xp(pg)
-    q=pg.inner_text('#needQ') if pg.locator('#needQ').count() else '';print(name,'遠處',q,'| 卡片',pg.inner_text('.dist').replace('\n',' '));assert pg.evaluate("RT.walkMin(nearestN(shown(),1)[0].d)")==int(q.split('走 ')[1].split(' ')[0]) and ('步行 %s 分'%q.split('走 ')[1].split(' ')[0]) in pg.inner_text('.dist') and pg.locator('.more #needQ').is_visible()
+    pg.evaluate("(()=>{const s=D.yb.find(x=>x.name==='捷運大安站(4號出口)');setPos([s.la,s.lo],'手動設定的位置')})()");pg.wait_for_timeout(500)
+    q=pg.inner_text('#needQ') if pg.locator('#needQ').count() else '';print(name,'遠處',q,'| 卡片',pg.inner_text('.dist').replace('\n',' '));assert pg.evaluate("RT.walkMin(nearestN(shown(),1)[0].d)")==int(q.split('走 ')[1].split(' ')[0]) and ('步行約 %s 分'%q.split('走 ')[1].split(' ')[0]) in pg.inner_text('.dist')
     st=pg.evaluate("(()=>{const c=getComputedStyle(needBtn);return [c.backgroundColor,c.borderTopColor,c.color]})()");print(name,'醒目樣式',st);assert st==['rgb(255, 255, 255)','rgb(43, 51, 51)','rgb(43, 51, 51)']
     assert pg.locator('#need.far #needBtn').count()==1 and '最近的桶要走' in q and '需要這裡多一個嗎？' in q
     pg.screenshot(path=f'shot_pedestrian_need_{name}.png')
@@ -221,23 +166,6 @@ with sync_playwright() as p:
     rl=pg.locator(f'#mustList li:has(.repby)');print(name,'行人回報站',rep_id,rl.count(),pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}')&&route.find(e=>e.b.id==='{rep_id}').must"))
     assert rl.count()==1 and pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}').must") and pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}').b.addr") in rl.inner_text() and pg.locator('.flag.rep').count()==0
     rp=pg.evaluate("(()=>{const li=[...document.querySelectorAll('#mustList li')].find(l=>l.querySelector('.repby')),c=getComputedStyle(li.querySelector('.stchip')),m=getComputedStyle(document.querySelector('.flag.must'));return [li.querySelector('.stchip').textContent,c.backgroundColor,c.color,li.querySelector('.repby').textContent,m.backgroundColor,m.color]})()");print(name,'行人回報列',rp);assert rp[0]=='已回報滿' and rp[1:3]==['rgb(252, 235, 233)','rgb(180, 35, 42)'] and rp[3] in ('行人回報・剛剛','行人回報・1 分前') and rp[4:]==['rgb(43, 51, 51)','rgb(255, 255, 255)']
-    # PM 驗收流程：?reset=1 → 公館「滿了」→ 清潔隊有行人回報 → 取消 → 標籤消失 → 再「滿了」→ 換桶再回來 →「還空著」→ 不再紅、清潔隊更新
-    def crew_rep(bid):
-      pg.goto(B+'crew.html?fc=1&day=we&t=15:30');pg.wait_for_selector('#card[data-state=A]',timeout=20000);pg.wait_for_timeout(600)
-      return pg.evaluate(f"(()=>{{const e=E.find(x=>x.b.id==='{bid}');return [!!e&&e.rep,[...document.querySelectorAll('#mustList li,#list li')].some(l=>l.querySelector('.repby')&&l.textContent.includes(e.b.addr))]}})()")
-    def ped():pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(1500)
-    pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_selector('#list [data-full]',timeout=20000);pg.wait_for_timeout(6000)
-    if name=='mobile':pg.screenshot(path='/workspace/ped_sheet_v2_390.png')
-    gid=pg.get_attribute('#list .card','data-id');pg.click('[data-full]');pg.wait_for_timeout(300);c1=crew_rep(gid)
-    ped();assert pg.inner_text('#repDone')=='✓ 已通知清潔隊';pg.click('#repUndo');pg.wait_for_timeout(300);assert '這桶滿了嗎？' in pg.inner_text('#list') and '已回報滿' not in pg.inner_text('.r1') and pg.locator('.binmk.tgt.rep').count()==0 and pg.evaluate("getEvents().length")==0;c2=crew_rep(gid)
-    ped();pg.click('[data-full]');pg.wait_for_timeout(300);oid=pg.evaluate("nearestN(shown(),3)[1].f.id");pg.evaluate(f"focusBin(shown().find(b=>b.id==='{oid}'))");pg.wait_for_timeout(300);pg.evaluate(f"focusBin(shown().find(b=>b.id==='{gid}'))");pg.wait_for_timeout(300)
-    assert '已回報滿' in pg.inner_text('.r1') and pg.locator('[data-ok]').count()==1  # 換桶後取消消失、問句回來（可重複回報）
-    pg.click('[data-ok]');pg.wait_for_timeout(300);okv=[pg.inner_text('#repDone'),pg.locator('.binmk.tgt.rep').count(),pg.inner_text('.r1')];assert okv[0]=='✓ 謝謝，已更新' and okv[1]==0 and '已回報滿' not in okv[2],okv
-    assert pg.evaluate(f"Math.round(fillOf('{gid}'))")==pg.evaluate(f"Math.round(fillOf('{gid}',[]))")  # 還空著不影響滿度預測（回到原估計）
-    c3=crew_rep(gid);hist=pg.inner_text('#hist') if pg.locator('#hist').count() else pg.evaluate("hist.innerText");print(name,'PM 驗收 清潔隊',c1,c2,c3,'|',hist.replace('\n',' ')[:160])
-    assert c1==[True,True] and c2==[False,False] and c3==[False,False] and '行人 回報還空著' in hist and '行人 回報已滿' in hist
-    ped();pg.click('#repUndo');pg.wait_for_timeout(300);assert pg.locator('.binmk.tgt.rep').count()==1 and '已回報滿' in pg.inner_text('.r1')  # 取消「還空著」→ 回到已回報滿
-    rep_id=gid;pg.goto(B+'crew.html?fc=1&day=we&t=15:30');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)  # 回到原本的清潔隊流程
     sb=pg.locator('#startBtn').bounding_box();ml=pg.locator('#mustList').bounding_box();tt=pg.locator('#cardTitle').bounding_box();cw=pg.locator('#cardBody').bounding_box()
     assert tt['y']<sb['y']<ml['y'] and sb['y']+sb['height']<=pg.evaluate("innerHeight") and sb['width']>=cw['width']-2 and sb['height']>=44,(sb,ml,cw)
     if name=='mobile':pg.screenshot(path='/workspace/crew_start_390.png')

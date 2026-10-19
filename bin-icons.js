@@ -26,6 +26,6 @@ function binDivIcon(fill,near,state,small){const{w,h,html}=binIconSVG(fill,state
   return L.divIcon({className:'binmk'+(near?' near':''),iconSize:[w*k,h*k],iconAnchor:[w*k/2,31.4*k],
     html:`<div class="w" style="width:${w}px;transform:scale(${k});transform-origin:0 0">${near?'<span class="halo"></span>':''}${html}</div>`})}
 // 行人回報滿了且之後沒有清運 → 'reported'
-function binState(id,ev){let s=null;for(const e of ev)if(e.bin===id){if(e.kind==='full')s='reported';else if(e.kind==='clear'||e.kind==='ok')s=null}return s} // 以最新一筆為準：還空著（ok）蓋掉滿了
+function binState(id,ev){let s=null;for(const e of ev)if(e.bin===id){if(e.kind==='full')s='reported';else if(e.kind==='clear')s=null}return s}
 const _sm=h=>h.replace('width="28" height="34"','width="14" height="17"');
 const BIN_LEGEND=()=>[{html:_sm(binIconSVG(40).html),t:STATE_LABEL.low},{html:_sm(binIconSVG(85).html),t:STATE_LABEL.mid},{html:_sm(binIconSVG(100).html),t:STATE_LABEL.high+'（估計）'},{html:_sm(binIconSVG(0,'reported').html),t:STATE_LABEL.reported+'（有人回報、尚未清運）'}];

@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020z"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020z"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020z"><link rel="stylesheet" href="tokens.css?v=20261020z"><link rel="stylesheet" href="ui.css?v=20261020z">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021a"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021a"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021a"><link rel="stylesheet" href="tokens.css?v=20261021a"><link rel="stylesheet" href="ui.css?v=20261021a">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -74,7 +74,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .seg2 button{border:0;background:none;border-radius:999px;padding:0 9px;font:500 13px/1 var(--font);color:var(--ink-2);cursor:pointer}.seg2 button.on{background:var(--ink);color:#fff;font-weight:600}
 .need{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .need .nbtn{width:100%;min-height:var(--touch);border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:600 15px/1.2 var(--font)}
-.need.far .nbtn{background:var(--surface);border-color:var(--ink-strong);color:var(--ink-strong);font-weight:500} /* 醒目但中性：不比「步行導航／回報滿了」搶眼；品牌綠只給步行導航 */
+.need.far .nbtn{background:var(--surface);border-color:var(--ink-strong);color:var(--ink-strong);font-weight:500} /* 醒目但中性：不比「還能丟／滿了」搶眼；品牌綠只給步行導航 */
 .need .nq{margin:0 0 8px;font:500 15px/1.4 var(--font);color:var(--ink)}
 .need .nd{display:flex;align-items:center;min-height:var(--touch);color:var(--ink);font:600 15px/1.4 var(--font)}
 .need .nl{margin:0 0 6px;font:400 12px/1.4 var(--font);color:var(--mute)}
@@ -88,34 +88,6 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .crow.ovf{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)} /* 放不下才出現右緣漸層 */
 .vmk{width:9px!important;height:9px!important;background:#1f8fa3;transform:rotate(45deg);border:1.5px solid #fff}.vmk.hit{background:none;border:0;width:44px!important;height:44px!important;display:flex;align-items:center;justify-content:center}.vmk.hit i{display:block;width:9px;height:9px;background:#1f8fa3;border:1.5px solid #fff;box-shadow:0 0 0 1px #1f8fa355}
 .crow .lhint{flex:none;height:var(--touch);box-sizing:border-box;padding:0 9px;gap:4px}
-/* ===== Bottom sheet（手機）：收合 peek ≈144px／展開 open／需求回報 need ===== */
-#list{left:0;right:0;bottom:0;max-width:none;margin:0;border-radius:16px 16px 0 0;padding:0 16px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -4px 20px #0000001a,0 -1px 3px #00000014}
-#list.scroll{padding-bottom:calc(22px + env(safe-area-inset-bottom))}
-.grab{display:block;position:relative;width:100%;height:20px;margin:0;padding:0;border:0;background:none;cursor:grab;touch-action:none}
-.grab::before{content:'';position:absolute;left:50%;top:0;width:132px;height:44px;margin-left:-66px} /* 點擊範圍 44px */
-.grab i{position:absolute;left:50%;top:8px;width:36px;height:5px;margin-left:-18px;border-radius:3px;background:#d5d8d9}
-.dragz{touch-action:none}
-.r1{display:flex;align-items:center;gap:8px;min-height:24px}.r1 .addr{flex:1;min-width:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:17px;line-height:24px}
-.r1 .stchip{flex:none}
-#list .dist{display:block;margin:2px 0 0;font:400 14px/20px var(--font);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#list .dist b{font-size:14px;letter-spacing:0;color:var(--ink);font-weight:700}
-#list .acts{margin-top:10px}#list .acts .b{min-height:44px;height:44px;box-sizing:border-box}#list .acts .pri{flex:2}
-#list .acts .neu{flex:1;background:var(--surface);border:1.5px solid var(--ink-strong);color:var(--ink-strong)}
-#list .acts .neu{flex:0 0 26%;min-width:0;padding:0 6px}#list .acts .done{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;height:44px;color:var(--ink);font:600 15px/1.2 var(--font);white-space:nowrap}
-#list.peek .more,#list.needm .main{display:none}
-.r2{display:flex;align-items:baseline;gap:8px}.r2 .dist{flex:1;min-width:0}.r2{align-items:center;height:20px;margin-top:2px}.r2 .dist{margin:0!important}.r2 .qt{flex:none;padding-right:2px;text-align:right;font:500 13px/20px var(--font);color:var(--ink-2)} /* 問句靠右、在兩顆回報按鈕上方 */
-#list .acts .undo{flex:none;height:44px;min-width:44px;padding:0 10px;border:0;background:none;color:var(--ink-2);font:500 15px/1 var(--font);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.locsrc{display:flex;align-items:center;gap:2px;min-height:44px;margin-top:4px;font:400 13px/1.4 var(--font);color:var(--mute)}
-.locsrc .ib{width:44px;height:44px;margin:0 -10px;border:0;background:none;color:var(--mute);font:500 16px/1 var(--font);cursor:pointer}
-.locsrc.full{display:block;min-height:0;margin:0 0 4px;font-size:12px}
-.nhd{display:flex;align-items:center;justify-content:space-between;min-height:44px}.nhd b{font:700 16px/1.3 var(--font);color:var(--ink)}
-.nhd .x{width:44px;height:44px;margin-right:-10px;border:0;background:none;font:500 20px/1 var(--font);color:var(--ink);cursor:pointer}
-#list.needm .need{margin-top:4px;padding-top:0;border-top:0}
-#locate{position:fixed;right:12px;bottom:calc(var(--sheetH,144px) + 12px);z-index:999;width:44px;height:44px;border:0;border-radius:50%;background:var(--surface);box-shadow:var(--shadow-1),0 2px 8px #0000001f;display:flex;align-items:center;justify-content:center;cursor:pointer}
-@media (min-width:761px){#list{left:auto;right:16px;bottom:16px;width:380px;border-radius:var(--r);padding:16px}#list .grab{display:none}#list.peek .more{display:block}#locate{right:412px;bottom:16px}}
-/* 圖層 chip：外觀 32px、點擊範圍 44px；色點兼圖例 */
-.crow .lchip{height:var(--touch);padding:0;background:none;box-shadow:none}
-.lchip .face{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1)}
-.crow .lhint{display:inline-flex;align-items:center;height:32px;padding:0 11px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);margin:0}
 </style></head>
 <body>
 <div id="map"></div>
@@ -127,9 +99,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   </div>
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
-<div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><span class="face"><i style="--c:#a07d3e"></i>YouBike</span></button><button class="lchip" data-ly="lyBus" aria-pressed="false"><span class="face"><i style="--c:#5b6f9c"></i>公車站</span></button><button class="lchip" data-ly="lyVen" aria-pressed="false"><span class="face"><i class="dia" style="--c:var(--venue)"></i>備用垃圾桶</span></button><span class="lgd lhint" id="rhint"></span></div>
-<section id="list" class="peek" aria-live="polite"><button class="grab" id="grab" aria-label="展開或收合"><i></i></button><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div><span id="where" hidden>定位中…</span></section>
-<button id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+<div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip" data-ly="lyBus" aria-pressed="false"><i style="--c:#5b6f9c"></i>公車站</button><button class="lchip" data-ly="lyVen" aria-pressed="false"><i class="dia" style="--c:#1f8fa3"></i>備用垃圾桶</button><span class="lgd lhint" id="rhint"></span></div>
+<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021a" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <input type="checkbox" id="lyYb" hidden><input type="checkbox" id="lyBus" hidden><input type="checkbox" id="lyVen" hidden><!-- 圖層狀態（由上方 chip 切換） -->
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
@@ -142,13 +113,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <h3>這裡需要垃圾桶</h3>
   <ul><li>按一下記錄目前位置與時間，可再選原因（一般垃圾／其他；選「其他」可再輸入 40 字內說明）；50 m 內已有回報只算一次。最近的桶步行超過 200 m 時按鈕會變醒目。設點規劃頁的「民眾回報需求」圖層看得到，只當佐證，不計入查核優先序。</li><li>需求回報只存在這台裝置，demo 用。「重設成原始狀態」與 ?reset=1 會清除。</li></ul>
   <h3>備用垃圾桶</h3>
-  <ul><li>「備用垃圾桶」圖層（預設關閉）：景點商圈場域線索 120 點（原始 130 列、120 個不同座標，2026-08-18），青色菱形（暫定色）。場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證；不列入「最近的桶」與步行路線。</li></ul>
+  <ul><li>「備用垃圾桶」圖層（預設關閉）：景點商圈場域線索 120 點（原始 130 列、120 個不同座標，2026-08-18），青色菱形。場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證；不列入「最近的桶」與步行路線。</li></ul>
   <h3>回報</h3>
-  <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。卡片問「這桶滿了嗎？」：「滿了」回報給清潔隊頁（列為「行人回報」、必清），地圖上該桶變紅、狀態改「已回報滿」；「還空著」也會寫入，以最新一筆為準，會蓋掉先前的「滿了」（不再紅、清潔隊頁不再強制必清）。「還空著」目前不影響滿度預測，只用來撤銷「已回報滿」。回報後可按「取消」移除自己剛送出的那一筆（換到別的桶前都可取消）；同一桶可以重複回報。示範區外也可回報。</li></ul>
+  <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。卡片直接問「這桶滿了嗎？」：「滿了」會回報給清潔隊頁（地圖上該桶變紅），「還能丟」不記錄；每個桶只問一次（「重設成原始狀態」會清除）。</li></ul>
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020z"></script><script src="common.js?v=20261020z"></script><script src="scenario.js?v=20261020z"></script><script src="routing.js?v=20261020z"></script><script src="bin-category.js?v=20261020z"></script><script src="ui.js?v=20261020z"></script><script src="bin-icons.js?v=20261020z"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021a"></script><script src="common.js?v=20261021a"></script><script src="scenario.js?v=20261021a"></script><script src="routing.js?v=20261021a"></script><script src="bin-category.js?v=20261021a"></script><script src="ui.js?v=20261021a"></script><script src="bin-icons.js?v=20261021a"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
@@ -160,11 +131,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,att
 document.getElementById('map').classList.add('desat');
 const ren=L.canvas({padding:.3});
 
-// 「回報滿了」狀態直接由事件推得（binState＝reported → 顯示「✓ 已通知清潔隊」，清運後恢復按鈕）；舊的「每桶只問一次」紀錄不再使用
-try{localStorage.removeItem('有桶_asked_v1')}catch(e){}
-let mode='peek',myRep=(()=>{try{return JSON.parse(sessionStorage.getItem('有桶_myrep')||'null')}catch(e){return null}})();const saveRep=()=>{try{myRep?sessionStorage.setItem('有桶_myrep',JSON.stringify(myRep)):sessionStorage.removeItem('有桶_myrep')}catch(e){}}; // 跨頁（去清潔隊頁看再回來）仍可取消 // myRep：自己剛送出的那一筆（{id,bin,kind}），換到別的桶就清掉
- // 面板：peek 收合／open 展開／need 需求回報
-let locFull=false;
+// 一步回報：每個桶只問一次（localStorage，有桶_ 前綴，重設會清除）
+const ASK_KEY='有桶_asked_v1';let asked={};try{const v=JSON.parse(localStorage.getItem(ASK_KEY)||'{}');if(v&&typeof v==='object'&&!Array.isArray(v))asked=v}catch(e){}
+const setAsked=(id,v)=>{asked[id]=v;try{localStorage.setItem(ASK_KEY,JSON.stringify(asked))}catch(e){}};
 const NEED_REASONS=NEED_REASON_KEYS; // general／other（顯示文字見 common.js NEED_REASON）
 let needId=null,needNoteSent=false; // 這個位置剛回報的需求（換位置就重來）
 let D,binsBefore=[],me=null,pos=null,sel=null,filter='all',dumped=false,demoLoc=null;
@@ -201,7 +170,7 @@ function placeLabel(){const lb=document.getElementById('tlab');if(!lb)return;lb.
   const hit=others.some(o=>o.right>zone.l&&o.left<zone.r&&o.bottom>zone.t&&o.top<zone.b);if(hit||r.right>innerWidth-12)lb.classList.add('left')}
 function drawPts(layer,data,color,on,pop){layer.clearLayers();if(!on||map.getZoom()<14)return;const b=map.getBounds().pad(.2);for(const f of data)if(b.contains([f.la,f.lo]))L.marker([f.la,f.lo],{icon:stationIcon(color),keyboard:false,zIndexOffset:-500}).bindPopup(pop(f)).addTo(layer)}
 const VEN_MSG='場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證';
-function drawVen(){venL.clearLayers();if(!lyVen.checked||!D)return;for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk hit',iconSize:[44,44],html:'<i></i>'}),keyboard:false,zIndexOffset:-300,title:'備用垃圾桶'}).bindPopup(`◆ <b>${v.addr}</b><br>${VEN_MSG}`).addTo(venL)} // 樣式同規劃頁紫色菱形，點擊範圍 44px
+function drawVen(){venL.clearLayers();if(!lyVen.checked||!D)return;for(const v of D.venue)L.marker([v.la,v.lo],{icon:L.divIcon({className:'vmk hit',iconSize:[44,44],html:'<i></i>'}),keyboard:false,zIndexOffset:-300,title:'備用垃圾桶'}).bindPopup(`◆ <b>${v.addr}</b><br>${VEN_MSG}`).addTo(venL)} // 青色菱形（--venue，同規劃頁），點擊範圍 44px
 function redraw(){if(!D)return;drawBins();drawPts(ybL,D.yb,'yb',lyYb.checked,f=>`🚲 <b>${f.name}</b>`);drawPts(busL,D.bus,'bus',lyBus.checked,f=>`🚌 <b>${f.name}</b><br>${f.routes} 條路線`)}
 map.on('moveend',redraw);
 
@@ -219,51 +188,31 @@ function freshness(b,ev){const last=ev.filter(e=>e.bin===b.id).slice(-1)[0];if(!
   return last.kind==='full'?`<span class="rep">有人回報滿了・${ago(last.ts)}</span>`:last.kind==='clear'?`<span>已清運・${ago(last.ts)}${last.by}回報</span>`:''}
 // render 包一層：資料未就緒先不畫；任何例外都顯示真正的錯誤（不再卡在「定位中」）
 function render(fit){if(!D)return;try{renderInner(fit)}catch(e){console.error('[有桶] render 失敗',e);list.innerHTML=`<div class="addr">畫面載入失敗</div><p class="sub">${e.message}（可試「資料說明 → 重設成原始狀態」）</p>`}}
-const mfmt=d=>d<1000?Math.round(d)+' m':(d/1000).toFixed(1)+' km';
-const grabHTML=()=>`<button class="grab" id="grab" aria-label="展開或收合" aria-expanded="${mode!=='peek'}"><i></i></button>`;
-const locHTML=()=>{const demo=/示範位置/.test(where);return `<div class="locsrc"><span>${demo?'示範位置':where}</span>${demo?`<button class="ib" id="locInfo" aria-label="定位來源說明" aria-expanded="${locFull}">ⓘ</button>`:''}</div>${demo&&locFull?`<span class="locsrc full">${where}</span>`:''}<span id="where" hidden>${where}</span>`};
 function renderInner(fit){
   const ev=getEvents();if(!pos)return;
-  const P=primary(),N=nextOf(P),g=grabHTML();
-  list.className=mode==='need'?'needm':mode;
-  if(mode==='need'){list.innerHTML=g+`<div class="nhd"><b>這裡需要垃圾桶</b><button class="x" id="needClose" aria-label="關閉">✕</button></div>`+needHTML();kbFit();return}
-  if(!P){list.innerHTML=g+`<div class="main"><div class="r1 dragz"><div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div></div><div class="acts"><button class="b" data-f="all">看全部</button></div></div><div class="more">${needHTML()}${locHTML()}</div>`;redraw();kbFit();return}
-  const p=P.f,rep=binState(p.id,ev)==='reported',mine=myRep&&myRep.bin===p.id&&ev.some(e=>e.id===myRep.id)?myRep:null,cat=binCategory(p).cat,catT={both:'一般＋回收',general:'一般垃圾',recycle:'資源回收'}[cat]||BIN_CAT[cat].label;
-  const extra=/家用垃圾/.test(p.note||'')?'・禁丟家用垃圾':'';
-  list.innerHTML=g+`<div class="main"><div class="card item" data-id="${p.id}" style="border:0;padding:0;margin:0;cursor:default">
-    <div class="dragz"><div class="r1"><div class="addr">${p.addr}</div>${stateChip(fillOf(p.id,ev),rep,!rep)}</div>
-    <div class="r2"><div class="dist"><b>${mfmt(P.d)}</b>・${P.w?`步行 ${mins(P)} 分`:`直線・約 ${mins(P)} 分`}・${catT}${extra}</div>${mine?'':'<span class="qt" id="qt">這桶滿了嗎？</span>'}</div></div>
-    <div class="acts"><a class="b pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">步行導航</a>${mine?`<div class="done" id="repDone" role="status">${mine.kind==='full'?(SC.inArea(p.la,p.lo)?'✓ 已通知清潔隊':'✓ 已回報'):'✓ 謝謝，已更新'}</div><button class="undo" id="repUndo">取消</button>`:`<button class="b neu" data-ok="${p.id}" aria-describedby="qt">還空著</button><button class="b neu" data-full="${p.id}" aria-describedby="qt">滿了</button>`}</div>
-  </div></div>
-  <div class="more">${needHTML()}${locHTML()}</div>`;
+  const P=primary(),N=nextOf(P);
+  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021a" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
+  if(!P){list.innerHTML=head+`<div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div><div class="acts"><button class="b" data-f="all">看全部</button></div>`+needHTML();redraw();return}
+  const p=P.f,cs=binCategory(p).simulated;
+  const real=[];if(/家用垃圾/.test(p.note||''))real.push('禁丟家用垃圾');const fr=freshness(p,ev);
+  list.innerHTML=head+`<div class="card item" data-id="${p.id}" style="border:0;padding:0;margin:8px 0 0;cursor:default">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${catBadge(p)}</div>
+    <div class="addr">${p.addr}</div>
+    <div class="dist"><b>${fmtM(P.d).replace(' ','\u2009')}</b><span>${dlab(P)}</span></div>
+    ${fr?`<div class="meta">${fr}</div>`:''}${real.length?`<div class="meta" style="margin-top:2px">${real.join('・')}</div>`:''}
+    <div class="acts"><a class="b pri" target="_blank" rel="noopener" href="${gmapWalk(p.la,p.lo)}">步行導航</a></div>
+    <div class="q" data-q="${p.id}"><div class="qt">這桶滿了嗎？</div>${asked[p.id]?`<div class="qd">${asked[p.id]==='full'&&SC.inArea(p.la,p.lo)?'✓ 謝謝，已通知清潔隊':'✓ 謝謝回報'}</div>`:`<div class="qb"><button id="okBtn" data-ok="${p.id}">還能丟</button><button data-full="${p.id}">滿了</button></div>`}</div>
+  </div>
+  ${N?`<button class="next" data-next="${N.f.id}"><span>下一個</span><span class="t"><b>${N.f.addr}</b></span><span>${fmtM(N.d)}・${mins(N)} 分${N.w?'':'（直線）'} ›</span></button>`:''}${needHTML()}`;
   drawRoute(P);redraw();kbFit();
   if(fit)fitTarget()
 }
-// 面板狀態切換：200ms ease-out 高度動畫（prefers-reduced-motion → 無動畫）
-const RM=matchMedia('(prefers-reduced-motion: reduce)');
-function animH(h0){if(RM.matches||!isMobile()){syncSheet();return}list.style.transition='';list.style.height='';const h1=list.offsetHeight;if(Math.abs(h1-h0)<2){syncSheet();return}
-  list.style.height=h0+'px';list.offsetHeight;list.style.transition='height 200ms ease-out';list.style.height=h1+'px';
-  let done=false;const end=()=>{if(done)return;done=true;list.style.transition='';list.style.height='';syncSheet()};list.addEventListener('transitionend',end,{once:true});setTimeout(end,260)}
-function setMode(m,fit){const h0=list.offsetHeight;if(m!=='open')locFull=false;mode=m;render(!!fit);animH(h0)}
-// 定位按鈕貼在面板上緣、跟著面板移動（含拖拉與動畫中）
-function syncSheet(){const t=list.getBoundingClientRect().top;document.documentElement.style.setProperty('--sheetH',Math.max(0,Math.round(innerHeight-t))+'px')}
-new ResizeObserver(syncSheet).observe(list);addEventListener('resize',syncSheet);
-// 拖拉（觸控＋滑鼠，pointer events）：把手或前兩行；上拉 → 展開、下拉 → 收合；點把手切換
-let drag=null;
-list.addEventListener('pointerdown',e=>{if(!isMobile()||e.target.closest('a,input'))return;const z=e.target.closest('.grab,.dragz');if(!z)return;drag={y:e.clientY,h:list.offsetHeight,grab:!!e.target.closest('.grab'),moved:false};try{list.setPointerCapture(e.pointerId)}catch(_){}});
-list.addEventListener('pointermove',e=>{if(!drag)return;const dy=e.clientY-drag.y;if(Math.abs(dy)>6)drag.moved=true;if(!drag.moved)return;const mx=parseFloat(list.style.maxHeight)||innerHeight;list.style.transition='';list.style.height=Math.max(60,Math.min(mx,drag.h-dy))+'px';syncSheet()});
-const dragEnd=e=>{if(!drag)return;const d=drag;drag=null;const dy=e.clientY-d.y;if(!d.moved){if(d.grab)setMode(mode==='peek'?'open':'peek');return}
-  const h0=list.offsetHeight;mode=dy<-30?(mode==='need'?'need':'open'):dy>30?'peek':mode;if(mode!=='open')locFull=false;render(false);animH(h0)};
-// 快速甩動後 Chromium 會把下一個點擊當成「停止捲動」而不發 click：拖拉中阻止 touchmove 預設行為（非 passive）
-list.addEventListener('touchmove',e=>{if(drag&&drag.moved)e.preventDefault()},{passive:false});
-list.addEventListener('pointerup',dragEnd);list.addEventListener('pointercancel',dragEnd);
 // 「這裡需要垃圾桶」：卡片下方常駐；最近的桶（不分類別）步行 >200 m 時改醒目並加一句
 // 判斷用「步行距離」，與卡片上顯示的同一個值（nearestN＋wd，同類別篩選；無法對應路網＝直線時不判斷）
 function needHTML(){const NB=nearestN(shown(),1)[0],far=!!(NB&&NB.w&&NB.d>200),n=needId&&getNeeds().find(x=>x.id===needId);
-  return `<div class="need${far?' far':''}" id="need">${far&&mode!=='need'?`<p class="nq" id="needQ">最近的桶要走 ${mins(NB)} 分鐘，需要這裡多一個嗎？</p>`:''}${mode!=='need'?`<button class="b nbtn" id="needBtn">${n?'✓ 已回報這裡需要垃圾桶':'這裡需要垃圾桶'}</button>`:n?`<div class="nd" role="status">✓ 謝謝，已給設點規劃參考</div><div class="nl" id="nrLbl">原因（可不選）</div><div class="nr" role="group" aria-labelledby="nrLbl">${NEED_REASONS.map(r=>`<button data-reason="${r}" aria-pressed="${n.reason===r}">${NEED_REASON[r]}</button>`).join('')}</div>${n.reason==='other'&&!needNoteSent?`<div class="nother" id="nOther"><span class="nin"><input id="needNote" type="text" maxlength="40" placeholder="例：大型廢棄物、狗便" aria-label="其他原因（可留空）" enterkeyhint="send"><span class="ncnt" id="noteCnt" hidden></span></span><button id="needNoteSend">送出</button></div>`:n.reason==='other'?`<div class="nd" id="noteDone" role="status">✓ 已送出說明</div>`:''}<button class="tlink" id="needUndo">取消回報</button>`:''}</div>`}
+  return `<div class="need${far?' far':''}" id="need">${far?`<p class="nq" id="needQ">最近的桶要走 ${mins(NB)} 分鐘，需要這裡多一個嗎？</p>`:''}${n?`<div class="nd" role="status">✓ 謝謝，已給設點規劃參考</div><div class="nl" id="nrLbl">原因（可不選）</div><div class="nr" role="group" aria-labelledby="nrLbl">${NEED_REASONS.map(r=>`<button data-reason="${r}" aria-pressed="${n.reason===r}">${NEED_REASON[r]}</button>`).join('')}</div>${n.reason==='other'&&!needNoteSent?`<div class="nother" id="nOther"><span class="nin"><input id="needNote" type="text" maxlength="40" placeholder="例：大型廢棄物、狗便" aria-label="其他原因（可留空）" enterkeyhint="send"><span class="ncnt" id="noteCnt" hidden></span></span><button id="needNoteSend">送出</button></div>`:n.reason==='other'?`<div class="nd" id="noteDone" role="status">✓ 已送出說明</div>`:''}<button class="tlink" id="needUndo">取消回報</button>`:`<button class="b nbtn" id="needBtn">這裡需要垃圾桶</button>`}</div>`}
 // 地圖框住：你的位置＋目標桶＋路線；底部卡片高度實測後留白，不被蓋住
-let peekH=144;
-function fitTarget(){if(!routeInfo)return;if(mode==='peek'&&!list.style.height)peekH=list.getBoundingClientRect().height;const ch=peekH,mob=isMobile(); // 一律用收合高度避開面板
+function fitTarget(){if(!routeInfo)return;const ch=list.getBoundingClientRect().height,mob=isMobile();
   const tl=[mob?40:48,Math.max(topUIBottom(),crow.getBoundingClientRect().bottom)+24],br=[mob?72:list.getBoundingClientRect().width+64,mob?ch+28:44];
   map.fitBounds(L.latLngBounds(routeInfo.pts),{paddingTopLeft:tl,paddingBottomRight:br,maxZoom:18,animate:false});
   // 你的位置與目標在畫面上至少相距 48px：太近就放大（最多 19），以兩者中點為中心放在可視區中央
@@ -273,19 +222,18 @@ function fitTarget(){if(!routeInfo)return;if(mode==='peek'&&!list.style.height)p
 let where='定位中…';
 // 你的位置：品牌綠點（白邊）在路線之上＋定位精度圈；沒有精度值（示範位置、手動設定）時用 ACC_DEFAULT_M
 const ACC_DEFAULT_M=30;let accC=null,acc=ACC_DEFAULT_M;
-function setPos(p,label,accM){pos=p;needNoteSent=false;acc=accM>0?accM:ACC_DEFAULT_M;needId=null;where=label;dumped=false;mode='peek';locFull=false;if(me)me.remove();if(accC)accC.remove();
+function setPos(p,label,accM){pos=p;needNoteSent=false;acc=accM>0?accM:ACC_DEFAULT_M;needId=null;where=label;dumped=false;if(me)me.remove();if(accC)accC.remove();
   accC=L.circle(p,{radius:acc,color:getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()||'#0f9d76',weight:1,opacity:.5,fillOpacity:.1,interactive:false,className:'acc'}).addTo(map);
   me=L.marker(p,{icon:L.divIcon({className:'me',iconSize:[18,18]}),zIndexOffset:2000,interactive:false}).addTo(map);render(true)}
-function focusBin(f){if(myRep&&myRep.bin!==f.id){myRep=null;saveRep()}sel=f.id;dumped=false;if(mode!=='peek')setMode('peek',true);else render(true)} // 選了別的桶 → 面板回到收合 // 點地圖上的桶或「下一個」→ 成為目標：標籤、路線、卡片一起更新並重新框住
+function focusBin(f){sel=f.id;dumped=false;render(true)} // 點地圖上的桶或「下一個」→ 成為目標：標籤、路線、卡片一起更新並重新框住
 list.onclick=e=>{
-  const fb=e.target.closest('[data-full],[data-ok]');if(fb){const full=!!fb.dataset.full,id=fb.dataset.full||fb.dataset.ok,r=addEvent({bin:id,kind:full?'full':'ok',...(full?{level:100}:{}),by:'行人'});myRep={id:r.id,bin:id,kind:r.kind};saveRep();sel=id;render(false);return} // 滿了 → 清潔隊頁「行人回報」；還空著 → 蓋掉已回報滿
-  if(e.target.closest('#repUndo')&&myRep){removeEvent(myRep.id);myRep=null;saveRep();render(false);return} // 取消：用 id 移除自己剛送出的那一筆
-  if(e.target.closest('#needBtn')&&pos){if(!needId||!getNeeds().find(x=>x.id===needId))needId=addNeed(pos[0],pos[1]).rec.id;setMode('need');return}
-  if(e.target.closest('#needClose')){if(document.activeElement)document.activeElement.blur();setMode('peek');return}
-  if(e.target.closest('#locInfo')){locFull=!locFull;render(false);return}
+  const fb=e.target.closest('[data-full]');if(fb){addEvent({bin:fb.dataset.full,kind:'full',level:100,by:'行人'});setAsked(fb.dataset.full,'full');sel=fb.dataset.full;render(false);return}
+  const ob=e.target.closest('[data-ok]');if(ob){setAsked(ob.dataset.ok,'ok');sel=ob.dataset.ok;render(false);return}
+  if(e.target.closest('#needBtn')&&pos){needId=addNeed(pos[0],pos[1]).rec.id;render(false);return}
   if(e.target.closest('#needNoteSend')&&needId){setNeedNote(needId,needNote.value.slice(0,NEED_NOTE_MAX));needNoteSent=true;render(false);return}
-  if(e.target.closest('#needUndo')&&needId){needNoteSent=false;removeNeed(needId);needId=null;setMode('open');return}
+  if(e.target.closest('#needUndo')&&needId){needNoteSent=false;removeNeed(needId);needId=null;render(false);return}
   const rb=e.target.closest('[data-reason]');if(rb&&needId){setNeedReason(needId,rb.dataset.reason);needNoteSent=false;render(false);if(rb.dataset.reason==='other'){const i=document.getElementById('needNote');i&&i.focus({preventScroll:true})}return}
+  if(e.target.closest('#locate')){locate();return}
   const nx=e.target.closest('[data-next]');if(nx){const f=bins().find(b=>b.id===nx.dataset.next);if(f)focusBin(f);return}
   const fa=e.target.closest('[data-f]');if(fa)setFilter(fa.dataset.f)};
 // 手機鍵盤：用 visualViewport 把卡片抬到鍵盤上方、限制高度可捲動，並把輸入框捲進可視範圍
@@ -297,19 +245,15 @@ function kbFit(){const vv=window.visualViewport,r=document.querySelector('.roles
   document.documentElement.style.setProperty('--bar',bar+'px');
   const vb=vv?Math.min(innerHeight,vv.offsetTop+vv.height):innerHeight,kb=innerHeight-vb>40,bot=kb?vb-8:null;
   list.style.bottom=kb?(innerHeight-bot)+'px':'';
-  const bottomEdge=kb?bot:list.getBoundingClientRect().bottom,mh=Math.max(44,Math.floor(bottomEdge-bar-8));list.style.maxHeight=mh+'px';
-  list.style.minHeight=mode==='need'&&isMobile()?Math.min(mh,Math.round(innerHeight*.6))+'px':''; // 需求回報 ≈60% 高；不超過頂列，鍵盤時跟著縮
+  const bottomEdge=kb?bot:list.getBoundingClientRect().bottom;list.style.maxHeight=Math.max(44,Math.floor(bottomEdge-bar-8))+'px';
   list.classList.toggle('scroll',list.scrollHeight>list.clientHeight+1);
   const i=document.activeElement;if(i&&i.id==='needNote')i.scrollIntoView({block:'nearest'})}
 addEventListener('resize',kbFit);
 if(window.visualViewport){visualViewport.addEventListener('resize',kbFit);visualViewport.addEventListener('scroll',kbFit)}
 list.addEventListener('focusin',e=>{if(e.target.id==='needNote')setTimeout(()=>{kbFit();e.target.scrollIntoView({block:'nearest'})},300)});
 function setFilter(f){filter=f;sel=null;chips.querySelectorAll('.chip').forEach(c=>{const on=c.dataset.f===f;c.classList.toggle('on',on);c.setAttribute('aria-checked',on)});render(!!pos)}
-document.getElementById('locate').onclick=()=>locate();
-function crowOvf(){crow.classList.toggle('ovf',crow.scrollWidth>crow.clientWidth+1&&crow.scrollLeft+crow.clientWidth<crow.scrollWidth-2)}
-crow.addEventListener('scroll',crowOvf,{passive:true});addEventListener('resize',crowOvf);setTimeout(crowOvf,0);
 chips.onclick=e=>{const c=e.target.closest('[data-f]');if(c)setFilter(c.dataset.f)};
-let binTapAt=0;map.on('click',e=>{if(Date.now()-binTapAt<400)return;if(mode!=='peek'){setMode('peek');return} /* 展開／需求時點地圖只收合，不動位置與目標 */ /* 點桶不移動你的位置 */sel=null;setPos([e.latlng.lat,e.latlng.lng],'手動設定的位置')});
+let binTapAt=0;map.on('click',e=>{if(Date.now()-binTapAt<400)return; /* 點桶不移動你的位置 */sel=null;setPos([e.latlng.lat,e.latlng.lng],'手動設定的位置')});
 
 // ---- 定位：拒絕／不支援／逾時／不在台北 → 立即改用示範位置（公車站），不卡住 ----
 function fallback(why){const d=demoLoc||{la:TPE_MAIN[0],lo:TPE_MAIN[1],name:TPE_NAME};setPos([d.la,d.lo],`${why}，改用示範位置：${d.name}`)}
@@ -320,6 +264,8 @@ function locate(){where='定位中…';const w=document.getElementById('where');
     ()=>once(()=>fallback('未允許定位')),{timeout:5000,enableHighAccuracy:false,maximumAge:60000})}catch(e){once(()=>fallback('不支援定位'))}}
 
 // ---- 資料說明、圖層 chip ----
+function crowOvf(){crow.classList.toggle('ovf',crow.scrollWidth>crow.clientWidth+1&&crow.scrollLeft+crow.clientWidth<crow.scrollWidth-2)}
+crow.addEventListener('scroll',crowOvf,{passive:true});addEventListener('resize',crowOvf);setTimeout(crowOvf,0);
 infoBtn.onclick=()=>sheetOpen('infoSheet');crow.querySelectorAll('[data-ly]').forEach(c=>c.onclick=()=>{const i=document.getElementById(c.dataset.ly);i.checked=!i.checked;c.classList.toggle('on',i.checked);c.setAttribute('aria-pressed',i.checked);i.onchange()});
 lyYb.onchange=()=>{lyYb.checked?ybL.addTo(map):ybL.remove();redraw()};lyBus.onchange=()=>{lyBus.checked?busL.addTo(map):busL.remove();redraw()};lyVen.onchange=()=>{if(lyVen.checked){drawVen();venL.addTo(map)}else{venL.remove();venL.clearLayers()}}; // 只在切換時建立（地圖移動不重建，否則彈窗會被關掉）// 預設關閉（點 chip 開啟）
 // 行人頁只顯示現況（沒有「改善後」；?mode=after 會被忽略）
