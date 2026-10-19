@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020x"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020x"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020x"><link rel="stylesheet" href="tokens.css?v=20261020x"><link rel="stylesheet" href="ui.css?v=20261020x">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261020y"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261020y"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261020y"><link rel="stylesheet" href="tokens.css?v=20261020y"><link rel="stylesheet" href="ui.css?v=20261020y">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -84,7 +84,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .need .nother{display:flex;gap:8px;margin-top:8px}.need .nother .nin{flex:1;min-width:0;position:relative;display:flex}.need .nother .ncnt{position:absolute;right:12px;top:50%;transform:translateY(-50%);font:400 12px/1 var(--font);color:var(--mute);pointer-events:none}.need .nother .nin.cnt input{padding-right:52px}
 .need .nother input{flex:1;width:100%;min-width:0;height:var(--touch);box-sizing:border-box;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);color:var(--ink);font:400 16px/1.2 var(--font)}
 .need .nother button{flex:none;height:var(--touch);padding:0 16px;border:0;border-radius:var(--r-sm);background:var(--ink-strong);color:var(--surface);font:600 15px/1 var(--font);cursor:pointer}
-.lchip i.dia{border-radius:1px;transform:rotate(45deg)}
+.lchip i.dia{border-radius:1px;transform:rotate(45deg);background:#1f8fa3;opacity:1!important} /* 實心菱形，同地圖標記 */
+.crow.ovf{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)} /* 放不下才出現右緣漸層 */
 .vmk{width:9px!important;height:9px!important;background:#1f8fa3;transform:rotate(45deg);border:1.5px solid #fff}.vmk.hit{background:none;border:0;width:44px!important;height:44px!important;display:flex;align-items:center;justify-content:center}.vmk.hit i{display:block;width:9px;height:9px;background:#1f8fa3;border:1.5px solid #fff;box-shadow:0 0 0 1px #1f8fa355}
 .crow .lhint{flex:none;height:var(--touch);box-sizing:border-box;padding:0 9px;gap:4px}
 /* ===== Bottom sheet（手機）：收合 peek ≈144px／展開 open／需求回報 need ===== */
@@ -146,7 +147,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020x"></script><script src="common.js?v=20261020x"></script><script src="scenario.js?v=20261020x"></script><script src="routing.js?v=20261020x"></script><script src="bin-category.js?v=20261020x"></script><script src="ui.js?v=20261020x"></script><script src="bin-icons.js?v=20261020x"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261020y"></script><script src="common.js?v=20261020y"></script><script src="scenario.js?v=20261020y"></script><script src="routing.js?v=20261020y"></script><script src="bin-category.js?v=20261020y"></script><script src="ui.js?v=20261020y"></script><script src="bin-icons.js?v=20261020y"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
@@ -251,6 +252,8 @@ list.addEventListener('pointerdown',e=>{if(!isMobile()||e.target.closest('a,inpu
 list.addEventListener('pointermove',e=>{if(!drag)return;const dy=e.clientY-drag.y;if(Math.abs(dy)>6)drag.moved=true;if(!drag.moved)return;const mx=parseFloat(list.style.maxHeight)||innerHeight;list.style.transition='';list.style.height=Math.max(60,Math.min(mx,drag.h-dy))+'px';syncSheet()});
 const dragEnd=e=>{if(!drag)return;const d=drag;drag=null;const dy=e.clientY-d.y;if(!d.moved){if(d.grab)setMode(mode==='peek'?'open':'peek');return}
   const h0=list.offsetHeight;mode=dy<-30?(mode==='need'?'need':'open'):dy>30?'peek':mode;if(mode!=='open')locFull=false;render(false);animH(h0)};
+// 快速甩動後 Chromium 會把下一個點擊當成「停止捲動」而不發 click：拖拉中阻止 touchmove 預設行為（非 passive）
+list.addEventListener('touchmove',e=>{if(drag&&drag.moved)e.preventDefault()},{passive:false});
 list.addEventListener('pointerup',dragEnd);list.addEventListener('pointercancel',dragEnd);
 // 「這裡需要垃圾桶」：卡片下方常駐；最近的桶（不分類別）步行 >200 m 時改醒目並加一句
 // 判斷用「步行距離」，與卡片上顯示的同一個值（nearestN＋wd，同類別篩選；無法對應路網＝直線時不判斷）
@@ -300,8 +303,10 @@ if(window.visualViewport){visualViewport.addEventListener('resize',kbFit);visual
 list.addEventListener('focusin',e=>{if(e.target.id==='needNote')setTimeout(()=>{kbFit();e.target.scrollIntoView({block:'nearest'})},300)});
 function setFilter(f){filter=f;sel=null;chips.querySelectorAll('.chip').forEach(c=>{const on=c.dataset.f===f;c.classList.toggle('on',on);c.setAttribute('aria-checked',on)});render(!!pos)}
 document.getElementById('locate').onclick=()=>locate();
+function crowOvf(){crow.classList.toggle('ovf',crow.scrollWidth>crow.clientWidth+1&&crow.scrollLeft+crow.clientWidth<crow.scrollWidth-2)}
+crow.addEventListener('scroll',crowOvf,{passive:true});addEventListener('resize',crowOvf);setTimeout(crowOvf,0);
 chips.onclick=e=>{const c=e.target.closest('[data-f]');if(c)setFilter(c.dataset.f)};
-let binTapAt=0;map.on('click',e=>{if(Date.now()-binTapAt<400)return; /* 點桶不移動你的位置 */sel=null;setPos([e.latlng.lat,e.latlng.lng],'手動設定的位置')});
+let binTapAt=0;map.on('click',e=>{if(Date.now()-binTapAt<400)return;if(mode!=='peek'){setMode('peek');return} /* 展開／需求時點地圖只收合，不動位置與目標 */ /* 點桶不移動你的位置 */sel=null;setPos([e.latlng.lat,e.latlng.lng],'手動設定的位置')});
 
 // ---- 定位：拒絕／不支援／逾時／不在台北 → 立即改用示範位置（公車站），不卡住 ----
 function fallback(why){const d=demoLoc||{la:TPE_MAIN[0],lo:TPE_MAIN[1],name:TPE_NAME};setPos([d.la,d.lo],`${why}，改用示範位置：${d.name}`)}

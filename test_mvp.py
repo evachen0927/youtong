@@ -105,13 +105,25 @@ with sync_playwright() as p:
       pg.mouse.move(x,y);pg.mouse.down();pg.mouse.move(x,y-60,steps=6);mh=pg.evaluate("list.getBoundingClientRect().height");pg.mouse.move(x,y-120,steps=6);pg.mouse.up();pg.wait_for_timeout(350);print(name,'拖拉中高度',mh);assert mh>140 and pg.evaluate('mode')=='open'
       g=pg.locator('#grab').bounding_box();x=g['x']+g['width']/2;y=g['y']+10;pg.mouse.move(x,y);pg.mouse.down();pg.mouse.move(x,y+120,steps=8);pg.mouse.up();pg.wait_for_timeout(350);assert pg.evaluate('mode')=='peek'
       pg.click('#grab');pg.wait_for_timeout(350)
-      p1=pg.evaluate('pos.slice()');pg.touchscreen.tap(200,250);pg.wait_for_timeout(600);print(name,'點地圖',pg.evaluate('[mode,pos]'),p1,pg.evaluate("document.elementFromPoint(200,250).className"));assert pg.evaluate('mode')=='peek'
+      p1=pg.evaluate('pos.slice()');pg.touchscreen.tap(200,250);pg.wait_for_timeout(600);t1=pg.evaluate('sel');print(name,'展開時點地圖',pg.evaluate('[mode,pos]'),p1);assert pg.evaluate('mode')=='peek' and pg.evaluate('pos')==p1 and pg.evaluate('sel')==t1  # 只收合，不動位置與目標
+      pg.touchscreen.tap(200,250);pg.wait_for_timeout(600);assert pg.evaluate('pos')!=p1  # 收合時點地圖照舊設定位置
       pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(400)
       cdp=pg.context.new_cdp_session(pg);g=pg.locator('.r1').bounding_box();x=g['x']+40;y=g['y']+10
       cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]})
       for k in range(1,7):cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':y-20*k}]})
       cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});pg.wait_for_timeout(400);print(name,'觸控上拉',pg.evaluate('mode'));assert pg.evaluate('mode')=='open'
-      # 點地圖 → 收合
+      # 快速甩動（≈130ms）後第一次點地圖仍要觸發 click（v30 w.py 重現）
+      def tch(x0,y0,x1=None,y1=None,steps=6,dt=20):
+        cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x0,'y':y0}]})
+        if x1 is not None:
+          for k in range(1,steps+1):cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x0+(x1-x0)*k/steps,'y':y0+(y1-y0)*k/steps}]});pg.wait_for_timeout(dt)
+        cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});pg.wait_for_timeout(350)
+      pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(400)
+      gx=pg.evaluate("innerWidth/2");tch(gx,pg.evaluate("list.getBoundingClientRect().top")+20,gx,780);tch(gx,pg.evaluate("list.getBoundingClientRect().top")+20,gx,200);assert pg.evaluate('mode')=='open'
+      pg.evaluate("window.__lc=0;map.on('click',()=>__lc++)");tch(200,250);print(name,'甩動後第一次點',pg.evaluate('[__lc,mode]'));assert pg.evaluate('__lc')==1 and pg.evaluate('mode')=='peek'
+      cr=pg.evaluate("(()=>{const i=document.querySelector('[data-ly=lyVen] i'),c=getComputedStyle(i);return [c.backgroundColor,c.opacity,c.transform!=='none']})()");assert cr==['rgb(31, 143, 163)','1',True],cr
+      pg.set_viewport_size({'width':375,'height':667});pg.wait_for_timeout(400);ov=pg.evaluate("[crow.scrollWidth-crow.clientWidth,crow.classList.contains('ovf')]");pg.evaluate("crow.scrollLeft=999");pg.wait_for_timeout(200);ov2=pg.evaluate("crow.classList.contains('ovf')");pg.evaluate("crow.scrollLeft=0");pg.wait_for_timeout(200);print(name,'chip 列溢出',ov,ov2);assert ov[0]>0 and ov[1] and not ov2
+      pg.set_viewport_size({'width':390,'height':844});pg.wait_for_timeout(400);assert not pg.evaluate("crow.classList.contains('ovf')") or pg.evaluate("crow.scrollWidth>crow.clientWidth")
       pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(400)
       # prefers-reduced-motion → 無動畫
       pg.emulate_media(reduced_motion='reduce');pg.click('#grab');assert pg.evaluate("list.style.transition")=='' and pg.evaluate('mode')=='open';pg.click('#grab');pg.emulate_media(reduced_motion='no-preference');pg.wait_for_timeout(300)
@@ -205,8 +217,9 @@ with sync_playwright() as p:
     # 清潔隊：深連結 → A 規劃（預測），時間抽屜、門檻、開始清運 → B 執行、回報＋校正、復原、返回
     pg.goto(B+'crew.html?fc=1&day=we&t=15:30');pg.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);pg.wait_for_timeout(600)
     # 行人回報滿 → 清單該站有紅色「行人回報」且在必清；「開始清運」在標題下、清單上方，整寬、不捲動可見
-    rl=pg.locator(f'#mustList li:has(.flag.rep)');print(name,'行人回報站',rep_id,rl.count(),pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}')&&route.find(e=>e.b.id==='{rep_id}').must"))
-    assert rl.count()==1 and pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}').must") and pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}').b.addr") in rl.inner_text() and pg.evaluate("getComputedStyle(document.querySelector('.flag.rep')).backgroundColor")=='rgb(226, 87, 76)'
+    rl=pg.locator(f'#mustList li:has(.repby)');print(name,'行人回報站',rep_id,rl.count(),pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}')&&route.find(e=>e.b.id==='{rep_id}').must"))
+    assert rl.count()==1 and pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}').must") and pg.evaluate(f"route.find(e=>e.b.id==='{rep_id}').b.addr") in rl.inner_text() and pg.locator('.flag.rep').count()==0
+    rp=pg.evaluate("(()=>{const li=[...document.querySelectorAll('#mustList li')].find(l=>l.querySelector('.repby')),c=getComputedStyle(li.querySelector('.stchip')),m=getComputedStyle(document.querySelector('.flag.must'));return [li.querySelector('.stchip').textContent,c.backgroundColor,c.color,li.querySelector('.repby').textContent,m.backgroundColor,m.color]})()");print(name,'行人回報列',rp);assert rp[0]=='已回報滿' and rp[1:3]==['rgb(252, 235, 233)','rgb(180, 35, 42)'] and rp[3] in ('行人回報・剛剛','行人回報・1 分前') and rp[4:]==['rgb(43, 51, 51)','rgb(255, 255, 255)']
     sb=pg.locator('#startBtn').bounding_box();ml=pg.locator('#mustList').bounding_box();tt=pg.locator('#cardTitle').bounding_box();cw=pg.locator('#cardBody').bounding_box()
     assert tt['y']<sb['y']<ml['y'] and sb['y']+sb['height']<=pg.evaluate("innerHeight") and sb['width']>=cw['width']-2 and sb['height']>=44,(sb,ml,cw)
     if name=='mobile':pg.screenshot(path='/workspace/crew_start_390.png')
