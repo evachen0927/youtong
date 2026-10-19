@@ -1,17 +1,17 @@
 // ===== 有桶・垃圾桶標記：單一垃圾桶（無外框、平面幾何；正面桶身＋桶蓋＋地面陰影）=====
 // 依賴：rampColor（ui.js）
 // 滿度＝桶身內水位（tokens 色階），任何縮放都顯示；空的部分＝淺中性灰；桶蓋＝中性。
-// state：'reported'（行人回報滿了、尚未清運）→ 整個桶實心紅；'overflow' → 整桶深紅。
+// state：'reported'（行人回報滿了、尚未清運）→ 整個桶實心紅；'overflow' 不是地圖狀態：只用於收運量「溢出」按鈕（滿桶＋桶蓋溢出點）。
 const BIN_LID='#8d9397',BIN_EMPTY='#e3e6e7',BIN_REPORTED=REPORTED,BIN_OVER=RAMP.over;
 const BIN_BODY='M2 8.5H20L18.6 27Q18.4 29 16.4 29H5.6Q3.6 29 3.4 27Z';
 let _binUid=0;
 function binGlyph(fill,state){ // 局部座標 22×29
-  const solid=state==='reported'?BIN_REPORTED:state==='overflow'?BIN_OVER:null,lid=solid||BIN_LID;
+  const solid=state==='reported'?BIN_REPORTED:null,lid=solid||BIN_LID;if(state==='overflow')fill=100;
   let body;
   if(solid)body=`<path d="${BIN_BODY}" fill="${solid}"/><rect x="7" y="13.4" width="8" height="2.4" rx="1.2" fill="#ffffffcc"/>`;
   else{const f=Math.max(0,Math.min(100,fill)),id='bc'+(++_binUid),h=(20.5*Math.max(f?10:0,f)/100).toFixed(1);
     body=`<path d="${BIN_BODY}" fill="${BIN_EMPTY}"/>`+(f>0?`<clipPath id="${id}"><path d="${BIN_BODY}"/></clipPath><rect x="0" y="${(29-h).toFixed(1)}" width="22" height="${h}" fill="${rampColor(f)}" clip-path="url(#${id})"/>`:'')}
-  return `<rect x="8" y="0.6" width="6" height="3.6" rx="1.6" fill="${lid}"/><rect x="0" y="3" width="22" height="5.2" rx="2.4" fill="${lid}"/>${body}`;
+  return `<rect x="8" y="0.6" width="6" height="3.6" rx="1.6" fill="${lid}"/><rect x="0" y="3" width="22" height="5.2" rx="2.4" fill="${lid}"/>${body}`+(state==='overflow'?`<circle cx="4.5" cy="2" r="2.4" fill="${RAMP.high}"/><circle cx="17.6" cy="1.5" r="1.8" fill="${RAMP.high}"/>`:'');
 }
 // 回傳 {html,w,h}；28×34，錨點＝陰影中心 (14,31.4)
 function binIconSVG(fill=0,state){const w=28;

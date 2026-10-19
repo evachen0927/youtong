@@ -108,7 +108,7 @@ function fitTop(n=3){const pts=route.slice(0,n).map(e=>[e.b.la,e.b.lo]);if(!pts.
   if(state==='B'){const ci=curIdx();if(ci>=0){const b=route[ci].b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot;pts.length=0;pts.push(prev,[b.la,b.lo])}}
   map.fitBounds(pts,{paddingTopLeft:[50,110],paddingBottomRight:[50,cardH()+30],maxZoom:17})}
 function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=doneSet(),ci=curIdx(),ids=new Set(route.map(e=>e.b.id)),small=map.getZoom()<15;
-  for(const e of E)if(!ids.has(e.b.id)){const f=Math.round(e.fill);L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev)||(f>100?'overflow':null),small),title:`${e.b.addr}・預測 ${f}%`}).addTo(binL)}
+  for(const e of E)if(!ids.has(e.b.id)){const f=Math.round(e.fill);L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev),small),title:`${e.b.addr}・預測 ${f}%`}).addTo(binL)}
   if(route.length){L.polyline([depot,...route.map(e=>[e.b.la,e.b.lo])],{color:css('--ink-2'),weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
     L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點',interactive:false}).addTo(rtL);
     route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:i<3&&state==='A'?28:24;
