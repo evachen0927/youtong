@@ -114,7 +114,7 @@ roleSwitch('pedestrian.html'); // 導覽列放在「更多」面板內
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);
-legend(map,REPORTED_HINT(),'topleft')._container.classList.add('hint');
+legend(map,REPORTED_HINT(),'topleft')._container.classList.add('lhint');
 legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:'var(--brand)',t:'你的位置'}]);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 document.getElementById('map').classList.add('desat');

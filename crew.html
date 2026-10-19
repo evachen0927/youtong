@@ -93,7 +93,7 @@ roleSwitch('crew.html');
 const C=CONFIG.forecast,LSU='有桶_crew_ui_v2',AMT=[['empty','空',0],['half','半',50],['full','滿',100],['overflow','溢出',120]];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const map=quietMap(CONFIG.demoArea.center,15),binL=L.layerGroup().addTo(map),rtL=L.layerGroup().addTo(map);
-legend(map,[{html:'<b style="font-weight:600">滿度</b>',t:''},...RAMP_LEGEND],'topleft')._container.classList.add('hint');
+legend(map,[{html:'<b style="font-weight:600">滿度</b>',t:''},...RAMP_LEGEND],'topleft')._container.classList.add('lhint');
 legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:css('--ink-2'),t:'站序',shape:'line'}]);
 const q=new URLSearchParams(location.search),ui=JSON.parse(localStorage.getItem(LSU)||'{}');
 let P=[],E=[],route=[],state='A',gen=0;const depot=C.depot||CONFIG.demoArea.center;

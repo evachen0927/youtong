@@ -48,4 +48,4 @@ button,input,select,textarea,optgroup{font-family:inherit}
 .leaflet-control-zoom a,.leaflet-container a.leaflet-popup-close-button{font-family:var(--font)!important;font-weight:400}
 .num,.prog .no,.dist b,.lgd,.hs .ev b,.stat b,.sumr b,.big,.cmp td{font-variant-numeric:tabular-nums}
 .lgd.static{box-shadow:none;background:var(--surface-2);max-width:none;padding:10px 12px;gap:8px 14px;font-size:13px}
-.lgd.hint{flex-wrap:nowrap;padding:4px 10px;max-width:none}
+.lgd.lhint{flex-wrap:nowrap;padding:4px 10px;max-width:none}
