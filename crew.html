@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021i"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021i"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021i"><link rel="stylesheet" href="tokens.css?v=20261021i"><link rel="stylesheet" href="ui.css?v=20261021i">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021k"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021k"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021k"><link rel="stylesheet" href="tokens.css?v=20261021k"><link rel="stylesheet" href="ui.css?v=20261021k">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
@@ -81,19 +81,19 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <h3>已校正的桶</h3><div class="hist" id="calList">尚無</div>
   <h3>回報紀錄</h3><div class="hist" id="hist">尚無紀錄</div>
   <h3>示範工具</h3>
-  <div class="stack"><button class="b danger" id="allClear">將剩餘站點全部標示已清運…</button><button class="b" id="reset">清除示範資料</button></div>
+  <div class="stack"><button class="b danger" id="allClear">將剩餘站點全部標示已清運…</button></div>
 </div></div>
 
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
   <div class="hd"><b>資料說明</b><button class="x" data-close aria-label="關閉">✕</button></div>
-  <p class="sub">到桶的距離用步行計算；半徑內的數量用直線計算。</p>
-  <h3>真實資料</h3><ul><li><b>即時同步</b>：同一瀏覽器開的分頁（行人、清潔隊、規劃）會即時同步回報與清運。跨裝置同步（Firebase）的程式已完成、尚待雲端設定；設定上線前不同裝置之間不會同步，地圖右下角會顯示「離線・本機」。上線後「回報、清運、狀態同步」是真實資料；滿度預測、例行清運時間、出發點仍是模擬。</li><li>垃圾桶位置與地址：臺北市行人專用清潔箱街道清冊（2026-09-30）。</li><li>每小時交通活動：YouBike 2.0 租借紀錄 2026-07，200m 內站點每小時每日平均借＋還（平日 22 天、週末 7 天，排除 7/10、7/11）。</li></ul>
+  <p class="sub">到桶的距離用步行路網；半徑內的數量用直線。</p>
+  <h3>真實資料</h3><ul><li><b>即時同步</b>：回報會即時同步到所有裝置；離線時先存在本機，恢復連線後上傳。「回報、清運、需求回報」是真實資料（Firebase 同步）；滿度預測、例行清運時間、出發點仍是模擬。</li><li>垃圾桶位置與地址：臺北市行人專用清潔箱街道清冊（2026-09-30）。</li><li>每小時交通活動：YouBike 2.0 租借紀錄 2026-07，200m 內站點每小時每日平均借＋還（平日 22 天、週末 7 天，排除 7/10、7/11）。</li></ul>
   <h3>推估與假設</h3><ul><li>人流由交通活動推估，不是實測人流。</li><li>產生量每次借還 <b id="iLpr"></b> 公升（<b>假設，不是觀測到的垃圾量</b>）：<a id="iSrc" target="_blank" rel="noopener">用官方公開的每日清運頻率校準，仍是假設</a>（環保局：每箱約 120 公升、每日清運 3–6 次；假設示範區人流中位數的桶平日一天滿 3 次：3 × 120 ÷ 361.1）。</li><li>例行清運時間 05:00／08:00／12:00／16:00 為假設；官方公開資料只提到一天 3–6 次，沒有公布時間。預測從最近一次清運起累積。</li></ul>
   <h3>模擬資料（標 <span class="sim"></span>）</h3><ul><li>填充度與預計滿時間是模擬；清潔隊回報的實際滿度會校正該桶產生量（EMA）。</li></ul>
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021i"></script><script src="common.js?v=20261021i"></script><script src="cloud.js?v=20261021i"></script><script src="ui.js?v=20261021i"></script><script src="bin-icons.js?v=20261021i"></script><script src="forecast.js?v=20261021i"></script><script src="routing.js?v=20261021i"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021k"></script><script src="common.js?v=20261021k"></script><script src="cloud.js?v=20261021k"></script><script src="ui.js?v=20261021k"></script><script src="bin-icons.js?v=20261021k"></script><script src="forecast.js?v=20261021k"></script><script src="routing.js?v=20261021k"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
@@ -191,7 +191,6 @@ thSeg.onchange=()=>replan();
 cardBody.addEventListener('click',e=>{if(e.target.closest('#toNear')){th.value=70;replan()}if(e.target.closest('#toTime'))sheetOpen('timeSheet')}); // 空狀態連結：切回「快滿了以上」（切換鈕、清單、存檔一起更新）
 allClear.onclick=()=>{const d=doneSet(),left=route.filter(e=>!d.has(e.b.id));if(!left.length)return;
   if(confirm(`確定將剩餘 ${left.length} 站全部標示為「已清運」？\n（不會記錄實際滿度，也不會校正）`)){left.forEach(e=>addEvent({bin:e.b.id,kind:'clear',level:0,by:'清潔隊'}));toast(`已標示 ${left.length} 站清運完成`);draw();setSheet.hidden=true}};
-reset.onclick=()=>{if(confirm('清除所有示範回報與校正？')){localStorage.removeItem(LS_EVENTS);localStorage.removeItem(CONFIG.storageKeys.forecast);toast('已清除');replan()}};
 iLpr.textContent=C.litersPerRide;dlinks.innerHTML=C.demoLinks.map(l=>`<a href="crew.html?fc=1&day=${l.day}&t=${l.time}" data-pd="${l.day}" data-pt="${l.time}">${l.label}</a>`).join('');
 dlinks.onclick=ev=>{const a=ev.target.closest('[data-pd]');if(!a)return;ev.preventDefault();document.querySelector(`[name=fcd][value=${a.dataset.pd}]`).checked=true;fcT.value=FC.hm(a.dataset.pt);fcTV.textContent=a.dataset.pt;
   card.classList.add('fade');setTimeout(()=>{replan();card.classList.remove('fade');timeSheet.hidden=true},300)};iSrc.href=C.calibration.source;

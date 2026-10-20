@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021i"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021i"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021i"><link rel="stylesheet" href="tokens.css?v=20261021i"><link rel="stylesheet" href="ui.css?v=20261021i">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021k"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021k"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021k"><link rel="stylesheet" href="tokens.css?v=20261021k"><link rel="stylesheet" href="ui.css?v=20261021k">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -104,18 +104,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
 <div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip" data-ly="lyBus" aria-pressed="false"><i style="--c:#5b6f9c"></i>公車站</button><button class="lchip on" data-ly="lyVen" aria-pressed="true"><i class="dia" style="--c:#1f8fa3"></i>備用垃圾桶</button></div>
-<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021i" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
+<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021k" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
 <input type="checkbox" id="lyYb" hidden><input type="checkbox" id="lyBus" hidden><input type="checkbox" id="lyVen" hidden checked><!-- 圖層狀態（由上方 chip 切換） -->
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
   <div class="hd"><b>資料說明</b><button class="x" data-close aria-label="關閉">✕</button></div>
   <h3>真實資料</h3>
-  <ul><li><b>即時同步</b>：同一瀏覽器開的分頁（行人、清潔隊、規劃）會即時同步回報與清運。跨裝置同步（Firebase）的程式已完成、尚待雲端設定；設定上線前不同裝置之間不會同步，地圖右下角會顯示「離線・本機」。上線後「回報、清運、狀態同步」是真實資料；滿度預測、例行清運時間、出發點仍是模擬。</li><li><b>位置、地址、禁丟家用垃圾</b>：臺北市行人專用清潔箱（環保局，data.taipei，2026-09-30 版，欄位：行政區、地址、經度、緯度、備註）。</li>
+  <ul><li><b>即時同步</b>：回報會即時同步到所有裝置；離線時先存在本機，恢復連線後上傳。「回報、清運、需求回報」是真實資料（Firebase 同步）；滿度預測、例行清運時間、出發點仍是模擬。</li><li><b>位置、地址、禁丟家用垃圾</b>：臺北市行人專用清潔箱（環保局，data.taipei，2026-09-30 版，欄位：行政區、地址、經度、緯度、備註）。</li>
   <li><b>一般垃圾＋資源回收</b>：開放資料<b>沒有逐桶類別欄位</b>；依環保局全市說明「全市共設有1943組『行人專用清潔箱』，每組包含一般垃圾箱與資源回收箱各1個，每個容量約為120公升」（資料截至 2025 年 2 月），每個點位皆標示為一般＋回收。個別點位實況可能不同。<br>
   來源：<a href="https://www.chinatimes.com/realtimenews/20250817001619-260405" target="_blank" rel="noopener">中國時報 2025-08-17</a>・<a href="https://udn.com/news/story/7266/8945553" target="_blank" rel="noopener">聯合報 2025-08-18</a>・<a href="https://money.udn.com/money/story/7307/8944421" target="_blank" rel="noopener">經濟日報</a></li>
   <li>示範位置：捷運公館站公車站（公車站位資料，示範區內，45 條路線停靠），最近的清潔箱（羅斯福路4段106號(水源市場前)）步行約 102 公尺；在這裡按「滿了」，清潔隊頁看得到。點地圖任一處可手動設定位置。</li></ul>
   <h3>這裡需要垃圾桶</h3>
-  <ul><li>按一下記錄目前位置與時間，可再選原因（一般垃圾／其他；選「其他」可再輸入 40 字內說明）；50 m 內已有回報只算一次。最近的桶步行超過 200 m 時按鈕會變醒目。設點規劃頁的「民眾回報需求」圖層看得到，只當佐證，不計入查核優先序。</li><li>需求回報只存在這台裝置，demo 用。「重設成原始狀態」與 ?reset=1 會清除。</li></ul>
+  <ul><li>按一下記錄目前位置與時間，可再選原因（一般垃圾／其他；選「其他」可再輸入 40 字內說明）；50 m 內已有回報只算一次。最近的桶步行超過 200 m 時按鈕會變醒目。設點規劃頁的「民眾回報需求」圖層看得到，只當佐證，不計入查核優先序。</li><li>需求回報已同步到雲端。</li></ul>
   <h3>備用垃圾桶</h3>
   <ul><li>「備用垃圾桶」圖層（預設開啟）：景點商圈場域線索 120 點（原始 130 列、120 個不同座標，2026-08-18），青色菱形。場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證；不列入「最近的桶」與步行路線。</li></ul>
   <h3>回報</h3>
@@ -123,7 +123,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021i"></script><script src="common.js?v=20261021i"></script><script src="cloud.js?v=20261021i"></script><script src="scenario.js?v=20261021i"></script><script src="routing.js?v=20261021i"></script><script src="bin-category.js?v=20261021i"></script><script src="ui.js?v=20261021i"></script><script src="bin-icons.js?v=20261021i"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021k"></script><script src="common.js?v=20261021k"></script><script src="cloud.js?v=20261021k"></script><script src="scenario.js?v=20261021k"></script><script src="routing.js?v=20261021k"></script><script src="bin-category.js?v=20261021k"></script><script src="ui.js?v=20261021k"></script><script src="bin-icons.js?v=20261021k"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
@@ -194,13 +194,13 @@ function freshness(b,ev){const last=ev.filter(e=>e.bin===b.id).slice(-1)[0];if(!
   return last.kind==='full'?`<span class="rep">有人回報滿了・${ago(last.ts)}</span>`:last.kind==='clear'?`<span>已清運・${ago(last.ts)}・${last.by}回報</span>`:''}
 // render 包一層：資料未就緒先不畫；任何例外都顯示真正的錯誤（不再卡在「定位中」）
 // 跨分頁同步：只重畫資料（桶、卡片），不重新 fit 地圖；需求回報流程中（剛回報、選原因、輸入其他）卡片不重建
-onAppSync(k=>{if(!D||!pos)return;if(needId&&getNeeds().some(x=>x.id===needId)){redraw();return}render(false)});
-function render(fit){if(!D)return;try{renderInner(fit)}catch(e){console.error('[有桶] render 失敗',e);list.innerHTML=`<div class="addr">畫面載入失敗</div><p class="sub">${e.message}（可試「資料說明 → 重設成原始狀態」）</p>`}}
+onAppSync(k=>{if(k==='wipe'){asked={};myRep=null;needId=null;return}if(!D||!pos)return;if(needId&&getNeeds().some(x=>x.id===needId)){redraw();return}render(false)});
+function render(fit){if(!D)return;try{renderInner(fit)}catch(e){console.error('[有桶] render 失敗',e);list.innerHTML=`<div class="addr">畫面載入失敗</div><p class="sub">${e.message}（可試重新整理頁面）</p>`}}
 const TOG=()=>`<button class="tog" id="cardTog" aria-expanded="${!collapsed}" aria-label="${collapsed?'展開卡片':'收合卡片'}"><svg width="20" height="12" viewBox="0 0 20 12"><path d="${collapsed?'M3 9l7-6 7 6':'M3 3l7 6 7-6'}" fill="none" stroke="#9aa0a4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
 function renderInner(fit){
   const ev=getEvents();if(!pos)return;
   const P=primary();
-  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021i" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
+  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021k" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
   if(!P){list.innerHTML=head+`<div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div><div class="acts"><button class="b" data-f="all">看全部</button></div>`+needHTML();redraw();return}
   const p=P.f,cs=binCategory(p).simulated;
   list.classList.toggle('col',collapsed);

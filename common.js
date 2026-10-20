@@ -22,7 +22,7 @@ const gmapWalk=(la,lo)=>`https://www.google.com/maps/dir/?api=1&destination=${la
 function toast(t){let e=document.querySelector('.toast');if(!e){e=document.createElement('div');e.className='toast';document.body.appendChild(e)}e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2200)}
 // 事件：{bin, kind:'full'|'level'|'clear', level(0-100), by:'行人'|'清潔隊', ts}
 const getEvents=()=>{try{const v=JSON.parse(localStorage.getItem(LS_EVENTS));return Array.isArray(v)?v.filter(e=>e&&typeof e==='object'&&typeof e.bin==='string'):[]}catch(e){return[]}}; // 舊版／壞掉的存檔不會讓頁面掛掉
-// 「這裡需要垃圾桶」民眾回報：只存在這台裝置（localStorage，有桶_ 前綴 → 重設／?reset=1 會清除），沒有預設資料
+// 「這裡需要垃圾桶」民眾回報：已同步到雲端（cloud.js）；本機快取在 localStorage（有桶_ 前綴），重設／?reset=1 只清本機，沒有預設資料
 const LS_NEEDS='有桶_needs_v1',NEED_DEDUP_M=50;
 // 同一瀏覽器跨分頁即時同步（模擬）：只在回報事件或需求回報的鍵改變時呼叫 fn；跨裝置不同步。
 // 正在輸入（焦點在 input/textarea/select）時延後到離開輸入框再套用，不打斷使用者
@@ -44,7 +44,7 @@ const needBreakdown=A=>{const c={};for(const n of A){const k=n.reason||'none';c[
 function addNeed(la,lo){const a=getNeeds(),d=a.find(n=>hav(la,lo,n.la,n.lo)<=NEED_DEDUP_M);if(d)return{rec:d,dup:true};
   const rec={id:'N'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),la,lo,ts:Date.now(),reason:null};a.push(rec);localStorage.setItem(LS_NEEDS,JSON.stringify(a.slice(-500)));cloudOp('put','needs',rec);return{rec,dup:false}}
 function removeNeed(id){localStorage.setItem(LS_NEEDS,JSON.stringify(getNeeds().filter(x=>x.id!==id)));cloudOp('del','needs',{id})}
-const NEED_NOTE_MAX=40;function setNeedNote(id,t){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.note=String(t||'').trim().slice(0,NEED_NOTE_MAX)||null;localStorage.setItem(LS_NEEDS,JSON.stringify(a));cloudOp('upd','needs',{id,note:n.note})} // 「其他」的說明文字：只存 localStorage，存檔前裁到 40 字
+const NEED_NOTE_MAX=40;function setNeedNote(id,t){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.note=String(t||'').trim().slice(0,NEED_NOTE_MAX)||null;localStorage.setItem(LS_NEEDS,JSON.stringify(a));cloudOp('upd','needs',{id,note:n.note})} // 「其他」的說明文字：存檔前裁到 40 字，同步到雲端
 function setNeedReason(id,reason){if(!NEED_REASON[reason])return;const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a));cloudOp('upd','needs',{id,reason})}
 function addEvent(e){const a=getEvents(),r={...e,id:e.id||('ev'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),ts:Date.now()};a.push(r);localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)));cloudOp('put','events',r);return r}
 // 依 id 撤回一筆事件（行人「取消」自己剛送出的回報）
@@ -54,7 +54,7 @@ function removeEvent(id){localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents
 // 待上傳的動作存在 有桶_cloudq_v1，重新連線後依序送出
 const LS_CQ='有桶_cloudq_v1',LS_OWN='有桶_owners_v1';
 const cloudQ=()=>{try{const v=JSON.parse(localStorage.getItem(LS_CQ));return Array.isArray(v)?v:[]}catch(e){return[]}};
-function cloudOp(op,node,rec){if(!window.CLOUD_ON)return;const q=cloudQ();q.push({op,node,rec,t:Date.now()});try{localStorage.setItem(LS_CQ,JSON.stringify(q.slice(-300)))}catch(e){}if(window.Cloud)Cloud.flush()}
+function cloudOp(op,node,rec){if(!window.CLOUD_ON)return;const q=cloudQ();q.push({op,node,rec,t:Date.now(),ep:(v=>v==null?null:+v)(localStorage.getItem('有桶_epoch_v1'))});try{localStorage.setItem(LS_CQ,JSON.stringify(q.slice(-300)))}catch(e){}if(window.Cloud){Cloud.flush();Cloud.refresh&&Cloud.refresh()}}
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定
 function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin===id){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}
 const fillColor=f=>typeof rampColor==='function'?rampColor(f):(f>=100?'#d9731f':f>=70?'#e8b931':'#8cc9a8'); // 色階定義在 ui.js
@@ -75,7 +75,7 @@ const isMobile=()=>matchMedia('(max-width:760px)').matches;
 function sheetH(){const p=document.querySelector('.panel');return isMobile()&&p?p.getBoundingClientRect().height:0}
 function focusAt(map,latlng,zoom){map.setView(latlng,zoom,{animate:false});const h=sheetH();if(h)map.panBy([0,h/2],{animate:false})}
 function fitTo(map,pts,maxZoom){map.fitBounds(pts,{paddingTopLeft:[40,40],paddingBottomRight:[40,40+sheetH()],maxZoom})}
-// ===== 重設成原始狀態：清除本站寫入的所有 localStorage／sessionStorage =====
+// ===== 重設成原始狀態：只清這台裝置（本站寫入的 localStorage／sessionStorage），不會清雲端 =====
 // 明確列表（config.storageKeys＋清潔隊頁 UI 狀態），另外清掉所有「有桶_」「debug松_」開頭的鍵（含舊版）
 const APP_KEYS=[...Object.values((window.CONFIG&&CONFIG.storageKeys)||{}),'有桶_crew_ui_v2','有桶_fc_ui'];
 const APP_PREFIXES=['有桶_','debug松_'];
@@ -83,9 +83,4 @@ function resetAppState(){for(const S of [localStorage,sessionStorage]){const ks=
   for(const k of ks)if(APP_KEYS.includes(k)||APP_PREFIXES.some(p=>k.startsWith(p)))S.removeItem(k)}}
 const resetToDefault=()=>{resetAppState();location.replace(location.pathname)}; // 回到不帶參數的預設網址
 if(new URLSearchParams(location.search).get('reset')==='1')resetToDefault(); // ?reset=1：不跳確認，直接清除（示範前用）
-document.addEventListener('DOMContentLoaded',()=>{const sh=document.querySelector('#infoSheet .sh, #menuSheet .sh');if(!sh||sh.querySelector('#resetAll'))return;
-  const b=document.createElement('button');b.id='resetAll';b.type='button';b.textContent='重設成原始狀態';
-  b.style.cssText='display:block;width:100%;min-height:var(--touch);margin:16px 0 4px;border:0;border-radius:var(--r-sm);background:var(--gray-1);color:var(--ink);font:600 15px var(--font);cursor:pointer';
-  b.onclick=()=>{if(confirm('會清除所有回報與紀錄，確定？'))resetToDefault()};
-  const p=document.createElement('p');p.textContent='清除本機所有回報、校正與方案紀錄，回到預設畫面。';p.style.cssText='margin:0 0 8px;font:400 12px var(--font);color:var(--mute)';
-  sh.append(b,p)});
+// （資料說明裡的「重設成原始狀態」按鈕已移除；開發用隱藏網址 ?reset=1 仍可清本機）

@@ -17,7 +17,7 @@
 | 頁面 | 檔案 | 功能 |
 |---|---|---|
 | 設點規劃（主頁） | `index.html` | 開場數字（來自 `config.js`）、示範區查核優先序、點熱點看 A/B/C 指標對照與地圖變化，「採用」後存入 localStorage |
-| 行人 | `pedestrian.html` | 只顯示現況。定位（拒絕時改用示範位置「捷運公館站公車站」，`config.js > fallbackLocation`；可點地圖手動設定）、最近 1 個垃圾桶（卡片不顯示類別標籤；點地圖上其他桶可換目標）、Google Maps 步行導航、一步回報：卡片直接問「這桶滿了嗎？」——「滿了」寫入回報（地圖該桶變紅，清潔隊頁讀得到），「還能丟」不寫入；按下後原位顯示一行：示範區內的桶按「滿了」→「謝謝，已通知清潔隊」，其他情況（含示範區外的桶，清潔隊頁看不到）→「謝謝回報」，同一桶不再問（`有桶_asked_v1`，重設會清除）；回報後感謝文字旁有「取消」，用事件 id 撤回自己那一筆（撤回「滿了」時清潔隊頁的已回報滿／行人回報／必清一起解除），撤回後可再問，換到別的桶前都可取消。手機一開頁卡片收合（只顯示全寬「步行導航」＋把手），點把手展開，桌機預設展開；切換後重新 fit。「備用垃圾桶」圖層（場域線索，青色菱形，預設開啟，不參與最近桶與導航）。只顯示步行路網距離（全臺北市）；卡片不顯示行政區與桶數 |
+| 行人 | `pedestrian.html` | 只顯示現況。定位（拒絕時改用示範位置「捷運公館站公車站」，`config.js > fallbackLocation`，到最近的桶步行 102 m；可點地圖手動設定）、最近 1 個垃圾桶（卡片不顯示類別標籤；點地圖上其他桶可換目標）、Google Maps 步行導航、一步回報：卡片直接問「這桶滿了嗎？」——「滿了」寫入回報（地圖該桶變紅，清潔隊頁讀得到），「還能丟」不寫入；按下後原位顯示一行：示範區內的桶按「滿了」→「謝謝，已通知清潔隊」，其他情況（含示範區外的桶，清潔隊頁看不到）→「謝謝回報」，同一桶不再問（`有桶_asked_v1`，重設會清除）；回報後感謝文字旁有「取消」，用事件 id 撤回自己那一筆（撤回「滿了」時清潔隊頁的已回報滿／行人回報／必清一起解除），撤回後可再問，換到別的桶前都可取消。手機一開頁卡片收合（只顯示全寬「步行導航」＋把手），點把手展開，桌機預設展開；切換後重新 fit。「備用垃圾桶」圖層（場域線索，青色菱形，預設開啟，不參與最近桶與導航）。只顯示步行路網距離（全臺北市）；卡片不顯示行政區與桶數 |
 | 清潔隊 | `crew.html` | 單一頁面：依預測產生參考清運順序（給領班參考，不排班、不派工，全部為模擬）。上方時間 chip 開抽屜（平日／週末＋時間滑桿，預設「平日 10:00」「週六 15:30」），卡片分「規劃」（必清／順路）與「執行」（逐站回報收運量 空／半／滿／滿溢，可復原；回報會歸零並校正該桶產生量）。舊網址 `crew-route.html` 會自動導向 `crew.html`。 |
 
 ## 怎麼執行
@@ -25,7 +25,7 @@
 cd trash-mvp
 python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 ```
-純靜態網站（HTML/CSS/原生 JS + Leaflet），沒有後端；所有路徑都是相對路徑，可直接放到 GitHub Pages（repo 根目錄），已附 `.nojekyll`。Leaflet 已放在 `vendor/`，不依賴 CDN；**地圖底圖仍需網路**（OpenStreetMap）。離線備援：`demo-backup.mp4` 示範影片。
+靜態網站（HTML/CSS/原生 JS + Leaflet）＋ Firebase Realtime Database（即時同步；SDK 從 gstatic CDN 載入）；所有路徑都是相對路徑，可直接放到 GitHub Pages（repo 根目錄），已附 `.nojekyll`。Leaflet 已放在 `vendor/`，不依賴 CDN；**地圖底圖仍需網路**（OpenStreetMap）。
 
 開場數字、示範區範圍、行人頁示範位置與方案參數都在 **`config.js`**，改這個檔案即可。
 
@@ -34,6 +34,11 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 |---|---|
 | `config.js` | 可編輯設定（開場數字、示範區、方案參數、假設） |
 | `common.js` | 資料載入、距離、localStorage 事件、填充度（工程邏輯） |
+| `cloud.js` | Firebase 雲端同步層、連線狀態提示（已同步／離線・本機） |
+| `routing.js` | 步行／行車路網最短距離 |
+| `database.rules.json` | Firebase Realtime Database 安全規則 |
+| `firebase.json` | Firebase CLI／模擬器設定 |
+| `scripts/` | `rules-test.mjs`（規則測試，模擬器）、`wipe-cloud.mjs`（管理員清空雲端，需服務帳戶） |
 | `scenario.js` | A/B/C 方案引擎 |
 | `forecast.js` | 清潔隊預測調度（人流、累積、預計滿、最近鄰路線、校正） |
 | `footfall_hourly.json` | 示範區 YouBike 站 × 平日/週末 × 24 小時平均借＋還（`aggregate_hourly.py` 產生，約 100 KB） |
@@ -47,7 +52,7 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 - 每小時人流 `F(h)` = 桶 200m 內 YouBike 站該小時每日平均借＋還次數的**平均**（只用 YouBike）。平日 22 天、週末 7 天（2026-07，排除 7/10、7/11）。
 - 每小時產生量 = `F(h)` × 0.997 公升（**假設，不是觀測到的垃圾量**；校準：示範區人流中位數的桶平日一天裝滿 3 次＝官方每日清運下限，3 × 120 ÷ 361.1，`calibrate_rate.py`）× 該桶校正係數。
 - 填充度 = 自最近一次例行清運（假設 05:00／08:00／12:00／16:00）或手動清運起的累積量 ÷ 容量 120 公升。清運後歸零（舊版會在每次例行清運後再疊加 0–30% 模擬殘留量，已修正）。
-- 優先順序 = 預計滿時間由早到晚。「收班前最後一輪」= 預計在收班 16:30 之後、隔天 08:00 上班前滿的桶（時間設定在 `config.js`）。
+- 優先順序 = 預計滿時間由早到晚。「必清」期限 = 下一次例行清運或收班 16:30（取較早者）；已過收班則為隔天上班 08:00（時間設定在 `config.js`）。預計在期限前滿、或已被回報滿的桶列為必清。
 - 路線 = 「清運範圍」兩段切換內的桶：「快滿了以上」（預設，內部門檻 70）或「只清滿溢」（內部 100）；畫面不顯示數字，舊存檔的數字門檻會對應到最近的選項（≥85→只清滿溢），「只清滿溢」沒有站時顯示「目前沒有滿溢的桶」。分兩層（`routeOrder:'tiered'`）：第 1 層「必清」＝下一次例行清運或收班（16:30）前預計會滿，收班後則為隔天 08:00 前會滿；第 2 層「順路」＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰；站號＝實際拜訪順序。**不做最佳化**。示範時間：平日 10:00 vs 週六 15:30（對照 ≥100% 桶數）。
 - 「已清運＋回報滿度」：該桶歸零，校正係數 `k ← 0.7·k + 0.3·k·(回報% ÷ 預測%)`（限 0.2–5），標示「已校正」。
 - **限制**：
@@ -58,8 +63,10 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
   - YouBike 有通勤尖峰，平日早上的預測量可能高於週末傍晚；這是交通活動代理的特性，不代表實際垃圾量。
 - 示範對照（抽屜預設與深連結）：`crew.html?fc=1&day=wk&t=10:00`（平日 10:00，≥100% 2 桶）vs `crew.html?fc=1&day=we&t=15:30`（週六 15:30，≥100% 6 桶）。
 
-### localStorage 事件格式
-`{bin, kind:'full'|'level'|'clear', level, by:'行人'|'清潔隊', ts, amount, amountPct}`；預測調度回報另加 `predPct`（預測滿度）、`calib`（新校正係數）、`fcDay`（wk/we）、`fcMin`（滑桿時間，分鐘）。校正係數另存 `localStorage['有桶_forecast_v1']`；清潔隊回報收運量時 `amount` 為 `empty|half|full|overflow`，`amountPct` 對應 0／50／100／120。
+### 事件格式（localStorage 快取＋雲端 `events`）
+`{id, bin, kind:'full'|'level'|'clear', level, by:'行人'|'清潔隊', ts, amount, amountPct}`；預測調度回報另加 `predPct`（預測滿度）、`calib`（新校正係數）、`fcDay`（wk/we）、`fcMin`（滑桿時間，分鐘）。校正係數另存 `localStorage['有桶_forecast_v1']`；清潔隊回報收運量時 `amount` 為 `empty|half|full|overflow`，`amountPct` 對應 0／50／100／120。
+
+需求回報格式（localStorage `有桶_needs_v1`＋雲端 `needs`）：`{id, la, lo, ts, reason:null|'general'|'other', note}`（note ≤40 字）。事件與需求回報都會同步到雲端；雲端紀錄另加 `c`（clientId，用於頻率限制），`ts` 由伺服器時間寫入，刪除為 `del:true`。
 
 重建資料：`python3 aggregate_youbike_trips.py`（需先下載 2026-07 租借紀錄 ZIP 到 `/workspace/raw/`）→ `python3 prep.py`（需 shapely、pyproj）→ 路網 `python build_walk_city.py`（步行，全市；osmium extract -p 臺北市多邊形 → tags-filter w/highway）＋`python build_roads.py`（行車，示範區）（osmnx；先以 osmium 從 Geofabrik 臺灣 pbf 擷取示範區並篩選道路，指令見檔頭）。測試：`python test_mvp.py`（Playwright，桌面 1280×800＋手機 390×844）。行人頁：`[data-full]` 回報滿了、`[data-ok]` 還能丟；清潔隊頁用 `#card [data-amt]` 回報收運量。
 
@@ -84,7 +91,9 @@ TDX 公車 API 需申請金鑰（未使用）。
 | YouBike 借＋還次數 | **真實**紀錄的彙總，但當作人流時是**推估** |
 | 公車每站停靠路線數 | **推估**（路線數不是上下車人數） |
 | **交通活動量是人流的推估，不等於垃圾量** | — |
-| 垃圾桶填充度、滿溢告警 | **模擬**（依桶編號固定產生；行人與清潔隊回報會覆蓋）——目前唯一的模擬資料欄位 |
+| 垃圾桶填充度、滿溢告警 | **模擬**（依桶編號固定產生；行人與清潔隊回報會覆蓋） |
+| 回報／清運／需求回報（Firebase 同步） | **真實**：使用者實際送出的資料，即時同步到所有裝置 |
+| 清潔隊出發點 | **模擬** |
 | 每小時人流（預測調度） | **推估**：由交通活動推估——200m 內 YouBike 站 2026-07 每小時「每日平均借＋還次數」的平均（真實紀錄彙總，`footfall_hourly.json`）。**公車不納入**（路線數換算人流沒有可靠依據，故只用 YouBike） |
 | 垃圾產生量（每次借還 0.997 公升） | **假設，不是觀測到的垃圾量**：用官方公開的每日清運頻率校準——環保局資料「每個容量約 120 公升」「每日巡查清運頻率約 3 至 6 次」（聯合報 2025-08-17，經濟日報轉載 https://money.udn.com/money/story/7307/8944421 ）。假設示範區人流中位數的桶平日一天裝滿 3 次：3 × 120 ÷ 361.1 = 0.997 公升／次（`calibrate_rate.py`） |
 | 例行清運時間 05:00、08:00、12:00、16:00 | **假設**：例行清運時間 05:00／08:00／12:00／16:00 為假設；官方公開資料只提到一天 3–6 次，沒有公布時間。預測從最近一次例行或手動清運起累積 |
@@ -124,8 +133,25 @@ Leaflet 1.9.4（BSD-2）、OpenStreetMap、Python 3（shapely、pyproj）、Play
 程式碼 MIT（見 `LICENSE`）。資料依各來源授權。
 
 - **即時同步**：同一瀏覽器的分頁會即時同步（storage 事件）回報與清運。
-- **跨裝置同步（Firebase Realtime Database，待設定）**：`config.js` 的 `firebaseConfig` 填好後，回報、清運、需求回報會寫入雲端並即時同步到其他裝置（`cloud.js`）。沒設定、SDK 載不到或離線時自動改用本機 localStorage，動作排進佇列，重新連線後上傳。地圖右下角顯示「即時同步」或「離線・本機」。
-  - 真實／模擬：設定上線後，**回報、清運、狀態同步是真實資料**（設定前仍只在本機）；**滿度預測、例行清運時間、出發點仍是模擬**。
+- **跨裝置同步（Firebase Realtime Database，已上線）**：回報會即時同步到所有裝置（`cloud.js`）。沒設定、SDK 載不到或離線時自動改用本機 localStorage，動作排進佇列，重新連線後上傳。連線狀態：在線時平常不顯示，收到別台更新或上傳成功時卡片上方短暫出現「已同步」；離線時常駐「離線・本機（N 筆待上傳）」，點一下說明「恢復連線後會自動上傳」。
+  - 真實／模擬：設定上線後，**回報、清運、狀態同步是真實資料**；**滿度預測、例行清運時間、出發點仍是模擬**。
   - 規則：`database.rules.json`（只能寫 events、needs；欄位型別與長度驗證；kind 只能是 full|level|clear；說明 ≤40 字；不能覆寫或刪除整個節點；只能用自己的 owner 密鑰把自己的那筆標成刪除；同一 clientId 每 1.5 秒最多寫一次）。部署：`firebase deploy --only database`。
-  - 「重設成原始狀態」與 `?reset=1` 只清本機。示範前清空雲端請用管理員腳本：`node scripts/wipe-cloud.mjs --yes`（需要服務帳戶，說明在檔案開頭）。
+  - 頁面上沒有重設按鈕；開發用隱藏網址 `?reset=1`（例：`pedestrian.html?reset=1`）只清這台裝置的本機資料，不會清雲端。
   - 測試：`firebase emulators:start --only database --project demo-youtong`，然後 `node scripts/rules-test.mjs`（規則）和 `python3 test_cloud.py`（兩個瀏覽器設定檔、離線與重新連線）。
+
+## demo 前重置
+示範前要把雲端回報清乾淨時，由**工程端**執行管理員腳本（不是網頁按鈕）：
+
+1. 向 Eva 取得 Firebase 服務帳戶金鑰：Firebase 主控台 → 專案設定 → 服務帳戶 → 產生新的私密金鑰（JSON）。金鑰不要放進 repo。
+2. `cd scripts && npm i firebase-admin`（第一次）
+3. 執行：
+   ```
+   GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json \
+   DB_URL=https://youtong-529da-default-rtdb.asia-southeast1.firebasedatabase.app \
+   node scripts/wipe-cloud.mjs --yes
+   ```
+   腳本清空 `events`、`needs`、`owners`、`proof`、`last`，並把 `meta/epoch` 改成伺服器時間。
+
+各頁會比對 `meta/epoch`：和本機記錄不同時，自動清掉本機的回報、需求回報、待上傳佇列（以及「這桶問過了」記錄、預測校正），所以舊資料不會被重新上傳。清空時離線的裝置，重新連線後也一樣：佇列裡的動作帶著舊 epoch，用戶端會丟掉，規則也會拒絕（`e` 必須等於目前的 `meta/epoch`）。`meta` 只能讀、用戶端不能寫。
+
+模擬器演練：`firebase emulators:start --only database --project demo-youtong`，再 `python3 test_wipe.py`。

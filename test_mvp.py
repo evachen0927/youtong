@@ -11,6 +11,7 @@ with sync_playwright() as p:
   br=p.chromium.launch()
   for name,opt in VP.items():
     c=br.new_context(**opt,locale='zh-TW')  # 不給定位權限 → 測試 fallback 台北市政府
+    c.add_init_script("window.FB_TEST={config:{}}")  # 本機路徑測試：不連雲端（雲端另有 test_cloud.py／即時驗收）
     pg=c.new_page();errs=[];pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000)
     assert pg.inner_text('#needCard').replace('\n',' ')=='民眾回報需求 尚無回報' and pg.evaluate("getComputedStyle(document.querySelector('.vmk')).backgroundColor")=='rgb(31, 143, 163)'  # 場域線索＝--venue 青色
@@ -247,15 +248,12 @@ with sync_playwright() as p:
     print(name,'清潔隊',a0.replace('\n',' '),'→',a1.replace('\n',' '),'→ 復原',a2.replace('\n',' '),'| 完成卡',pg.locator('#card .done').count()>0)
     pg.click('#backBtn');pg.wait_for_selector('#card[data-state=A]');print(name,'返回 A',pg.inner_text('#cardTitle'))
     assert pg.locator('.roles a[href="index.html"]').count()>0;print(name,'行車路網',pg.inner_text('#sum').replace('\n',' '))
-    # 重設：先有回報 → 資料說明裡的重設鈕（confirm）→ 狀態清空；再測 ?reset=1
-    pg.evaluate("addEvent({bin:'B0001',kind:'full',level:100,by:'行人'})");n0=pg.evaluate("getEvents().length")
-    pg.click('#infoBtn');pg.once('dialog',lambda d:d.accept());pg.click('#resetAll');pg.wait_for_load_state();pg.wait_for_timeout(800)
-    left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");ui=pg.evaluate("JSON.parse(localStorage.getItem('有桶_crew_ui_v2')||'{}')");print(name,'重設前事件',n0,'重設後殘留鍵',left,'事件',pg.evaluate("getEvents().length"),'校正',pg.evaluate("FC.state()"),'crew ui',ui.get('state'),'url',pg.url.split('/')[-1])
-    assert n0>0 and set(left)<={'有桶_crew_ui_v2'} and ui.get('state','A')=='A' and pg.evaluate("getEvents().length")==0 and pg.evaluate("Object.keys(FC.state().cal).length")==0 and '?' not in pg.url  # 清潔隊頁載入時會重新寫入預設 UI 狀態
+    # 重設鈕已移除（資料說明、清潔隊「清除示範資料」）；?reset=1 仍可清本機
+    assert pg.locator('#resetAll').count()==0 and pg.locator('#reset').count()==0
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.evaluate("addEvent({bin:'B0002',kind:'full',level:100,by:'行人'});SC.save({hotspotId:'x',option:'A'});addNeed(25.02,121.54)")
     pg.goto(B+'pedestrian.html?reset=1');pg.wait_for_url('**/pedestrian.html');pg.wait_for_timeout(800)
     left=pg.evaluate("Object.keys(localStorage).filter(k=>/^(有桶_|debug松_)/.test(k))");print(name,'?reset=1 殘留鍵',left);assert left==[] and pg.evaluate("getNeeds().length")==0
-    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.click('#menu');assert pg.locator('#menuSheet #resetAll').count()==1;pg.click('#menuSheet [data-close]')
+    pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000);pg.click('#menu');assert pg.locator('#menuSheet #resetAll').count()==0 and '重設成原始狀態' not in pg.inner_text('#menuSheet');pg.click('#menuSheet [data-close]')
     # 空狀態重現（?reset=1 之後）：平日 08:30 + 只清滿溢
     pg.goto(B+'crew.html?reset=1');pg.wait_for_url('**/crew.html');pg.goto(B+'crew.html?fc=1&day=wk&t=08:30');pg.wait_for_selector('#card[data-state=A]',timeout=20000);pg.wait_for_timeout(600)
     pg.click('#menu');pg.click('#thSeg label:has([value="100"])');pg.wait_for_timeout(400);pg.click('#setSheet [data-close]')

@@ -14,7 +14,7 @@ window.CONFIG={
   },
   demoArea:{name:'公館–大安',bounds:[[25.0075,121.5240],[25.0400,121.5560]],center:[25.0215,121.5380],zoom:15},
   fallbackLocation:{name:'捷運公館站公車站',latlng:[25.013993,121.535185]}, // 行人頁定位失敗時的示範位置
-  hotspot:{gapThresholdM:100, maxList:8},          // 查核優先序：最近街道清潔箱（直線）> 100m
+  hotspot:{gapThresholdM:100, maxList:8},          // 查核優先序：最近街道清潔箱（步行；無法對應路網時用直線）> 100m
   scenarioB:{ // B 原位改善：模擬參數（假設，可調整）
     baseCapacityL:80, newCapacityL:120,            // 容量（公升）
     baseCollectionsPerDay:2, newCollectionsPerDay:3,

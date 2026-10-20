@@ -2,3 +2,5 @@ __pycache__/
 *.gz
 *_raw.*
 node_modules
+firebase-debug.log
+database-debug.log

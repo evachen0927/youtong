@@ -7,5 +7,5 @@ admin.initializeApp({databaseURL:url,...(process.env.FIREBASE_DATABASE_EMULATOR_
 const db=admin.database(),N=['events','needs','owners','proof','last'];
 const cnt=async n=>(await db.ref(n).get()).numChildren();
 console.log('清空前',Object.fromEntries(await Promise.all(N.map(async n=>[n,await cnt(n)]))));
-await db.ref().update(Object.fromEntries(N.map(n=>[n,null])));
+await db.ref().update({...Object.fromEntries(N.map(n=>[n,null])),'meta/epoch':admin.database.ServerValue.TIMESTAMP}); // epoch 改變 → 各頁自動清掉本機資料與待上傳佇列
 console.log('已清空',N.join('、'));process.exit(0);

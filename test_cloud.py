@@ -17,7 +17,7 @@ with sync_playwright() as pw:
   br=pw.chromium.launch()
   A=ctx(br,viewport={'width':390,'height':844},is_mobile=True,has_touch=True);Bc=ctx(br,viewport={'width':1280,'height':800});Cc=ctx(br,viewport={'width':1280,'height':800})
   ped=page(A,'pedestrian.html','#list .card');ped.wait_for_timeout(4000);exp(ped)
-  st=ped.inner_text('#syncSt');print('狀態',st);assert st=='即時同步'
+  st=ped.evaluate("getComputedStyle(syncSt).display");print('在線狀態列 display',st);assert st=='none'
   crew=page(Bc,'crew.html?fc=1&day=we&t=15:30','#card[data-state=A] #startBtn');plan=page(Cc,'index.html','#needCard')
   gid=ped.get_attribute('#list .card','data-id');ped.click('[data-full]');t0=time.time()
   crew.wait_for_function(f"(()=>{{const e=E.find(x=>x.b.id==='{gid}'),r=route.find(x=>x.b.id==='{gid}');return e&&e.rep&&r&&r.must&&[...document.querySelectorAll('#mustList li')].some(l=>l.querySelector('.repby'))}})()",timeout=5000);tF=time.time()-t0
@@ -33,7 +33,7 @@ with sync_playwright() as pw:
   plan.wait_for_function(f"getNeeds().length==={n0+1}&&document.querySelector('#needCard').textContent.includes('{n0+1}')",timeout=5000);tN=time.time()-t0
   plan.screenshot(path='/workspace/cloud_planner_need.png');print(f'雲端 需求→規劃頁 {tN*1000:.0f}ms',plan.inner_text('#needCard')[:40].replace('\n',' '))
   # 離線：清潔隊斷線 → 狀態「離線・本機」→ 本機照常；行人在線回報 → 清潔隊重新連線後補上；清潔隊離線時寫的事件重連後上傳
-  Bc.set_offline(True);crew.evaluate("Cloud._off&&Cloud._off()");crew.wait_for_function("document.documentElement.dataset.sync==='local'",timeout=8000);so=crew.inner_text('#syncSt');print('離線狀態',so);assert so=='離線・本機'
+  Bc.set_offline(True);crew.evaluate("Cloud._off&&Cloud._off()");crew.wait_for_function("document.documentElement.dataset.sync==='local'",timeout=8000);so=crew.inner_text('#syncSt .r');print('離線狀態',so);assert so.startswith('離線・本機')
   rid2=crew.evaluate("route.find(e=>!getEvents().some(x=>x.bin===e.b.id&&x.kind==='clear')).b.id");crew.click('#card [data-amt=full]');crew.wait_for_timeout(500)
   assert crew.evaluate(f"getEvents().some(e=>e.bin==='{rid2}'&&e.kind==='clear')") and crew.evaluate("cloudQ().length")>=1
   ped.wait_for_timeout(1600);ped.evaluate(f"focusBin(shown().find(b=>b.id==='{gid}'))");ped.wait_for_timeout(300);exp(ped);ped.click('[data-full]');ped.wait_for_timeout(800)
