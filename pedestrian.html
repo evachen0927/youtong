@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021g"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021g"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021g"><link rel="stylesheet" href="tokens.css?v=20261021g"><link rel="stylesheet" href="ui.css?v=20261021g">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021h"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021h"><title>有桶｜找最近的垃圾桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021h"><link rel="stylesheet" href="tokens.css?v=20261021h"><link rel="stylesheet" href="ui.css?v=20261021h">
 <style>
 /* ===== 有桶・行人頁（mobile-first 390x844）===== */
 :root{--gen:var(--cat-general);--rec:var(--cat-recycle)}
@@ -86,7 +86,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
 .need .nother button{flex:none;height:var(--touch);padding:0 16px;border:0;border-radius:var(--r-sm);background:var(--ink-strong);color:var(--surface);font:600 15px/1 var(--font);cursor:pointer}
 .lchip i.dia{border-radius:1px;transform:rotate(45deg);background:#1f8fa3;opacity:1!important} /* 實心菱形，同地圖標記 */
 .crow.ovf{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)} /* 放不下才出現右緣漸層 */
-.vmk{width:9px!important;height:9px!important;background:#1f8fa3;transform:rotate(45deg);border:1.5px solid #fff}.vmk.hit{background:none;border:0;width:44px!important;height:44px!important;display:flex;align-items:center;justify-content:center}.vmk.hit i{display:block;width:9px;height:9px;background:#1f8fa3;border:1.5px solid #fff;box-shadow:0 0 0 1px #1f8fa355}
+.vmk{width:9px!important;height:9px!important;background:#1f8fa3;transform:rotate(45deg);border:1.5px solid #fff}.vmk.hit{background:none;border:0;width:44px!important;height:44px!important;display:flex;align-items:center;justify-content:center}.vmk.hit i{display:block;width:9px;height:9px;transform:rotate(45deg);background:#1f8fa3;border:1.5px solid #fff;box-shadow:0 0 0 1px #1f8fa355}
 .crow .lhint{flex:none;height:var(--touch);box-sizing:border-box;padding:0 9px;gap:4px}
 .q .qd{justify-content:space-between;gap:8px}.q .qd .undo{flex:none;min-width:44px;height:44px;margin-right:-6px;padding:0 8px;border:0;background:none;color:var(--ink-2);font:500 15px/1 var(--font);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .tog{display:flex;align-items:center;justify-content:center;width:calc(100% + 32px);height:44px;margin:-14px -16px -8px;padding:0;border:0;background:none;cursor:pointer} /* 把手：點擊範圍 44px（整列） */
@@ -103,10 +103,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   </div>
   <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
 </div>
-<div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip" data-ly="lyBus" aria-pressed="false"><i style="--c:#5b6f9c"></i>公車站</button><button class="lchip" data-ly="lyVen" aria-pressed="false"><i class="dia" style="--c:#1f8fa3"></i>備用垃圾桶</button><span class="lgd lhint" id="rhint"></span></div>
-<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021g" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
+<div class="crow" id="crow" style="gap:5px"><button class="lchip" data-ly="lyYb" aria-pressed="false"><i style="--c:#a07d3e"></i>YouBike</button><button class="lchip" data-ly="lyBus" aria-pressed="false"><i style="--c:#5b6f9c"></i>公車站</button><button class="lchip on" data-ly="lyVen" aria-pressed="true"><i class="dia" style="--c:#1f8fa3"></i>備用垃圾桶</button></div>
+<section id="list" aria-live="polite"><div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021h" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">定位中…</span></div><div class="addr" style="color:var(--mute);font-weight:500">正在找離你最近的垃圾桶…</div></section>
 
-<input type="checkbox" id="lyYb" hidden><input type="checkbox" id="lyBus" hidden><input type="checkbox" id="lyVen" hidden><!-- 圖層狀態（由上方 chip 切換） -->
+<input type="checkbox" id="lyYb" hidden><input type="checkbox" id="lyBus" hidden><input type="checkbox" id="lyVen" hidden checked><!-- 圖層狀態（由上方 chip 切換） -->
 <div class="sheet" id="infoSheet" hidden><div class="sh" role="dialog" aria-label="資料說明">
   <div class="hd"><b>資料說明</b><button class="x" data-close aria-label="關閉">✕</button></div>
   <h3>真實資料</h3>
@@ -117,19 +117,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:#f4f4f2
   <h3>這裡需要垃圾桶</h3>
   <ul><li>按一下記錄目前位置與時間，可再選原因（一般垃圾／其他；選「其他」可再輸入 40 字內說明）；50 m 內已有回報只算一次。最近的桶步行超過 200 m 時按鈕會變醒目。設點規劃頁的「民眾回報需求」圖層看得到，只當佐證，不計入查核優先序。</li><li>需求回報只存在這台裝置，demo 用。「重設成原始狀態」與 ?reset=1 會清除。</li></ul>
   <h3>備用垃圾桶</h3>
-  <ul><li>「備用垃圾桶」圖層（預設關閉）：景點商圈場域線索 120 點（原始 130 列、120 個不同座標，2026-08-18），青色菱形。場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證；不列入「最近的桶」與步行路線。</li></ul>
+  <ul><li>「備用垃圾桶」圖層（預設開啟）：景點商圈場域線索 120 點（原始 130 列、120 個不同座標，2026-08-18），青色菱形。場域內垃圾桶（如捷運站、公園），可能有開放時間或需進站，未經查證；不列入「最近的桶」與步行路線。</li></ul>
   <h3>回報</h3>
   <ul><li>垃圾桶顏色＝4 種狀態：還有空間／快滿了／滿溢（估計）／<b>已回報滿</b>（紅，有人回報、尚未清運）。臺北市沒有清潔箱滿溢偵測資料：前三種是<b>模擬估計</b>（依編號固定產生，標 <span class="sim"></span>），行人與清潔隊回報會覆蓋。卡片直接問「這桶滿了嗎？」：「滿了」會回報給清潔隊頁（地圖上該桶變紅），「還能丟」不記錄；每個桶只問一次；回報後可按「取消」撤回自己那一筆（換到別的桶前都可取消），撤回後可再問一次（「重設成原始狀態」會清除）。手機一開頁卡片收合，只顯示「步行導航」，點上方把手展開。</li></ul>
   <h3>估算方式</h3><ul><li>全臺北市：步行路網距離（OpenStreetMap 路網，2026-10-18 預先計算；© OpenStreetMap contributors，ODbL），每分鐘 75 公尺。</li><li>例：捷運公館站(2號出口) 到最近清潔箱（羅斯福路4段68號）直線 41 m，但要過羅斯福路、繞到斑馬線；步行最近的是羅斯福路4段70號之1，約 180 m——直線距離會低估。</li><li>到桶的距離用步行計算；半徑內的數量用直線計算。</li><li>位置離道路超過 150 公尺、無法對應路網時，才改用直線距離並標示「直線」。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021g"></script><script src="common.js?v=20261021g"></script><script src="scenario.js?v=20261021g"></script><script src="routing.js?v=20261021g"></script><script src="bin-category.js?v=20261021g"></script><script src="ui.js?v=20261021g"></script><script src="bin-icons.js?v=20261021g"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021h"></script><script src="common.js?v=20261021h"></script><script src="scenario.js?v=20261021h"></script><script src="routing.js?v=20261021h"></script><script src="bin-category.js?v=20261021h"></script><script src="ui.js?v=20261021h"></script><script src="bin-icons.js?v=20261021h"></script>
 <script>
 roleSwitch('pedestrian.html');
 // ---- 底圖：OSM 圖磚＋CSS 去飽和、淡化（CARTO Positron 現在需要 API key，會出現浮水印，故不用）----
 const map=L.map('map',{zoomControl:false,preferCanvas:true,attributionControl:true}).setView(TPE_MAIN,16);
 map.attributionControl.setPrefix(false);
-rhint.innerHTML=REPORTED_HINT().map(i=>`<span>${i.html}${i.t}</span>`).join('');
 legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:'var(--brand)',t:'你的位置'}]);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 document.getElementById('map').classList.add('desat');
@@ -199,7 +198,7 @@ const TOG=()=>`<button class="tog" id="cardTog" aria-expanded="${!collapsed}" ar
 function renderInner(fit){
   const ev=getEvents();if(!pos)return;
   const P=primary();
-  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021g" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
+  const head=`<div class="k"><span class="brandm"><img src="assets/favicon.svg?v=20261021h" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:4px">有桶</span><span id="where">${where}</span><button class="loc" id="locate" aria-label="重新定位"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--accent)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>`;
   if(!P){list.innerHTML=head+`<div class="addr">附近沒有符合「${{general:'一般垃圾',recycle:'資源回收'}[filter]||'全部'}」的垃圾桶</div><div class="acts"><button class="b" data-f="all">看全部</button></div>`+needHTML();redraw();return}
   const p=P.f,cs=binCategory(p).simulated;
   list.classList.toggle('col',collapsed);
@@ -299,7 +298,7 @@ lyYb.onchange=()=>{lyYb.checked?ybL.addTo(map):ybL.remove();redraw()};lyBus.onch
 
 locate(); // 定位與資料載入同時開始；資料就緒前只記住位置
 const walkCapped=Promise.race([RT.load('walk').catch(e=>{console.error('[有桶] 步行路網載入失敗',e);return null}),new Promise(res=>setTimeout(()=>res(null),15000))]);
-Promise.all([loadCore(),walkCapped]).then(([d,w])=>{SC.walk=w;D=d;SC.all=[...D.yb,...D.bus];binsBefore=D.street;
+Promise.all([loadCore(),walkCapped]).then(([d,w])=>{SC.walk=w;D=d;SC.all=[...D.yb,...D.bus];binsBefore=D.street;if(lyVen.checked){drawVen();venL.addTo(map)} // 備用垃圾桶預設開啟（不參與最近桶與路線）
   // 示範位置：讀 config.js > fallbackLocation（預設捷運公館站公車站，示範區內）
   demoLoc={la:TPE_MAIN[0],lo:TPE_MAIN[1],name:TPE_NAME};
   chips.hidden=!binCatsVaried(D.street); // 全市同為「一般＋回收」→ 篩選無意義，隱藏（逐桶欄位出現時自動顯示）

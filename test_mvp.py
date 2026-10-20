@@ -43,10 +43,10 @@ with sync_playwright() as p:
         if not pg.evaluate('collapsed'):pg.click('#cardTog');pg.wait_for_timeout(400)
         pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(500)
         cc=pg.evaluate(COL);print(name,'收合',vw,vh,{k:v for k,v in cc.items() if k!='txt'});assert cc['txt']=='步行導航' and not cc['q'] and not cc['need'] and cc['tog'][1]>=44 and cc['nav'][1]>=44 and cc['nav'][0]>=cc['nav'][2]-34
-        r=pg.evaluate(FIT);assert ((15<=r['z']<=(19 if pg.evaluate('primary().d')<=150 else 17) and r['mk']>=0 and r['lab']>=0 and (r['halo']>=24 or (r['halo']>=18 and r['z']>=17)) and r['meb']>=0 and r['mkb']>=0) or (r['z']==14 and not r['fits15'] and r['mk']>=0 and r['mkb']>=0 and r['meb']>=0)),r;print(name,'fit4',vw,'collapsed',r);assert r['sep']>=48 and r['routeVis']>=10,r;pg.screenshot(path=f'/workspace/ped_fit4_{vw}_collapsed.png')
+        r=pg.evaluate(FIT);assert ((15<=r['z']<=(19 if pg.evaluate('primary().d')<=150 else 17) and r['mk']>=0 and r['lab']>=0 and (r['halo']>=24 or (r['halo']>=18 and r['z']>=17)) and r['meb']>=0 and r['mkb']>=0) or (r['z']==14 and not r['fits15'] and r['mk']>=0 and r['mkb']>=0 and r['meb']>=0)),r;print(name,'fit4',vw,'collapsed',r);assert r['sep']>=48 and r['routeVis']>=10,r;pg.screenshot(path=f'/workspace/ped_v34_{vw}_collapsed.png')
         z0=pg.evaluate("map.getZoom()+','+map.getCenter().lat.toFixed(6)");pg.click('#cardTog');pg.wait_for_timeout(400);cc=pg.evaluate(COL);print(name,'展開',vw,vh,{k:v for k,v in cc.items() if k!='txt'})
         assert cc['q'] and cc['need'] and '這桶滿了嗎？' in cc['txt'] and cc['tog'][1]>=44 and pg.evaluate("map.getZoom()+','+map.getCenter().lat.toFixed(6)")!=z0  # 展開後重新 fit
-        r=pg.evaluate(FIT);assert ((15<=r['z']<=(19 if pg.evaluate('primary().d')<=150 else 17) and r['mk']>=0 and r['lab']>=0 and (r['halo']>=24 or (r['halo']>=18 and r['z']>=17)) and r['meb']>=0 and r['mkb']>=0) or (r['z']==14 and not r['fits15'] and r['mk']>=0 and r['mkb']>=0 and r['meb']>=0)),r;print(name,'fit4',vw,'expanded',r);assert r['sep']>=48 and r['routeVis']>=10,r;pg.screenshot(path=f'/workspace/ped_fit4_{vw}_expanded.png')
+        r=pg.evaluate(FIT);assert ((15<=r['z']<=(19 if pg.evaluate('primary().d')<=150 else 17) and r['mk']>=0 and r['lab']>=0 and (r['halo']>=24 or (r['halo']>=18 and r['z']>=17)) and r['meb']>=0 and r['mkb']>=0) or (r['z']==14 and not r['fits15'] and r['mk']>=0 and r['mkb']>=0 and r['meb']>=0)),r;print(name,'fit4',vw,'expanded',r);assert r['sep']>=48 and r['routeVis']>=10,r;pg.screenshot(path=f'/workspace/ped_v34_{vw}_expanded.png')
         for spot in ('demo','JG'):
           pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)" if spot=='demo' else "(()=>{const b=D.street.find(x=>x.addr==='建國南路2段306號');setPos([b.la-0.0027,b.lo+0.0006],'你的目前位置')})()");pg.wait_for_timeout(500)
           r=pg.evaluate(FIT);print(name,'fit',vw,vh,spot,r);assert ((15<=r['z']<=(19 if pg.evaluate('primary().d')<=150 else 17) and r['mk']>=0 and r['lab']>=0 and (r['halo']>=24 or (r['halo']>=18 and r['z']>=17)) and r['meb']>=0 and r['mkb']>=0) or (r['z']==14 and not r['fits15'] and r['mk']>=0 and r['mkb']>=0 and r['meb']>=0)),r  # 14＝15 仍放不下的例外：只要求標記完整在 chip 列下且不被卡片蓋、位置點不被卡片蓋  # zoom 15–17；只有縮到下限 15 仍放不下時才容許（空間太短）
@@ -92,7 +92,9 @@ with sync_playwright() as p:
     pg.evaluate("drawRoute({...primary(),w:0})");assert pg.evaluate("routeInfo.snapped")==False and pg.evaluate("routeL.getLayers().length")==1  # 無法對應路網 → 虛線直線
     pg.evaluate("sel=null;render(true)");pg.wait_for_timeout(300);assert pg.inner_text('#tlab').startswith('最近・')
     # 備用垃圾桶：預設關閉；打開顯示場域線索 120 點（青色菱形，暫定）；點一下顯示說明；不參與最近桶與路線
-    assert pg.get_attribute('[data-ly="lyVen"]','aria-pressed')=='false' and pg.locator('.vmk').count()==0 and pg.inner_text('[data-ly="lyVen"]').strip()=='備用垃圾桶'
+    assert pg.get_attribute('[data-ly="lyVen"]','aria-pressed')=='true' and pg.evaluate('lyVen.checked') and 'on' in pg.get_attribute('[data-ly="lyVen"]','class') and pg.inner_text('[data-ly="lyVen"]').strip()=='備用垃圾桶' and pg.locator('#rhint').count()==0  # 預設開啟；已回報滿圖例已拿掉
+    zo=pg.evaluate("(()=>{const t=document.querySelector('.binmk.tgt'),v=document.querySelector('.vmk');return [+getComputedStyle(t).zIndex,+getComputedStyle(v).zIndex,t.parentNode===v.parentNode]})()");assert zo[0]>zo[1] and zo[2],zo  # 目標桶＋標籤在菱形之上
+    pg.click('[data-ly="lyVen"]');pg.wait_for_timeout(300);assert pg.locator('.vmk').count()==0 and pg.get_attribute('[data-ly="lyVen"]','aria-pressed')=='false' and not pg.evaluate('lyVen.checked')
     t0=pg.evaluate("[primary().f.id,routeInfo.bin]");pg.click('[data-ly="lyVen"]');pg.wait_for_timeout(400);nv=pg.locator('.vmk').count();print(name,'備用垃圾桶點數',nv,pg.evaluate("D.venue.length"));assert nv==120 and pg.evaluate("D.venue.length")==120
     pg.evaluate("map.setView(pos,15,{animate:false})");pg.wait_for_timeout(400)
     vp=pg.evaluate("(()=>{for(const e of document.querySelectorAll('.vmk')){const r=e.getBoundingClientRect();if(r.top>140&&r.bottom<list.getBoundingClientRect().top&&r.left>10&&r.right<innerWidth-10)return [r.left+r.width/2,r.top+r.height/2]}return null})()");assert vp
@@ -103,7 +105,7 @@ with sync_playwright() as p:
     if name=='mobile':
       pg.set_viewport_size({'width':375,'height':667});pg.wait_for_timeout(400);ov=pg.evaluate("[crow.scrollWidth-crow.clientWidth,crow.classList.contains('ovf')]");pg.evaluate("crow.scrollLeft=999");pg.wait_for_timeout(200);ov2=pg.evaluate("crow.classList.contains('ovf')");pg.evaluate("crow.scrollLeft=0");pg.wait_for_timeout(200);print(name,'chip 列溢出',ov,ov2);assert (ov[0]>0)==ov[1] and not ov2
       pg.set_viewport_size({'width':390,'height':844});pg.wait_for_timeout(400)
-    pg.click('[data-ly="lyVen"]');pg.wait_for_timeout(300);assert pg.locator('.vmk').count()==0;pg.evaluate("map.closePopup();render(true)");pg.wait_for_timeout(300)
+    pg.evaluate("map.closePopup();render(true)");pg.wait_for_timeout(300)
     pg.goto(B+'pedestrian.html?mode=after');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(1500);exp(pg);assert 'pill sc' not in pg.content() and '調整後' not in pg.inner_text('#list')
     pg.wait_for_timeout(300);pg.screenshot(path=f'shot_pedestrian_{name}.png')
     assert pg.locator('#doneBtn').count()==0 and '這桶滿了嗎？' in pg.inner_text('#list')
