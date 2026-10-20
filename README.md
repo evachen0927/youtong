@@ -122,3 +122,10 @@ Leaflet 1.9.4（BSD-2）、OpenStreetMap、Python 3（shapely、pyproj）、Play
 
 ## 授權
 程式碼 MIT（見 `LICENSE`）。資料依各來源授權。
+
+- **即時同步**：同一瀏覽器的分頁會即時同步（storage 事件）回報與清運。
+- **跨裝置同步（Firebase Realtime Database，待設定）**：`config.js` 的 `firebaseConfig` 填好後，回報、清運、需求回報會寫入雲端並即時同步到其他裝置（`cloud.js`）。沒設定、SDK 載不到或離線時自動改用本機 localStorage，動作排進佇列，重新連線後上傳。地圖右下角顯示「即時同步」或「離線・本機」。
+  - 真實／模擬：設定上線後，**回報、清運、狀態同步是真實資料**（設定前仍只在本機）；**滿度預測、例行清運時間、出發點仍是模擬**。
+  - 規則：`database.rules.json`（只能寫 events、needs；欄位型別與長度驗證；kind 只能是 full|level|clear；說明 ≤40 字；不能覆寫或刪除整個節點；只能用自己的 owner 密鑰把自己的那筆標成刪除；同一 clientId 每 1.5 秒最多寫一次）。部署：`firebase deploy --only database`。
+  - 「重設成原始狀態」與 `?reset=1` 只清本機。示範前清空雲端請用管理員腳本：`node scripts/wipe-cloud.mjs --yes`（需要服務帳戶，說明在檔案開頭）。
+  - 測試：`firebase emulators:start --only database --project demo-youtong`，然後 `node scripts/rules-test.mjs`（規則）和 `python3 test_cloud.py`（兩個瀏覽器設定檔、離線與重新連線）。

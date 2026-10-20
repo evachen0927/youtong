@@ -45,5 +45,9 @@ window.CONFIG={
     demoTime:{day:'we',time:'15:30'}, // 示範：週六 15:30（對照平日 10:00）
     demoLinks:[{day:'wk',time:'10:00',label:'平日 10:00'},{day:'we',time:'15:30',label:'週六 15:30'}] // 抽屜預設：示範對照 ≥100% 桶數（平日 10:00＝2、週六 15:30＝6）
   },
+  // Firebase Realtime Database（回報／清運／需求即時同步）。留空 → 只用本機 localStorage＋同瀏覽器分頁同步。
+  // 填入 Firebase 主控台「專案設定 → 你的應用程式」的 firebaseConfig（apiKey、authDomain、databaseURL、projectId、appId…）；databaseURL 必填
+  // 公開的網頁設定（不是密鑰）；不啟用 Analytics
+  firebaseConfig:{apiKey:'AIzaSyBqwAw93WLZ5BG6CAykda_F6BCdikVzCp8',authDomain:'youtong-529da.firebaseapp.com',databaseURL:'https://youtong-529da-default-rtdb.asia-southeast1.firebasedatabase.app',projectId:'youtong-529da',storageBucket:'youtong-529da.firebasestorage.app',messagingSenderId:'349692717136',appId:'1:349692717136:web:81c9063632f7752acf8955'},
   storageKeys:{scenario:'debug松_scenario_v2',events:'debug松_events_v1',forecast:'有桶_forecast_v1'}
 };

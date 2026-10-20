@@ -269,6 +269,29 @@ with sync_playwright() as p:
     # 例行清運時間（假設）：config 與資料說明一致
     assert pg.evaluate("CONFIG.forecast.routineClears.join(',')")=='05:00,08:00,12:00,16:00' and '例行清運時間 05:00／08:00／12:00／16:00 為假設；官方公開資料只提到一天 3–6 次，沒有公布時間' in pg.content()
     pg.goto(B+'crew-route.html');pg.wait_for_selector('#card',timeout=20000);print(name,'舊路線網址導向',pg.url.endswith('crew.html'))
+    # 跨分頁同步（同一 context 兩個分頁）
+    P1=pg;P1.goto(B+'pedestrian.html?reset=1');P1.wait_for_url('**/pedestrian.html');P1.wait_for_selector('#list .card',timeout=20000);P1.wait_for_timeout(5000);exp(P1)
+    P2=c.new_page();P2.on('pageerror',lambda e:errs.append(str(e)));P2.goto(B+'crew.html?fc=1&day=we&t=15:30');P2.wait_for_selector('#card[data-state=A] #startBtn',timeout=20000);P2.wait_for_timeout(600)
+    gid=P1.get_attribute('#list .card','data-id');P1.bring_to_front();vw0=P1.evaluate("[map.getZoom(),map.getCenter().lat,map.getCenter().lng]");o2=P2.evaluate("route.map(e=>e.b.id).join()")
+    t0=P1.evaluate("Date.now()");P1.click('[data-full]')
+    P2.wait_for_function(f"(()=>{{const e=E.find(x=>x.b.id==='{gid}'),r=route.find(x=>x.b.id==='{gid}');return e&&e.rep&&r&&r.must&&[...document.querySelectorAll('#mustList li')].some(l=>l.querySelector('.repby')&&l.textContent.includes(e.b.addr)&&l.querySelector('.stchip').textContent==='已回報滿')}})()",timeout=3000);tF=P2.evaluate("Date.now()")-t0
+    o2b=P2.evaluate("route.map(e=>e.b.id).join()");P2.screenshot(path=f'/workspace/sync_{name}_crew_full.png')
+    t0=P1.evaluate("Date.now()");P1.click('#repUndo')
+    P2.wait_for_function(f"(()=>{{const e=E.find(x=>x.b.id==='{gid}');return e&&!e.rep&&![...document.querySelectorAll('#mustList li,#list li')].some(l=>l.querySelector('.repby'))}})()",timeout=3000);tU=P2.evaluate("Date.now()")-t0
+    assert P1.locator('[data-full]').count()==1 and P1.locator('.binmk.tgt.rep').count()==0;P2.screenshot(path=f'/workspace/sync_{name}_crew_cancel.png')
+    print(name,'同步 滿了→清潔隊',tF,'ms；取消→清潔隊',tU,'ms；A 站序不重排',o2==o2b.replace(','+gid,'') or o2b.startswith(o2[:20]))
+    # 清潔隊 B 完成一站 → 行人分頁轉綠
+    P2.click('#startBtn');P2.wait_for_selector('#card[data-state=B] [data-amt]');rid=P2.evaluate("route[0].b.id");ordB=P2.evaluate("route.map(e=>e.b.id).join()")
+    P1.evaluate(f"focusBin(shown().find(b=>b.id==='{rid}')||D.street.find(b=>b.id==='{rid}'))");P1.wait_for_timeout(400);vw1=P1.evaluate("[map.getZoom(),map.getCenter().lat,map.getCenter().lng]")
+    t0=P2.evaluate("Date.now()");P2.click('#card [data-amt=half]')
+    P1.wait_for_function(f"fillOf('{rid}',getEvents())===0&&document.querySelector('#list').textContent.includes('已清運・剛剛・清潔隊回報')&&!document.querySelector('.binmk.tgt.rep')",timeout=1000);tC=P1.evaluate("Date.now()")-t0
+    vw2=P1.evaluate("[map.getZoom(),map.getCenter().lat,map.getCenter().lng]");P1.screenshot(path=f'/workspace/sync_{name}_ped_cleared.png')
+    print(name,'同步 清運→行人轉綠',tC,'ms；地圖不重新 fit',vw1==vw2);assert tC<1000 and vw1==vw2 and P2.evaluate("route.map(e=>e.b.id).join()")==ordB and P2.get_attribute('#card','data-state')=='B'
+    # 其他原因輸入框在同步時保留
+    P1.click('#needBtn');P1.wait_for_timeout(300);P1.click('[data-reason="other"]');P1.wait_for_timeout(300);P1.fill('#needNote','大型廢棄物');P1.focus('#needNote')
+    P2.evaluate(f"addEvent({{bin:'{gid}',kind:'full',by:'行人'}})");P1.wait_for_timeout(500)
+    kept=P1.evaluate("[!!document.querySelector('#needNote'),needNote.value,document.activeElement===needNote,map.getZoom()]");print(name,'同步時其他輸入保留',kept);assert kept[:3]==[True,'大型廢棄物',True] and kept[3]==vw2[0] and P1.evaluate(f"binState('{gid}',getEvents())")=='reported'
+    P2.close()
     print(name,'ERRORS',errs);ok&=not errs;c.close()
   br.close()
 print('PASS' if ok else 'FAIL')

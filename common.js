@@ -24,6 +24,13 @@ function toast(t){let e=document.querySelector('.toast');if(!e){e=document.creat
 const getEvents=()=>{try{const v=JSON.parse(localStorage.getItem(LS_EVENTS));return Array.isArray(v)?v.filter(e=>e&&typeof e==='object'&&typeof e.bin==='string'):[]}catch(e){return[]}}; // 舊版／壞掉的存檔不會讓頁面掛掉
 // 「這裡需要垃圾桶」民眾回報：只存在這台裝置（localStorage，有桶_ 前綴 → 重設／?reset=1 會清除），沒有預設資料
 const LS_NEEDS='有桶_needs_v1',NEED_DEDUP_M=50;
+// 同一瀏覽器跨分頁即時同步（模擬）：只在回報事件或需求回報的鍵改變時呼叫 fn；跨裝置不同步。
+// 正在輸入（焦點在 input/textarea/select）時延後到離開輸入框再套用，不打斷使用者
+const SYNC_FNS=[];function appSyncNotify(k){SYNC_FNS.forEach(f=>f(k))}
+function onAppSync(fn){let pend=false;const busy=()=>{const a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))};
+  const run=k=>{if(busy()){pend=k||true;return}pend=false;try{fn(k)}catch(e){console.error('[有桶] 同步失敗',e)}};
+  SYNC_FNS.push(run);addEventListener('storage',e=>{if(e.key===LS_EVENTS||e.key===LS_NEEDS)run(e.key)});
+  document.addEventListener('focusout',()=>setTimeout(()=>{if(pend&&!busy())run(pend===true?null:pend)},0))}
 // 原因存穩定的 key；顯示文字另查。舊資料（存顯示文字）讀取時遷移：飲料杯／外帶餐盒／household（家用垃圾）→ general，其他 → other，無法辨識 → null（未選）
 const NEED_REASON={general:'一般垃圾',other:'其他'},NEED_REASON_KEYS=Object.keys(NEED_REASON);
 const NEED_LEGACY={'飲料杯':'general','外帶餐盒':'general','其他':'other','一般垃圾':'general','家用垃圾':'general',household:'general'};
@@ -35,13 +42,19 @@ const getNeeds=()=>{try{const v=JSON.parse(localStorage.getItem(LS_NEEDS));if(!A
 const needBreakdown=A=>{const c={};for(const n of A){const k=n.reason||'none';c[k]=(c[k]||0)+1}return[...NEED_REASON_KEYS,'none'].filter(k=>c[k]).map(k=>[k,k==='none'?'未選':NEED_REASON[k],c[k]])};
 // 50 m 內已有回報 → 不重複計數，回傳既有那筆
 function addNeed(la,lo){const a=getNeeds(),d=a.find(n=>hav(la,lo,n.la,n.lo)<=NEED_DEDUP_M);if(d)return{rec:d,dup:true};
-  const rec={id:'N'+Date.now().toString(36),la,lo,ts:Date.now(),reason:null};a.push(rec);localStorage.setItem(LS_NEEDS,JSON.stringify(a.slice(-500)));return{rec,dup:false}}
-function removeNeed(id){localStorage.setItem(LS_NEEDS,JSON.stringify(getNeeds().filter(x=>x.id!==id)))}
-const NEED_NOTE_MAX=40;function setNeedNote(id,t){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.note=String(t||'').trim().slice(0,NEED_NOTE_MAX)||null;localStorage.setItem(LS_NEEDS,JSON.stringify(a))} // 「其他」的說明文字：只存 localStorage，存檔前裁到 40 字
-function setNeedReason(id,reason){if(!NEED_REASON[reason])return;const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a))}
-function addEvent(e){const a=getEvents(),r={...e,id:e.id||('ev'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),ts:Date.now()};a.push(r);localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)));return r}
+  const rec={id:'N'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),la,lo,ts:Date.now(),reason:null};a.push(rec);localStorage.setItem(LS_NEEDS,JSON.stringify(a.slice(-500)));cloudOp('put','needs',rec);return{rec,dup:false}}
+function removeNeed(id){localStorage.setItem(LS_NEEDS,JSON.stringify(getNeeds().filter(x=>x.id!==id)));cloudOp('del','needs',{id})}
+const NEED_NOTE_MAX=40;function setNeedNote(id,t){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.note=String(t||'').trim().slice(0,NEED_NOTE_MAX)||null;localStorage.setItem(LS_NEEDS,JSON.stringify(a));cloudOp('upd','needs',{id,note:n.note})} // 「其他」的說明文字：只存 localStorage，存檔前裁到 40 字
+function setNeedReason(id,reason){if(!NEED_REASON[reason])return;const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a));cloudOp('upd','needs',{id,reason})}
+function addEvent(e){const a=getEvents(),r={...e,id:e.id||('ev'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),ts:Date.now()};a.push(r);localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)));cloudOp('put','events',r);return r}
 // 依 id 撤回一筆事件（行人「取消」自己剛送出的回報）
-function removeEvent(id){localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents().filter(e=>e.id!==id)))}
+function removeEvent(id){localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents().filter(e=>e.id!==id)));cloudOp('del','events',{id})}
+// ===== 雲端同步（Firebase Realtime Database，見 cloud.js）=====
+// localStorage 永遠是本機快取；設定好且在線 → cloud.js 上傳並把雲端資料併回快取。沒設定／離線 → 只用本機（＋同瀏覽器分頁同步）。
+// 待上傳的動作存在 有桶_cloudq_v1，重新連線後依序送出
+const LS_CQ='有桶_cloudq_v1',LS_OWN='有桶_owners_v1';
+const cloudQ=()=>{try{const v=JSON.parse(localStorage.getItem(LS_CQ));return Array.isArray(v)?v:[]}catch(e){return[]}};
+function cloudOp(op,node,rec){if(!window.CLOUD_ON)return;const q=cloudQ();q.push({op,node,rec,t:Date.now()});try{localStorage.setItem(LS_CQ,JSON.stringify(q.slice(-300)))}catch(e){}if(window.Cloud)Cloud.flush()}
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定
 function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin===id){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}
 const fillColor=f=>typeof rampColor==='function'?rampColor(f):(f>=100?'#d9731f':f>=70?'#e8b931':'#8cc9a8'); // 色階定義在 ui.js
