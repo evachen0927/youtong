@@ -14,19 +14,21 @@ let st='local',everLive=false,bootAt=Date.now();const listeners=[];
 let el,hideT=0,showing=false,open=false;
 function mountStatus(){if(el)return;el=document.createElement('div');el.id='syncSt';el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.innerHTML='<div class="r"><i></i><b></b></div><small>恢復連線後會自動上傳</small>';
   const css=document.createElement('style');css.textContent='#syncSt{position:fixed;z-index:2900;left:0;top:0;display:none;flex-direction:column;align-items:center;justify-content:center;min-height:28px;padding:0 12px;border-radius:14px;background:#fff;box-shadow:0 1px 3px #0000001f;color:#2b3333;font:600 13px/1 var(--font,system-ui);white-space:nowrap;opacity:0;transition:opacity 200ms;cursor:default;-webkit-tap-highlight-color:transparent}#syncSt.on{opacity:1;transition:opacity 150ms}#syncSt .r{display:flex;align-items:center;gap:6px;height:28px}#syncSt i{width:9px;height:9px;border-radius:50%;background:#0f9d76;flex:none}#syncSt[data-s=off] i{background:#7d8b8b}#syncSt small{display:none;font:500 12px/1 var(--font,system-ui);color:#5f6a6a;padding:0 0 8px}#syncSt[data-s=off].open small{display:block}#syncSt[data-s=off]{cursor:pointer}';
-  document.head.appendChild(css);document.body.appendChild(el);el.onclick=()=>{if(el.dataset.s==='off'){open=!open;el.classList.toggle('open',open);place()}};
+  document.head.appendChild(css);document.body.appendChild(el);el.onclick=()=>{if(el.dataset.s==='off'){open=!open;el.classList.toggle('open',open);place();dispatchEvent(new Event('syncpill'))}};
   addEventListener('resize',place);new MutationObserver(()=>{if(showing)place()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});setInterval(()=>{if(showing)place()},500);render()}
 function vis(e){if(!e||e.hidden)return null;const r=e.getBoundingClientRect();return r.width&&r.height&&r.bottom>0&&r.top<innerHeight?r:null}
 function place(){if(!el||!showing)return;const h=el.offsetHeight||28,w=el.offsetWidth;let cx,top;
   const card=vis(document.querySelector('#list'))||vis(document.querySelector('#card'));
-  if(card){cx=card.left+card.width/2;top=card.top-12-h}else{const m=vis(document.querySelector('#map'))||{left:0,width:innerWidth,bottom:innerHeight};cx=m.left+m.width/2;top=Math.min(m.bottom,innerHeight)-16-h}
+  const ft=document.querySelector('.ftop'),mp=vis(document.querySelector('#map'));
+  if(card){cx=card.left+card.width/2;top=card.top-12-h}else if(innerWidth>760&&ft&&mp){const f=ft.getBoundingClientRect();cx=mp.left+mp.width/2;top=f.bottom+12}else{const m=vis(document.querySelector('#map'))||{left:0,width:innerWidth,bottom:innerHeight};cx=m.left+m.width/2;top=Math.min(m.bottom,innerHeight)-16-h}
   const u=[...document.querySelectorAll('.undo')].map(vis).find(Boolean);if(u&&top+h>u.top-12&&top<u.bottom+12)top=u.top-12-h; // 不蓋住「復原」
   el.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';el.style.top=Math.max(8,top)+'px'}
-function show(text,state){el.dataset.s=state;el.querySelector('b').textContent=text;if(state!=='off'){open=false;el.classList.remove('open')}el.style.display='flex';showing=true;place();requestAnimationFrame(()=>el.classList.add('on'))}
-function hide(){if(!el)return;el.classList.remove('on');clearTimeout(el._h);el._h=setTimeout(()=>{if(!el.classList.contains('on')){el.style.display='none';showing=false}},200)}
+let offShown=false;function offPill(v){if(v!==offShown){offShown=v;dispatchEvent(new Event('syncpill'))}}
+function show(text,state){el.dataset.s=state;el.querySelector('b').textContent=text;if(state!=='off'){open=false;el.classList.remove('open')}const was=el.classList.contains('on');el.style.display='flex';showing=true;place();if(!was){el.classList.remove('on');void el.offsetWidth}el.style.transition='opacity 150ms ease-out';el.classList.add('on')}
+function hide(){if(!el)return;el.style.transition='opacity 200ms ease-in';el.classList.remove('on');clearTimeout(el._h);el._h=setTimeout(()=>{if(!el.classList.contains('on')){el.style.display='none';showing=false}},200)}
 function render(){if(!el)return;if(!on)return; // 沒設定雲端 → 不顯示
-  if(st!=='live'){if(!everLive&&Date.now()-bootAt<4000){setTimeout(render,4100-(Date.now()-bootAt));return}clearTimeout(hideT);hideT=0;const n=cloudQ().length;show(n?`離線・本機（${n} 筆待上傳）`:'離線・本機','off')}
-  else if(!hideT)hide()}
+  if(st!=='live'){if(!everLive&&Date.now()-bootAt<4000){setTimeout(render,4100-(Date.now()-bootAt));return}clearTimeout(hideT);hideT=0;const n=cloudQ().length;show(n?`離線・本機（${n} 筆待上傳）`:'離線・本機','off');offPill(true)}
+  else{offPill(false);if(!hideT)hide()}}
 function toast(n){if(!el||st!=='live')return;clearTimeout(hideT);show(n>0?`已同步 ${n} 筆`:'已同步','ok');hideT=setTimeout(()=>{hideT=0;hide()},150+1600)} // 連續觸發只延長同一個提示
 function setStatus(s){const was=st;st=s;if(s==='live')everLive=true;document.documentElement.dataset.sync=s;if(el)el.dataset.conn=s;if(was!==s||s!=='live')render();listeners.forEach(f=>f(s))}
 const own=()=>{try{return JSON.parse(localStorage.getItem(LS_OWN))||{}}catch(e){return{}}};
@@ -42,8 +44,8 @@ async function flush(){if(!api||busy||st!=='live'||denied||!epochOK)return;busy=
     const curEp=+(localStorage.getItem('有桶_epoch_v1')||0);if(it.ep!=null&&it.ep!==curEp){dropStale(it);continue} // 清空前排進來的動作：丟掉，不上傳
     if(it.op==='put'){const sec=O[id]||(O[id]=rnd());setOwn(O);up[`${it.node}/${id}`]={...pick(it.rec,it.node==='events'?EV_KEYS:ND_KEYS),ts:api.serverTimestamp(),c:cid(),...(epochRules?{e:curEp}:{})}; /* e：目前的清空世代（規則比對；舊版規則讀不到 meta 時不送） */up[`owners/${id}`]=sec;up[`last/${cid()}`]=api.serverTimestamp()}
     else if(O[id]){up[`proof/${id}`]=O[id];if(it.op==='del')up[`${it.node}/${id}/del`]=true;else for(const k of ['reason','note'])if(k in it.rec)up[`${it.node}/${id}/${k}`]=it.rec[k]??null}
-    let wait=0;if(Object.keys(up).length)try{await api.update(api.ref(db),up)}catch(e){const m=String(e&&e.message||e);if(/permission|PERMISSION/i.test(m)){if(it.op==='put'&&!it.retry){it.retry=1;wait=1700}else if(it.op==='put'&&it.ep!=null&&it.ep!==+(localStorage.getItem('有桶_epoch_v1')||0)){dropStale(it);continue}else console.warn('[有桶] 雲端拒絕寫入，只保留在本機',it,m)}else{busy=false;return}} // 網路錯誤 → 留在佇列，下次連線再送
-    if(Object.keys(up).length)sent++;const q2=cloudQ();if(q2[0]&&q2[0].rec.id!==it.rec.id)continue;if(wait){if(!q2.length)continue;q2[0]=it;localStorage.setItem(LS_CQ,JSON.stringify(q2));await new Promise(r=>setTimeout(r,wait));continue}q2.shift();localStorage.setItem(LS_CQ,JSON.stringify(q2))}
+    let wait=0;if(Object.keys(up).length)try{await api.update(api.ref(db),up);sent++}catch(e){const m=String(e&&e.message||e);if(/permission|PERMISSION/i.test(m)){if(it.op==='put'&&!it.retry){it.retry=1;wait=1700}else if(it.op==='put'&&it.ep!=null&&it.ep!==+(localStorage.getItem('有桶_epoch_v1')||0)){dropStale(it);continue}else console.warn('[有桶] 雲端拒絕寫入，只保留在本機',it,m)}else{busy=false;return}} // 網路錯誤 → 留在佇列，下次連線再送
+    const q2=cloudQ();if(q2[0]&&q2[0].rec.id!==it.rec.id)continue;if(wait){if(!q2.length)continue;q2[0]=it;localStorage.setItem(LS_CQ,JSON.stringify(q2));await new Promise(r=>setTimeout(r,wait));continue}q2.shift();localStorage.setItem(LS_CQ,JSON.stringify(q2))}
 }finally{busy=false;if(sent){selfAck=Date.now();toast(backlog?sent:0)}}}
 // 雲端快照 → 本機快取：雲端有的（未刪）＋本機還沒送出的；本機已送出但雲端沒有（被刪／被清空）就移除
 const primed={};function merge(node,val){const key=node==='events'?LS_EVENTS:LS_NEEDS,q=cloudQ(),pend=new Set(q.filter(x=>x.node===node&&x.op==='put').map(x=>x.rec.id)),dels=new Set(q.filter(x=>x.node===node&&x.op==='del').map(x=>x.rec.id));
@@ -72,7 +74,7 @@ async function start(){
 
     for(const node of ['events','needs'])D.onValue(D.query(D.ref(db,node),D.orderByChild('ts'),D.limitToLast(500)),s=>merge(node,s.val()),e=>{denied=true;console.warn('[有桶] 雲端讀取被拒，改用本機',e&&e.code||e);upd()});
   }catch(e){console.warn('[有桶] 雲端同步無法啟動，改用本機',e);setStatus('local')}}
-window.Cloud={refresh:()=>render(),_off:()=>api&&api.goOffline(db),_on:()=>api&&api.goOnline(db),flush,status:()=>st,onStatus:f=>listeners.push(f),on};
+window.Cloud={pillH:()=>offShown&&el?el.offsetHeight+12:0,refresh:()=>render(),_off:()=>api&&api.goOffline(db),_on:()=>api&&api.goOnline(db),flush,status:()=>st,onStatus:f=>listeners.push(f),on};
 addEventListener('online',()=>flush());window.addEventListener('storage',e=>{if(e.key===LS_CQ)render()});
 const boot=()=>{mountStatus();if(on)start()};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
