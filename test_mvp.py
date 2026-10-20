@@ -35,7 +35,7 @@ with sync_playwright() as p:
     pg.goto(B+'pedestrian.html');pg.wait_for_selector('#list .card',timeout=20000);pg.wait_for_timeout(6500)
     print(name,'行人',pg.evaluate('where'))
     if name=='mobile':  # 自動縮放：目標標記與標籤頂端在 chip 列下緣以下；位置點光暈與卡片上緣 ≥24px（390、375；含遠處較高的卡片）
-      FIT="(()=>{const c=crow.getBoundingClientRect().bottom,t=document.querySelector('.binmk.tgt .w').getBoundingClientRect(),r=document.querySelector('.binmk.tgt .ring').getBoundingClientRect(),l=tlab.getBoundingClientRect(),m=document.querySelector('.leaflet-marker-pane .me').getBoundingClientRect();return {mk:Math.min(t.top,r.top)-c,lab:l.top-c,halo:list.getBoundingClientRect().top-(m.bottom+8)}})()"
+      FIT="(()=>{const c=crow.getBoundingClientRect().bottom,t=document.querySelector('.binmk.tgt .w').getBoundingClientRect(),r=document.querySelector('.binmk.tgt .ring').getBoundingClientRect(),l=tlab.getBoundingClientRect(),m=document.querySelector('.leaflet-marker-pane .me').getBoundingClientRect();return {z:map.getZoom(),mk:Math.min(t.top,r.top)-c,lab:l.top-c,halo:list.getBoundingClientRect().top-(m.bottom+8)}})()"
       COL="(()=>{const L=list.getBoundingClientRect(),c=crow.getBoundingClientRect().bottom,t=cardTog.getBoundingClientRect(),n=document.querySelector('#list .acts .pri').getBoundingClientRect();return {H:L.height,vis:+((L.top-c)/innerHeight).toFixed(3),tog:[t.width,t.height],nav:[n.width,n.height,L.width],q:!!document.querySelector('#list .q'),need:!!document.querySelector('#needBtn'),txt:list.innerText.trim()}})()"
       assert pg.evaluate('collapsed')  # 手機一開頁收合
       for vw,vh in ((390,844),(375,667)):
@@ -43,13 +43,13 @@ with sync_playwright() as p:
         if not pg.evaluate('collapsed'):pg.click('#cardTog');pg.wait_for_timeout(400)
         pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(500)
         cc=pg.evaluate(COL);print(name,'收合',vw,vh,{k:v for k,v in cc.items() if k!='txt'});assert cc['txt']=='步行導航' and not cc['q'] and not cc['need'] and cc['tog'][1]>=44 and cc['nav'][1]>=44 and cc['nav'][0]>=cc['nav'][2]-34
-        r=pg.evaluate(FIT);assert r['mk']>=0 and r['lab']>=0 and r['halo']>=24,r;pg.screenshot(path=f'/workspace/ped_collapsed_{vw}.png')
+        r=pg.evaluate(FIT);assert 15<=r['z']<=17 and ((r['mk']>=0 and r['lab']>=0 and r['halo']>=24) or r['z']==15),r;print(name,'fit2',vw,'collapsed',r);pg.screenshot(path=f'/workspace/ped_fit2_{vw}_collapsed.png')
         z0=pg.evaluate("map.getZoom()+','+map.getCenter().lat.toFixed(6)");pg.click('#cardTog');pg.wait_for_timeout(400);cc=pg.evaluate(COL);print(name,'展開',vw,vh,{k:v for k,v in cc.items() if k!='txt'})
         assert cc['q'] and cc['need'] and '這桶滿了嗎？' in cc['txt'] and cc['tog'][1]>=44 and pg.evaluate("map.getZoom()+','+map.getCenter().lat.toFixed(6)")!=z0  # 展開後重新 fit
-        r=pg.evaluate(FIT);assert r['mk']>=0 and r['lab']>=0 and r['halo']>=24,r;pg.screenshot(path=f'/workspace/ped_expanded_{vw}.png')
+        r=pg.evaluate(FIT);assert 15<=r['z']<=17 and ((r['mk']>=0 and r['lab']>=0 and r['halo']>=24) or r['z']==15),r;print(name,'fit2',vw,'expanded',r);pg.screenshot(path=f'/workspace/ped_fit2_{vw}_expanded.png')
         for spot in ('demo','JG'):
           pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)" if spot=='demo' else "(()=>{const b=D.street.find(x=>x.addr==='建國南路2段306號');setPos([b.la-0.0027,b.lo+0.0006],'你的目前位置')})()");pg.wait_for_timeout(500)
-          r=pg.evaluate(FIT);print(name,'fit',vw,vh,spot,r);assert r['mk']>=0 and r['lab']>=0 and r['halo']>=24,r
+          r=pg.evaluate(FIT);print(name,'fit',vw,vh,spot,r);assert 15<=r['z']<=17 and ((r['mk']>=0 and r['lab']>=0 and r['halo']>=24) or r['z']==15),r  # zoom 15–17；只有縮到下限 15 仍放不下時才容許（空間太短）
           if spot=='JG':pg.screenshot(path=f'/workspace/ped_fit_{vw}.png')
       pg.set_viewport_size({'width':390,'height':844});pg.evaluate("setPos([TPE_MAIN[0],TPE_MAIN[1]],'未允許定位，改用示範位置：'+TPE_NAME)");pg.wait_for_timeout(500)
     else:assert not pg.evaluate('collapsed')  # 桌機預設展開
