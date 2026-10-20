@@ -35,16 +35,17 @@ const own=()=>{try{return JSON.parse(localStorage.getItem(LS_OWN))||{}}catch(e){
 const setOwn=o=>{try{localStorage.setItem(LS_OWN,JSON.stringify(o))}catch(e){}};
 function cid(){let c=localStorage.getItem('有桶_cid_v1');if(!c||!/^c[0-9a-z]{8,24}$/.test(c)){c='c'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem('有桶_cid_v1',c)}return c}
 const rnd=()=>Array.from(crypto.getRandomValues(new Uint8Array(24)),b=>(b%36).toString(36)).join('');
-const EV_KEYS=['bin','kind','by','level','amount','amountPct','predPct','calib','fcDay','fcMin'],ND_KEYS=['la','lo','reason','note'];
+const EV_KEYS=['bin','kind','by','ot','level','amount','amountPct','predPct','calib','fcDay','fcMin'],ND_KEYS=['la','lo','reason','note'];
 const pick=(r,ks)=>{const o={};for(const k of ks)if(r[k]!=null&&r[k]!=='')o[k]=r[k];return o};
 function dropStale(it){const q=cloudQ().filter(x=>x.rec.id!==it.rec.id);localStorage.setItem(LS_CQ,JSON.stringify(q));const key=it.node==='events'?LS_EVENTS:LS_NEEDS;try{const a=JSON.parse(localStorage.getItem(key)||'[]');const b=a.filter(r=>r.id!==it.rec.id);if(b.length!==a.length){localStorage.setItem(key,JSON.stringify(b));appSyncNotify(key)}}catch(e){}}
-let epochRules=false,api=null,db=null,busy=false,denied=false,epochOK=false,wasOff=false,selfAck=0;const cloudIds={events:new Set(),needs:new Set()};
-async function flush(){if(!api||busy||st!=='live'||denied||!epochOK)return;busy=true;let sent=0;const backlog=cloudQ().length>1||wasOff;wasOff=false;try{
+let evOK=false,evT0=0,noOt=false,epochRules=false,api=null,db=null,busy=false,denied=false,epochOK=false,wasOff=false,selfAck=0;const cloudIds={events:new Set(),needs:new Set()};
+async function flush(){if(!api||busy||st!=='live'||denied||!epochOK||!evOK)return;busy=true;let sent=0;const backlog=cloudQ().length>1||wasOff;wasOff=false;try{
   for(;;){const q=cloudQ();if(!q.length)break;const it=q[0],O=own(),id=it.rec.id,up={};
     const curEp=+(localStorage.getItem('有桶_epoch_v1')||0);if(it.ep!=null&&it.ep!==curEp){dropStale(it);continue} // 清空前排進來的動作：丟掉，不上傳
-    if(it.op==='put'){const sec=O[id]||(O[id]=rnd());setOwn(O);up[`${it.node}/${id}`]={...pick(it.rec,it.node==='events'?EV_KEYS:ND_KEYS),ts:api.serverTimestamp(),c:cid(),...(epochRules?{e:curEp}:{})}; /* e：目前的清空世代（規則比對；舊版規則讀不到 meta 時不送） */up[`owners/${id}`]=sec;up[`last/${cid()}`]=api.serverTimestamp()}
+    if(it.op==='put'&&it.node==='events'&&it.rec.kind!=='clear'&&evT(it.rec)<lastClearTs(it.rec.bin)){const q3=cloudQ();q3.shift();localStorage.setItem(LS_CQ,JSON.stringify(q3));continue} // 排隊中的回報比該桶最近清運早 → 不上傳（不會讓桶又變紅）
+    if(it.op==='put'){const sec=O[id]||(O[id]=rnd());setOwn(O);up[`${it.node}/${id}`]={...pick(it.rec,it.node==='events'?(noOt?EV_KEYS.filter(x=>x!=='ot'):EV_KEYS):ND_KEYS),ts:api.serverTimestamp(),c:cid(),...(epochRules?{e:curEp}:{})}; /* e：目前的清空世代（規則比對；舊版規則讀不到 meta 時不送） */up[`owners/${id}`]=sec;up[`last/${cid()}`]=api.serverTimestamp()}
     else if(O[id]){up[`proof/${id}`]=O[id];if(it.op==='del')up[`${it.node}/${id}/del`]=true;else for(const k of ['reason','note'])if(k in it.rec)up[`${it.node}/${id}/${k}`]=it.rec[k]??null}
-    let wait=0;if(Object.keys(up).length)try{await api.update(api.ref(db),up);sent++}catch(e){const m=String(e&&e.message||e);if(/permission|PERMISSION/i.test(m)){if(it.op==='put'&&!it.retry){it.retry=1;wait=1700}else if(it.op==='put'&&it.ep!=null&&it.ep!==+(localStorage.getItem('有桶_epoch_v1')||0)){dropStale(it);continue}else console.warn('[有桶] 雲端拒絕寫入，只保留在本機',it,m)}else{busy=false;return}} // 網路錯誤 → 留在佇列，下次連線再送
+    let wait=0;if(Object.keys(up).length)try{await api.update(api.ref(db),up);sent++}catch(e){const m=String(e&&e.message||e);if(/permission|PERMISSION/i.test(m)){if(it.op==='put'&&it.node==='events'&&!noOt&&it.rec.ot!=null&&!it.otTried){noOt=true;it.otTried=1;wait=1}else if(it.otTried===1&&noOt&&!it.retry){noOt=false;it.otTried=2;it.retry=1;wait=1700}else if(it.op==='put'&&!it.retry){it.retry=1;wait=1700}else if(it.op==='put'&&it.ep!=null&&it.ep!==+(localStorage.getItem('有桶_epoch_v1')||0)){dropStale(it);continue}else console.warn('[有桶] 雲端拒絕寫入，只保留在本機',it,m)}else{busy=false;return}} // 網路錯誤 → 留在佇列，下次連線再送
     const q2=cloudQ();if(q2[0]&&q2[0].rec.id!==it.rec.id)continue;if(wait){if(!q2.length)continue;q2[0]=it;localStorage.setItem(LS_CQ,JSON.stringify(q2));await new Promise(r=>setTimeout(r,wait));continue}q2.shift();localStorage.setItem(LS_CQ,JSON.stringify(q2))}
 }finally{busy=false;if(sent){selfAck=Date.now();toast(backlog?sent:0)}}}
 // 雲端快照 → 本機快取：雲端有的（未刪）＋本機還沒送出的；本機已送出但雲端沒有（被刪／被清空）就移除
@@ -69,10 +70,10 @@ async function start(){
       if(mine!==null&&+mine!==e){for(const x of [LS_EVENTS,LS_NEEDS,LS_CQ,LS_OWN,'有桶_asked_v1',CONFIG.storageKeys.forecast])localStorage.removeItem(x);try{sessionStorage.removeItem('有桶_myrep')}catch(_){};console.info('[有桶] 雲端已清空，本機資料一併清除');appSyncNotify('wipe');appSyncNotify(LS_EVENTS)}
       localStorage.setItem(k,String(e));epochRules=true;epochOK=true;upd()},epErr=e=>{console.warn('[有桶] 讀不到 meta/epoch（規則未更新？），略過清空偵測');epochOK=true;upd()};
     D.onValue(D.ref(db,'meta/epoch'),onEpoch,epErr);
-    D.onValue(D.ref(db,'.info/connected'),s=>{conn=!!s.val();if(conn){epochOK=false;D.get(D.ref(db,'meta/epoch')).then(onEpoch,epErr)}upd()});
+    D.onValue(D.ref(db,'.info/connected'),s=>{conn=!!s.val();if(conn){epochOK=false;evOK=false;clearTimeout(evT0);evT0=setTimeout(()=>{evOK=true;flush()},2500);D.get(D.ref(db,'meta/epoch')).then(onEpoch,epErr)}upd()});
     // 每次（重新）連線先向伺服器確認 epoch 才上傳：離線期間被清空的話，待上傳佇列會先被清掉
 
-    for(const node of ['events','needs'])D.onValue(D.query(D.ref(db,node),D.orderByChild('ts'),D.limitToLast(500)),s=>merge(node,s.val()),e=>{denied=true;console.warn('[有桶] 雲端讀取被拒，改用本機',e&&e.code||e);upd()});
+    for(const node of ['events','needs'])D.onValue(D.query(D.ref(db,node),D.orderByChild('ts'),D.limitToLast(500)),s=>{merge(node,s.val());if(node==='events'&&!evOK){evOK=true;clearTimeout(evT0);flush()}},e=>{denied=true;console.warn('[有桶] 雲端讀取被拒，改用本機',e&&e.code||e);upd()});
   }catch(e){console.warn('[有桶] 雲端同步無法啟動，改用本機',e);setStatus('local')}}
 window.Cloud={pillH:()=>offShown&&el?el.offsetHeight+12:0,refresh:()=>render(),_off:()=>api&&api.goOffline(db),_on:()=>api&&api.goOnline(db),flush,status:()=>st,onStatus:f=>listeners.push(f),on};
 addEventListener('online',()=>flush());window.addEventListener('storage',e=>{if(e.key===LS_CQ)render()});

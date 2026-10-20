@@ -1,12 +1,12 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021m"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021m"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021m"><link rel="stylesheet" href="tokens.css?v=20261021m"><link rel="stylesheet" href="ui.css?v=20261021m">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261021o"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261021o"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261021o"><link rel="stylesheet" href="tokens.css?v=20261021o"><link rel="stylesheet" href="ui.css?v=20261021o">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 #map{position:fixed;inset:0;z-index:0}
 .top{position:fixed;top:0;left:0;right:0;z-index:1000;padding:calc(10px + env(safe-area-inset-top)) 12px 0;display:flex;gap:8px;align-items:center;pointer-events:none}
-.prog{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:var(--touch);padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);pointer-events:auto;font:600 14px/1 var(--font);color:var(--ink)}
+.prog .no,.tchip{white-space:nowrap;flex:none}.prog small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.prog{flex:1;min-width:0;white-space:nowrap;display:flex;align-items:center;gap:10px;height:var(--touch);padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);pointer-events:auto;font:600 14px/1 var(--font);color:var(--ink)}
 .prog .tr{flex:1;min-width:30px;height:6px;border-radius:3px;background:var(--gray-2);overflow:hidden}.prog .tr i{display:block;height:100%;background:var(--ink-2);border-radius:3px;transition:width .3s}
 .prog small{font-weight:500;color:var(--mute);font-size:13px;white-space:nowrap}
 .tchip{pointer-events:auto;height:var(--touch);padding:0 12px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-1);font:700 14px/1 var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
@@ -14,9 +14,9 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 .top{padding-top:calc(62px + env(safe-area-inset-top))!important}#infoBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:1100}
 #menu{flex:none}
 /* 卡片：A 規劃／B 執行 */
-#card{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow-2);padding:6px 16px 16px;max-width:520px;margin:0 auto;max-height:40vh;overflow-y:auto;transition:max-height .25s}
+#card{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow-2);padding:16px 16px 16px;max-width:520px;margin:0 auto;max-height:40vh;overflow-y:auto}
 #card.collapsed{max-height:64px;overflow:hidden}
-.grab{display:block;width:100%;height:18px;border:0;background:none;cursor:pointer;padding:0}.grab::before{content:"";display:block;margin:6px auto 0;width:36px;height:4px;border-radius:2px;background:var(--gray-2)}
+
 .k{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);min-height:28px}
 .k .lbl{font-weight:700;color:var(--ink);font-size:16px}.k .no{font-variant-numeric:tabular-nums}
 .k .back{margin-left:-8px;width:36px;height:36px;border:0;border-radius:50%;background:var(--gray-1);font:700 16px var(--font);color:var(--ink);cursor:pointer}
@@ -31,7 +31,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 .top3{list-style:none;margin:6px 0 12px;padding:0}.top3 li{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
 .top3 .n{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--surface);font:700 13px var(--font)}
 .top3 .t{flex:1;min-width:0}.top3 .t b{display:block;font-size:15px;line-height:1.3;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.top3 .t span{font-size:13px;color:var(--mute)}
-.subh{font:600 12px var(--font);color:var(--mute);margin:4px 0 0}.top3 .n.must{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink-2)}#card{transition:max-height .25s,opacity .3s}#card.fade{opacity:.35}.top3 .p,.no,.tv{font-variant-numeric:tabular-nums}.top3 .p{font:700 15px var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}
+.subh{font:600 12px var(--font);color:var(--mute);margin:4px 0 0}.top3 .n.must{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink-2)}#card{transition:opacity .3s}#card.fade{opacity:.35}.top3 .p,.no,.tv{font-variant-numeric:tabular-nums}.top3 .p{font:700 15px var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}
 .small{font-size:12px;color:var(--mute);line-height:1.5}
 .flag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;background:var(--gray-2);color:var(--ink-2)}.flag.must{background:var(--ink-strong)!important;color:#fff!important}.repby{font-size:12px;font-weight:500;color:var(--reported-ink)}.dl{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.dl a{flex:1;min-width:96px;text-align:center;padding:8px 6px;border-radius:10px;background:var(--gray-1);color:var(--ink);font:500 13px var(--font);text-decoration:none}.flag.cal{background:var(--gray-1);color:var(--ink-2)}
 .done{text-align:center;padding:8px 0 4px}.done b{display:block;font-size:20px;margin:6px 0 4px}.done p{color:var(--mute);font-size:14px;margin:0 0 14px}
@@ -63,7 +63,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 <div id="map"></div>
 <div class="top"><div class="prog" id="prog" aria-live="polite">載入中…</div><button class="tchip" id="tChip" aria-label="選擇預測時間">🕒 —</button><button class="tchip" id="menu" aria-label="調度設定">調度</button></div>
 <button class="fab ibtn" id="infoBtn" aria-label="資料說明">i</button>
-<section id="card" aria-live="polite" data-state="A"><button class="grab" id="grab" aria-label="收合／展開卡片"></button><div id="cardBody"><div class="addr" style="color:var(--mute);font-weight:500">正在載入預測…</div></div></section>
+<section id="card" aria-live="polite" data-state="A"><button class="tog" id="grab" aria-expanded="true" aria-label="收合卡片"><svg width="20" height="12" viewBox="0 0 20 12"><path d="M3 3l7 6 7-6" fill="none" stroke="#9aa0a4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div id="cardBody"><div class="addr" style="color:var(--mute);font-weight:500">正在載入預測…</div></div></section>
 
 <div class="sheet" id="timeSheet" hidden><div class="sh" role="dialog" aria-label="預測時間">
   <div class="hd"><b>預測時間</b><button class="x" data-close aria-label="關閉">✕</button></div>
@@ -93,7 +93,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021m"></script><script src="common.js?v=20261021m"></script><script src="cloud.js?v=20261021m"></script><script src="ui.js?v=20261021m"></script><script src="bin-icons.js?v=20261021m"></script><script src="forecast.js?v=20261021m"></script><script src="routing.js?v=20261021m"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261021o"></script><script src="common.js?v=20261021o"></script><script src="cloud.js?v=20261021o"></script><script src="ui.js?v=20261021o"></script><script src="bin-icons.js?v=20261021o"></script><script src="forecast.js?v=20261021o"></script><script src="routing.js?v=20261021o"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
@@ -117,7 +117,7 @@ function nnDrive(sel){const left=[...sel],out=[];let cur=depot;while(left.length
 // 第 1 層「必清」：在下一次例行清運（或收班）前會滿；收班後則為隔天上班前會滿
 function deadline(t){const day=Math.floor(t/1440)*1440,rc=C.routineClears.map(FC.hm),end=day+FC.hm(C.shiftEnd);const nx=rc.map(m=>day+m).filter(m=>m>t)[0];return t>=end||nx==null?day+1440+FC.hm(C.shiftStart):Math.min(nx,end)}
 // 行人回報時間：該桶最後一筆 full 事件 → 「N 分前」
-function repAgo(id){const l=getEvents().filter(x=>x.bin===id&&x.kind==='full').slice(-1)[0];if(!l)return '';const m=Math.max(0,Math.round((Date.now()-l.ts)/60000));return m<1?'剛剛':m<60?m+' 分前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前'}
+function repAgo(id){const l=binEvents(id).filter(x=>x.kind==='full').slice(-1)[0];if(!l)return '';const m=Math.max(0,Math.round((Date.now()-l.ts)/60000));return m<1?'剛剛':m<60?m+' 分前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前'}
 function plan(){const st=FC.state();E=FC.evaluate(P,day(),T(),st);const dl=deadline(T());const ev=getEvents();E.forEach(e=>e.rep=binState(e.b.id,ev)==='reported');const sel=E.filter(e=>e.fill>=+th.value||e.rep);sel.forEach(e=>e.must=e.rep||e.fill>=100||e.fullAt<=dl); // 行人回報滿（尚未清運）→ 一定排進「必清」
   route=!DR||C.routeOrder==='priority'?sel:C.routeOrder==='tiered'?[...nnDrive(sel.filter(e=>e.must)),...nnDriveFrom(sel.filter(e=>e.must),sel.filter(e=>!e.must))]:nnDrive(sel);gen=Date.now()}
 function nnDriveFrom(prev,sel){const left=[...sel],out=[];let cur=prev.length?(()=>{const p=nnDrive(prev).slice(-1)[0];return[p.b.la,p.b.lo]})():depot;while(left.length){let bi=0,bd=1e18;left.forEach((x,i)=>{const d=dd(cur,[x.b.la,x.b.lo]);if(d<bd){bd=d;bi=i}});const x=left.splice(bi,1)[0];out.push(x);cur=[x.b.la,x.b.lo]}return out}
@@ -175,7 +175,7 @@ function record(id,amount,pct){const b=P.find(x=>x.id===id),st=FC.state(),r=FC.c
 card.onclick=e=>{const a=e.target.closest('[data-amt]');if(a){record(route[curIdx()].b.id,a.dataset.amt,+a.dataset.pct);return}
   if(e.target.closest('#startBtn')){setState('B');return}
   if(e.target.closest('#backBtn')||e.target.closest('#replanBtn')){plan();setState('A');return}
-  if(e.target.closest('#grab')){card.classList.toggle('collapsed');requestAnimationFrame(()=>fitTop())}};
+  if(e.target.closest('#grab')||(e.target.closest('#cardBody > .k')&&!e.target.closest('button,a'))){card.classList.toggle('collapsed');togSet(document.getElementById('grab'),card.classList.contains('collapsed'));requestAnimationFrame(()=>fitTop())}}; // 把手或標題都能收合／展開（和行人頁一樣）
 menu.onclick=()=>sheetOpen('setSheet');infoBtn.onclick=()=>sheetOpen('infoSheet');tChip.onclick=()=>sheetOpen('timeSheet');
 // 跨分頁同步（行人 滿了／取消、別的分頁清運）：只更新每站狀態，不重新排序、不 fit 地圖、不換狀態
 function syncStatus(){const old=route.map(e=>e.b.id),ev=getEvents(),dl=deadline(T());

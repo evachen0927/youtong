@@ -2,9 +2,14 @@
 const TPE_MAIN=(window.CONFIG&&CONFIG.fallbackLocation.latlng)||[25.013993,121.535185];
 const TPE_NAME=(window.CONFIG&&CONFIG.fallbackLocation.name)||'捷運公館站公車站';
 const LS_EVENTS=(window.CONFIG&&CONFIG.storageKeys.events)||'debug松_events_v1';
+// 共用收合箭頭（行人／清潔隊／設點規劃三頁同一元件）：收合時 ^、展開時 v；點擊範圍 44px 整列
+function togHTML(col,id='cardTog',cls='tog'){return `<button class="${cls}" id="${id}" aria-expanded="${!col}" aria-label="${col?'展開卡片':'收合卡片'}"><svg width="20" height="12" viewBox="0 0 20 12"><path d="${col?'M3 9l7-6 7 6':'M3 3l7 6 7-6'}" fill="none" stroke="#9aa0a4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`}
+function togSet(b,col){if(!b)return;b.outerHTML=togHTML(col,b.id,b.className)}
 function sheet(){ // 手機底部面板：點把手切換大小
-  const p=document.querySelector('.panel'),h=p.querySelector('.handle');if(!h)return;
-  h.onclick=()=>{if(p.classList.contains('exp')){p.classList.remove('exp');p.classList.add('min')}else if(p.classList.contains('min'))p.classList.remove('min');else p.classList.add('exp')};
+  const p=document.querySelector('.panel');if(!p||!p.querySelector('.handle'))return;const h=()=>p.querySelector('.handle');
+  // 點把手（或收合時點面板）：收合 ↔ 展開（和行人頁一樣；原本三段循環，第一下是「放大」不是收合）。切換後地圖重新量尺寸
+  const tog=()=>{p.classList.remove('exp');p.classList.toggle('min');togSet(h(),p.classList.contains('min'));requestAnimationFrame(()=>{if(typeof map!=='undefined'&&map.invalidateSize){map.invalidateSize();if(typeof window.sheetFit==='function')window.sheetFit()}})};
+  p.addEventListener('click',e=>{if(e.target.closest('.handle')){e.stopPropagation();tog();return}if(p.classList.contains('min')&&!e.target.closest('button,a,input,select,label'))tog()});
 }
 function baseMap(center,zoom){ // 優先使用 ui.js 的去飽和底圖
   if(typeof quietMap==='function'){const m=quietMap(center,zoom);L.control.zoom({position:'topright'}).addTo(m);return m}
@@ -46,7 +51,8 @@ function addNeed(la,lo){const a=getNeeds(),d=a.find(n=>hav(la,lo,n.la,n.lo)<=NEE
 function removeNeed(id){localStorage.setItem(LS_NEEDS,JSON.stringify(getNeeds().filter(x=>x.id!==id)));cloudOp('del','needs',{id})}
 const NEED_NOTE_MAX=40;function setNeedNote(id,t){const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.note=String(t||'').trim().slice(0,NEED_NOTE_MAX)||null;localStorage.setItem(LS_NEEDS,JSON.stringify(a));cloudOp('upd','needs',{id,note:n.note})} // 「其他」的說明文字：存檔前裁到 40 字，同步到雲端
 function setNeedReason(id,reason){if(!NEED_REASON[reason])return;const a=getNeeds(),n=a.find(x=>x.id===id);if(!n)return;n.reason=reason;localStorage.setItem(LS_NEEDS,JSON.stringify(a));cloudOp('upd','needs',{id,reason})}
-function addEvent(e){const a=getEvents(),r={...e,id:e.id||('ev'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),ts:Date.now()};a.push(r);localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)));cloudOp('put','events',r);return r}
+function addEvent(e){const a=getEvents(),r={...e,id:e.id||('ev'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),ts:Date.now()};r.ot=r.ts; // ot：原始回報時間（上傳後 ts 會變成伺服器時間）
+ a.push(r);localStorage.setItem(LS_EVENTS,JSON.stringify(a.slice(-500)));cloudOp('put','events',r);return r}
 // 依 id 撤回一筆事件（行人「取消」自己剛送出的回報）
 function removeEvent(id){localStorage.setItem(LS_EVENTS,JSON.stringify(getEvents().filter(e=>e.id!==id)));cloudOp('del','events',{id})}
 // ===== 雲端同步（Firebase Realtime Database，見 cloud.js）=====
@@ -56,13 +62,17 @@ const LS_CQ='有桶_cloudq_v1',LS_OWN='有桶_owners_v1';
 const cloudQ=()=>{try{const v=JSON.parse(localStorage.getItem(LS_CQ));return Array.isArray(v)?v:[]}catch(e){return[]}};
 function cloudOp(op,node,rec){if(!window.CLOUD_ON)return;const q=cloudQ();q.push({op,node,rec,t:Date.now(),ep:(v=>v==null?null:+v)(localStorage.getItem('有桶_epoch_v1'))});try{localStorage.setItem(LS_CQ,JSON.stringify(q.slice(-300)))}catch(e){}if(window.Cloud){Cloud.flush();Cloud.refresh&&Cloud.refresh()}}
 function seedFill(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0)%101} // 模擬：依 id 固定
-function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of ev)if(e.bin===id){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}
+// 清運規則：某桶最近一次「清運完成」之後，比它早的回報（滿了／滿度）不算。比較用回報的原始時間 ot（離線排隊、晚上傳也一樣），沒有 ot 時用 ts
+const evT=e=>e.ot??e.ts;
+function lastClearTs(id,ev=getEvents()){let t=-Infinity;for(const e of ev)if(e.bin===id&&e.kind==='clear'&&e.ts>t)t=e.ts;return t}
+function binEvents(id,ev=getEvents()){const c=lastClearTs(id,ev);return ev.filter(e=>e.bin===id&&(e.kind==='clear'||evT(e)>=c)).sort((a,b)=>evT(a)-evT(b))}
+function fillOf(id,ev=getEvents()){let f=seedFill(id);for(const e of binEvents(id,ev)){f=e.kind==='full'?100:e.kind==='clear'?0:e.level}return f}
 const fillColor=f=>typeof rampColor==='function'?rampColor(f):(f>=100?'#d9731f':f>=70?'#e8b931':'#8cc9a8'); // 色階定義在 ui.js
 const fillPill=f=>`<span class="pill ${f>=100?'full':f>=70?'mid':'ok'}">${typeof rampState==='function'?rampState(f).t:f>=100?'滿溢':f>=70?'快滿了':'還有空間'}</span>`;
 const timeStr=ts=>new Date(ts).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
 
 // 示範資料：街道清冊垃圾桶（不含場域線索）、示範區站點
-async function loadCore(){const [b,y,s]=await Promise.all(['bins.geojson','youbike.geojson','busstops_taipei.geojson'].map(loadJSON));
+async function loadCore(opt={}){const st=opt.stations!==false,E={features:[]};const [b,y,s]=await Promise.all([loadJSON('bins.geojson'),st?loadJSON('youbike.geojson'):E,st?loadJSON('busstops_taipei.geojson'):E]); // 行人頁 {stations:false}：不載入 YouBike／公車站
   const street=b.features.filter(f=>f.properties.source.startsWith('main')).map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district,c:f.properties.colocated||1}));
   const venue=b.features.filter(f=>f.properties.source==='scenic130').map(f=>({id:f.properties.id,la:ll(f)[0],lo:ll(f)[1],addr:f.properties.address,d:f.properties.district,count:f.properties.count}));
   const yb=y.features.map(f=>({t:'yb',id:f.properties.id,name:f.properties.name,la:ll(f)[0],lo:ll(f)[1],act:f.properties.act,dock:f.properties.total,d:f.properties.district,addr:f.properties.address}));

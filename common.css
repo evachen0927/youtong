@@ -10,6 +10,8 @@ main{flex:1;display:flex;min-height:0;position:relative}
 #map{flex:1;min-height:0;background:#f3f5f6}
 .panel{width:400px;flex:none;border-left:1px solid var(--line);overflow-y:auto;padding:20px 22px 28px;background:#fff}
 .handle{display:none}
+.tog{display:flex;align-items:center;justify-content:center;width:calc(100% + 32px);height:44px;margin:-14px -16px -8px;padding:0;border:0;background:none;cursor:pointer;flex:none} /* 共用收合箭頭：點擊範圍 44px（整列） */
+@media (min-width:761px){.tog{height:32px;margin-bottom:-4px}}
 h2{font-size:19px;margin:0 0 4px}h3{font-size:15px;margin:22px 0 10px;color:var(--mute);font-weight:600}
 .sub{color:var(--mute);font-size:13px;margin:0 0 14px;line-height:1.5}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 14px;border-radius:10px;font-size:14px;cursor:pointer;text-decoration:none;font-family:inherit}
@@ -42,9 +44,9 @@ label.ck{display:flex;align-items:center;gap:8px;font-size:14px;padding:4px 0;cu
  header{height:50px;padding:0 14px}nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);justify-content:space-around;padding:6px 0 calc(6px + env(safe-area-inset-bottom));z-index:2000}
  nav.tabs a{flex-direction:column;gap:2px;font-size:12px;padding:6px 18px;border-radius:12px}
  main{flex-direction:column;padding-bottom:60px}
- .panel{position:absolute;left:0;right:0;bottom:60px;width:auto;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -4px 20px #0001;padding:6px 16px 20px;z-index:1500;transition:height .25s}
+ .panel{position:absolute;left:0;right:0;bottom:60px;width:auto;height:46%;border-left:0;border-top:0;border-radius:18px 18px 0 0;box-shadow:0 -4px 20px #0001;padding:16px 16px 20px;z-index:1500}
  .panel.exp{height:82%}.panel.min{height:96px;overflow:hidden}
- .handle{display:block;width:100%;padding:8px 0 10px;border:0;background:none;cursor:pointer}.handle::before{content:"";display:block;margin:auto;width:40px;height:5px;border-radius:3px;background:#d6dadc}
+ .tog.handle{display:flex;margin-bottom:-8px}
  #map{flex:1}
  .toast{bottom:150px}
 }

@@ -21,6 +21,7 @@
         "fcDay":    { ".validate": "newData.isString() && newData.val().length <= 4 && (!data.exists() || newData.val() === data.val())" },
         "fcMin":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1440 && (!data.exists() || newData.val() === data.val())" },
         "e":    { ".validate": "newData.isNumber() && (!data.exists() || newData.val() === data.val())" },
+        "ot":   { ".validate": "newData.isNumber() && newData.val() <= now + 300000 && newData.val() >= now - 604800000 && (!data.exists() || newData.val() === data.val())" },
         "del":  { ".validate": "newData.val() === true" },
         "$other": { ".validate": false }
       }

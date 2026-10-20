@@ -48,6 +48,10 @@ await t('改別人的需求原因',false,()=>update(ref(db),{[`proof/${n1}`]:'wr
 await t('移動需求座標',false,()=>update(ref(db),{[`proof/${n1}`]:SEC,[`needs/${n1}/la`]:25.02}));
 await t('epoch 不符（清空前的舊動作）',false,()=>{const c=C();return put('events',id(),ev(c,{e:12345}),c)});
 await t('沒帶 epoch',false,()=>{const c=C(),r=ev(c);delete r.e;return put('events',id(),r,c)});
+await sleep(1600);
+await t('帶原始時間 ot（現在）',true,()=>{const c=C();return put('events',id(),ev(c,{ot:Date.now()}),c)});
+await t('ot 太舊（>7 天）',false,()=>{const c=C();return put('events',id(),ev(c,{ot:Date.now()-8*864e5}),c)});
+await t('ot 在未來',false,()=>{const c=C();return put('events',id(),ev(c,{ot:Date.now()+36e5}),c)});
 await t('讀 meta/epoch',true,()=>get(ref(db,'meta/epoch')));
 await t('用戶端寫 meta/epoch',false,()=>set(ref(db,'meta/epoch'),1));
 await t('用戶端刪 meta',false,()=>set(ref(db,'meta'),null));
