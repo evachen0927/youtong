@@ -1,5 +1,7 @@
 # 有桶｜找回消失的垃圾桶（debug松 議題 #2 MVP）
 
+> **研究的界線**：本工具支援安排查核；人流不是垃圾量，清冊列數不是現場可用桶數，尚不能推薦新增箱位。
+
 **有桶**：幫行人找到最近的垃圾桶，也幫設點規劃排出「建議先去現場查核」的順序（查核優先序）。
 
 線上版：https://evachen0927.github.io/youtong/ ・程式碼：https://github.com/evachen0927/youtong
@@ -11,7 +13,7 @@
 - **B2 容量／頻率（模擬）**：**有桶團隊加的模擬，不在研究 PRD 內**。桶位不動；熱點最近的桶容量 80→120 公升、清運 2→3 次/日，參數在 `config.js > scenarioB`。
 - **C 同桶數挪一處**：總桶數不變；只從熱點 1 公里內挑一個桶（周邊 200m 活動量最低者）移到熱點旁。條件是原位置 600m 內不能有站點從「200m 內有桶」變成沒有（`config.js > scenarioC.noNewGapM = 200`）。
 
-方案定義沿用研究團隊（taipei-waste-lab，bangyuwen/taipei-city-lab HEAD 0b02eb6，PRD v0.4／D18）「A 現況／B 原位改善／C 同桶數微調一處」；B 拆成 B1（研究定義）與 B2（我們加的模擬）。
+方案定義沿用研究團隊（taipei-waste-lab，bangyuwen/taipei-city-lab commit 42c14f8，PRD v0.5／D18；https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab）「A 現況／B 原位改善／C 同桶數微調一處」；B 拆成 B1（研究定義）與 B2（我們加的模擬）。
 
 ## 三個頁面
 | 頁面 | 檔案 | 功能 |
@@ -76,7 +78,7 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 | 臺北市行人專用清潔箱（街道主檔 681 列，2026-09-30；景點商圈場域 130 列，2026-08-18） | https://data.taipei/dataset/detail?id=a835f3ba-7f50-4b0d-91a6-9df128632d1c ／ https://data.gov.tw/dataset/121355 | 政府資料開放授權條款-第1版 | 街道主檔＝垃圾桶；130 點只當「備用垃圾桶」，不計入桶數 |
 | YouBike2.0 臺北市即時資訊（站點快照 2026-10-19） | https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json | 政府資料開放授權條款-第1版 | 站點位置 |
 | 臺北市公共自行車2.0租借紀錄 2026-07 | https://data.taipei/dataset/detail?id=c5924c17-25db-4f1e-99c4-f8ada40f2445 | 政府資料開放授權條款-第1版 | 每站借＋還次數（地圖用全月；每小時預測排除 7/10、7/11 資料缺漏），只發布彙總檔 `youbike_activity_202607.csv` |
-| 臺北市公車站位（GetStop） | https://tcgbusfs.blob.core.windows.net/blobbus/GetStop.gz | 政府資料開放授權條款-第1版 | 站位位置、每站停靠路線數。**與研究團隊的公車資料來源不同**（研究另用其他站位資料）；GetStop 只有站位與路線，**無法推估人流**，所以只用在覆蓋率，不進預測 |
+| 臺北市公車站位（GetStop） | https://tcgbusfs.blob.core.windows.net/blobbus/GetStop.gz | 政府資料開放授權條款-第1版 | 站位位置、每站停靠路線數。研究也用 GetStop，但分組方式不同：研究用 5,375 個站位群組，我們用 3,460 個站位；GetStop 只有站位與路線，**無法推估人流**，所以只用在覆蓋率，不進預測 |
 | 鄉鎮市區界（內政部，經 taiwan-atlas 2021.9.20 TopoJSON） | https://cdn.jsdelivr.net/npm/taiwan-atlas/towns-10t.json | 政府資料開放授權條款-第1版（原始資料） | 判定是否在臺北市、各區面積 |
 | 底圖 | © OpenStreetMap contributors | ODbL | 地圖 |
 | 道路路網（步行、行車） | OpenStreetMap，經 Geofabrik `taiwan-261018.osm.pbf`（2026-10-18 資料，單次下載），© OpenStreetMap contributors | ODbL | 步行：**全臺北市**（12 區聯集外擴約 300m），`build_walk_city.py` 預先計算為 `roads_walk.json`（91,537 節點、135,016 路段；度-2 節點併入邊長、座標 1e-5 整數差分；1.55 MB，gzip 後約 0.5 MB）；行車：示範區外擴 300m，`roads_drive.json`（約 225 KB，遵守單行道）；展示時不呼叫任何路徑 API |
@@ -90,6 +92,7 @@ TDX 公車 API 需申請金鑰（未使用）。
 | 垃圾桶類別（一般垃圾＋資源回收） | **真實（全市一致說明）**：清冊沒有逐桶類別欄位；依環保局全市說明「每組包含一般垃圾箱與資源回收箱各 1 個」（中時 2025-08-17、聯合報報導），行人頁每桶都標一般＋回收，`bin-category.js` 的 `binCategory()` 回傳 `simulated:false`。若日後有逐桶欄位會自動改用 |
 | YouBike 借＋還次數 | **真實**紀錄的彙總，但當作人流時是**推估** |
 | 公車每站停靠路線數 | **推估**（路線數不是上下車人數） |
+| 捷運 2026-07 OD（設點規劃頁捷運圖層） | **真實紀錄彙總，不是垃圾量** |
 | **交通活動量是人流的推估，不等於垃圾量** | — |
 | 垃圾桶填充度、滿溢告警 | **模擬**（依桶編號固定產生；行人與清潔隊回報會覆蓋） |
 | 回報／清運／需求回報（Firebase 同步） | **真實**：使用者實際送出的資料，即時同步到所有裝置 |
@@ -104,6 +107,8 @@ TDX 公車 API 需申請金鑰（未使用）。
 | 距離 | 所有地圖距離判斷（行人頁、開場數字、查核優先序、門檻敏感度、A/B1/B2/C 指標）一律用**全臺北市步行路網距離**（點投影到最近路段，多源 Dijkstra；每分鐘 75 m）；清潔隊路線用**行車路網距離**。點離道路超過 150 m 無法對應路網時才退回直線並標示「直線（無法對應路網）」（目前 YouBike／公車站位 0 個）。到桶的距離用步行計算；半徑內的數量用直線計算。（半徑計數如 C 方案 200m 需求、B2 附近站點、預測集水半徑等維持直線。）研究 repo 用直線距離，對照數字見下。例：捷運公館站(2號出口) 到最近清潔箱直線 41 m，但要過羅斯福路，步行最近的是羅斯福路4段70號之1，約 180 m——直線會低估。路網為 OSM，可能缺斑馬線或巷弄細節 |
 
 街道清冊 681 列**全部顯示**：先前 5 m 內去重把 17 列併掉（地圖只剩 664 點），已改為每列保留；這 17 列都是地址不同的有效列（例如同一公車站左右側、停車場入口南／北側、動物園站 -1／-2），在地圖上與鄰列重疊，彈出視窗註明「此處重疊 N 列清冊」。無座標錯誤或超出範圍的列。開場數字與規劃頁所有指標只用這 681 列，不與 130 點相加。
+
+本 App 使用 2026-09-30 版街道清冊 681 列；官方 2026-10-21 版為 661 列（有效座標 659），demo 後更新。
 
 已知資料缺漏：北投區街道清冊 0 列、南港區 4 列 →**資料缺漏，非實際覆蓋率**。
 
@@ -122,10 +127,16 @@ TDX 公車 API 需申請金鑰（未使用）。
 - 研究團隊 39 處觀察錨點（每區活動量前 3＋臺大校區 3 處，`anchors.json`）可在設點規劃頁開啟圖層；錨點是觀察點，不是新設桶位。
 
 ## 與研究團隊資料的差異與注意事項
-- 公車：我們用 GetStop 站位，與研究資料來源不同；站位與路線數無法推估人流。
+- 公車：研究與我們都用 GetStop，但分組方式不同（研究 5,375 個站位群組，我們 3,460 個站位）；站位與路線數無法推估人流。
 - 研究的 2,663 則民眾意見不是代表性樣本，只能當線索。
 - 研究的「100 天落地」引用全市 WP01–WP09 工作包；其中的主責單位是「建議主責，不是機關的承諾」。
 - YouBike 站點快照：2026-10-19（研究為 2026-10-18）；借還活動為 2026-07 全月。
+
+## 新資料（僅引用，數字照原文）
+以下數字皆引用研究團隊（bangyuwen/taipei-city-lab commit 42c14f8，PRD v0.5），本工具未重算。
+- 捷運 2026-07 OD：73 站中 33 站 300 m 內無清冊桶。來源：https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab
+- 台北車站每桶位每日 63,188 人次。來源：https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab
+- 公車站位 62.7% 在 300 m 內無桶（研究為直線距離，與本 App 的步行距離不同）。來源：https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab
 
 ## 使用的開源與 AI 工具
 Leaflet 1.9.4（BSD-2）、OpenStreetMap、Python 3（shapely、pyproj）、Playwright（測試與錄影）、ffmpeg、AI 程式助理（協助撰寫程式與資料處理）。
