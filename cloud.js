@@ -29,7 +29,8 @@ function hide(){if(!el)return;el.style.transition='opacity 200ms ease-in';el.cla
 function render(){if(!el)return;if(!on)return; // 沒設定雲端 → 不顯示
   if(st!=='live'){if(!everLive&&Date.now()-bootAt<4000){setTimeout(render,4100-(Date.now()-bootAt));return}clearTimeout(hideT);hideT=0;const n=cloudQ().length;show(n?`離線・本機（${n} 筆待上傳）`:'離線・本機','off');offPill(true)}
   else{offPill(false);if(!hideT)hide()}}
-function toast(n){if(!el||st!=='live')return;clearTimeout(hideT);show(n>0?`已同步 ${n} 筆`:'已同步','ok');hideT=setTimeout(()=>{hideT=0;hide()},150+1600)} // 連續觸發只延長同一個提示
+let noteUntil=0;function toast(n){if(!el||st!=='live'||Date.now()<noteUntil)return; // 自訂提示（例：謝謝！已更新）顯示中不被同步提示蓋掉
+ clearTimeout(hideT);show(n>0?`已同步 ${n} 筆`:'已同步','ok');hideT=setTimeout(()=>{hideT=0;hide()},150+1600)} // 連續觸發只延長同一個提示
 function setStatus(s){const was=st;st=s;if(s==='live')everLive=true;document.documentElement.dataset.sync=s;if(el)el.dataset.conn=s;if(was!==s||s!=='live')render();listeners.forEach(f=>f(s))}
 const own=()=>{try{return JSON.parse(localStorage.getItem(LS_OWN))||{}}catch(e){return{}}};
 const setOwn=o=>{try{localStorage.setItem(LS_OWN,JSON.stringify(o))}catch(e){}};
@@ -75,7 +76,7 @@ async function start(){
 
     for(const node of ['events','needs'])D.onValue(D.query(D.ref(db,node),D.orderByChild('ts'),D.limitToLast(500)),s=>{merge(node,s.val());if(node==='events'&&!evOK){evOK=true;clearTimeout(evT0);flush()}},e=>{denied=true;console.warn('[有桶] 雲端讀取被拒，改用本機',e&&e.code||e);upd()});
   }catch(e){console.warn('[有桶] 雲端同步無法啟動，改用本機',e);setStatus('local')}}
-window.Cloud={pillH:()=>offShown&&el?el.offsetHeight+12:0,refresh:()=>render(),_off:()=>api&&api.goOffline(db),_on:()=>api&&api.goOnline(db),flush,status:()=>st,onStatus:f=>listeners.push(f),on};
+window.Cloud={note:(t,ms=1200)=>{mountStatus();noteUntil=Date.now()+ms+300;clearTimeout(hideT);show(t,'ok');hideT=setTimeout(()=>{hideT=0;hide();setTimeout(render,260)},ms)},pillH:()=>offShown&&el?el.offsetHeight+12:0,refresh:()=>render(),_off:()=>api&&api.goOffline(db),_on:()=>api&&api.goOnline(db),flush,status:()=>st,onStatus:f=>listeners.push(f),on};
 addEventListener('online',()=>flush());window.addEventListener('storage',e=>{if(e.key===LS_CQ)render()});
 const boot=()=>{mountStatus();if(on)start()};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
