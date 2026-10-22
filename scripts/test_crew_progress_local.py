@@ -17,7 +17,7 @@ with sync_playwright() as pw:
   R['B_sawA_events']=b.evaluate("getEvents().filter(e=>e.kind==='clear').length")
   R['B']=b.evaluate("({ci:curIdx(),prog:prog.querySelector('.no').innerText,route0:route.slice(0,3).map(e=>e.b.id)})")
   b.reload();b.wait_for_function("route.length",timeout=30000);b.wait_for_timeout(1500)
-  R['B_reload']=b.evaluate("({ci:curIdx(),prog:(prog.querySelector('.no')||{}).innerText,keys:Object.keys(localStorage).filter(k=>k.startsWith('有桶beta_'))})")
+  R['B_reload']=b.evaluate("({ci:curIdx(),prog:(prog.querySelector('.no')||{}).innerText,keys:Object.keys(localStorage).filter(k=>k.includes('crewprog'))})")
   R['errs']=errs;print(json.dumps(R,ensure_ascii=False))
   ok=R['A']['ci']==2 and R['B']['ci']==0 and R['B_reload']['ci']==0 and R['B_sawA_events']>=2 and not errs
   print('TWOCTX','PASS' if ok else 'FAIL');sys.exit(0 if ok else 1)

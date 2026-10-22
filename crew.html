@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022n"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022n"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022n"><link rel="stylesheet" href="tokens.css?v=20261022n"><link rel="stylesheet" href="ui.css?v=20261022n">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022o"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022o"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022o"><link rel="stylesheet" href="tokens.css?v=20261022o"><link rel="stylesheet" href="ui.css?v=20261022o">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
@@ -41,7 +41,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
 /* 地圖標記 */
 .stopw{background:none;border:0}.stop{display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--surface);font:700 12px/1 var(--font);box-shadow:0 0 0 2px var(--surface)}
 .stop.cur{font-size:15px;box-shadow:0 0 0 3px var(--surface),0 0 0 9px var(--scrim)}
-.stop.must{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink-2)}.stop.must.cur{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--ink-2),0 0 0 11px var(--scrim)}.stop.ok{background:var(--gray-2)!important;color:var(--mute)}
+.stop.must{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink-2)}.stop.must.cur{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--ink-2),0 0 0 11px var(--scrim)}.stop.ok{font-size:10px;background:var(--gray-2)!important;color:var(--mute)}
 .start{width:14px!important;height:14px!important;border-radius:4px;background:var(--ink-2);box-shadow:0 0 0 3px var(--surface)}
 /* 復原 toast */
 .undo{position:fixed;left:50%;transform:translateX(-50%);z-index:3000;display:flex;align-items:center;gap:6px;padding:4px 4px 4px 16px;border-radius:999px;background:var(--ink);color:var(--surface);font:14px var(--font);box-shadow:var(--shadow-2);white-space:nowrap}
@@ -94,13 +94,15 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022n"></script><script src="common.js?v=20261022n"></script><script src="cloud.js?v=20261022n"></script><script src="ui.js?v=20261022n"></script><script src="bin-icons.js?v=20261022n"></script><script src="forecast.js?v=20261022n"></script><script src="routing.js?v=20261022n"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022o"></script><script src="common.js?v=20261022o"></script><script src="cloud.js?v=20261022o"></script><script src="ui.js?v=20261022o"></script><script src="bin-icons.js?v=20261022o"></script><script src="forecast.js?v=20261022o"></script><script src="routing.js?v=20261022o"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
 const TH_OPTS=[70,100],thNorm=v=>{v=+v;return isFinite(v)&&v>0?(v>=85?100:70):70};
 const th={get value(){const i=document.querySelector('[name=thr]:checked');return i?+i.value:70},set value(v){const n=thNorm(v),i=document.querySelector(`[name=thr][value="${n}"]`);if(i)i.checked=true}};
-const C=CONFIG.forecast,LSU='有桶_crew_ui_v2',AMT=[['empty','空',0],['half','半',50],['full','滿',100],['overflow','滿溢',120]];
+// localStorage 前綴：/youtong-beta/ 底下用 beta 前綴（和正式站同網域，避免共用鍵）；其他路徑用正式站原本的鍵名
+const KP=/\/youtong-beta\//.test(location.pathname)?'有桶beta_':'有桶_';
+const C=CONFIG.forecast,LSU=KP+'crew_ui_v2',AMT=[['empty','空',0],['half','半',50],['full','滿',100],['overflow','滿溢',120]];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const map=quietMap(CONFIG.demoArea.center,15),binL=L.layerGroup().addTo(map),rtL=L.layerGroup().addTo(map);
 legendIntoSheet('infoSheet',[...BIN_LEGEND(),{c:css('--ink-2'),t:'站序',shape:'line'}]);
@@ -110,8 +112,8 @@ const day=()=>document.querySelector('[name=fcd]:checked').value,T=()=>+fcT.valu
 const dayName=k=>k==='we'?'週六':'平日';
 function saveUI(){localStorage.setItem(LSU,JSON.stringify({day:day(),t:T(),th:+th.value,state,gen,route:route.map(e=>e.b.id)}))}
 // 路線進度（哪幾站完成）只存在這台裝置的 localStorage，不從 Firebase 回報推導：別人的回報不影響我的進度。
-// 鍵＝beta 前綴＋本機日期＋路線（站序 id），隔天自動換新鍵並清掉舊日期的鍵。收運量回報照舊寫 Firebase。
-const PROG_PFX='有桶beta_crewprog_v1|';
+// 鍵＝前綴（KP）＋本機日期＋路線（站序 id），隔天自動換新鍵並清掉舊日期的鍵。收運量回報照舊寫 Firebase。
+const PROG_PFX=KP+'crewprog_v1|';
 const progDate=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const progKey=()=>PROG_PFX+progDate()+'|'+route.map(e=>e.b.id).join(',');
 function progLoad(){try{const v=JSON.parse(localStorage.getItem(progKey()));return new Set(Array.isArray(v&&v.done)?v.done:[])}catch(e){return new Set()}}
@@ -139,8 +141,8 @@ function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=d
   for(const e of E)if(!ids.has(e.b.id)){const f=Math.floor(e.fill);/* 不四捨五入：99.7% 不能畫成「滿溢」（卡片與選站用同一時間、同一個 ≥100 判斷）*/L.marker([e.b.la,e.b.lo],{icon:binDivIcon(f,false,binState(e.b.id,ev),small),title:`${e.b.addr}・預測${rampState(f).t}`}).addTo(binL)}
   if(route.length){L.polyline(DR?route.reduce((a,e,i)=>{const p=i?[route[i-1].b.la,route[i-1].b.lo]:depot;return a.concat(RT.path(DR,p,[e.b.la,e.b.lo]))},[]):[depot,...route.map(e=>[e.b.la,e.b.lo])],{color:css('--ink-2'),weight:3,opacity:.55,lineJoin:'round'}).addTo(rtL);
     L.marker(depot,{icon:L.divIcon({className:'start'}),title:'清潔隊出發點',interactive:false}).addTo(rtL);
-    route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:i<3&&state==='A'?28:24;
-      L.marker([e.b.la,e.b.lo],{zIndexOffset:cur?1000:ok?0:600-i,title:e.b.addr,icon:L.divIcon({className:'stopw',iconSize:[s,s],html:`<div class="stop${ok?' ok':''}${cur?' cur':''}${e.must&&!ok?' must':''}" style="width:${s}px;height:${s}px;background:${rampColor(e.fill,e.fill>100)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${ok?'✓':i+1}</div>`})}).bindPopup(`<b>第 ${i+1} 站</b>・${e.b.addr}${ok?'<br>已完成':''}`).addTo(rtL)})} // 點站點只看資訊，不改導航目標
+    route.forEach((e,i)=>{const ok=done.has(e.b.id),cur=state==='B'&&i===ci,s=cur?34:ok?16:i<3&&state==='A'?28:24; // 已完成：較小、壓在站號下面
+      L.marker([e.b.la,e.b.lo],{zIndexOffset:cur?3000:ok?-3000:1000-i,title:e.b.addr,icon:L.divIcon({className:'stopw',iconSize:[s,s],html:`<div class="stop${ok?' ok':''}${cur?' cur':''}${e.must&&!ok?' must':''}" style="width:${s}px;height:${s}px;background:${rampColor(e.fill,e.fill>100)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${ok?'✓':i+1}</div>`})}).bindPopup(`<b>第 ${i+1} 站</b>・${e.b.addr}${ok?'<br>已完成':''}`).addTo(rtL)})} // 點站點只看資訊，不改導航目標
   const nd=route.filter(e=>done.has(e.b.id)).length;
   prog.innerHTML=route.length?`<span class="no">${nd} / ${route.length}</span><span class="tr"><i style="width:${nd/route.length*100}%"></i></span><small>${CONFIG.demoArea.name}</small>`:`<small class="empty">${CONFIG.demoArea.name}・沒有要清的桶</small>`;
   tChip.textContent=`🕒 ${dayName(day())} ${FC.fmt(T())} ▾`;
@@ -247,4 +249,4 @@ window.NAVH={osrm:'https://routing.openstreetmap.de/routed-car/route/v1/driving/
     if(i<0){navEnd&&document.body.classList.remove('navon');navMe.hidden=true;NAVH.setCol(false);draw();requestAnimationFrame(()=>fitTop());return true} // 最後一站：結束導航，回到路線總覽
     NAVH.setCol(true);navStart(route[i].b,{idx:i});return true}};
 {const s=document.createElement('style');s.textContent='.navw{display:block!important;width:100%}.ncw{display:flex;flex-wrap:wrap;align-items:baseline;min-width:0;flex:1}.ncw .nn{flex-basis:100%;font:400 13px/1.4 var(--font,system-ui);color:#7d8b8b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#card .narr .amts{margin-top:8px}';document.head.appendChild(s)}
-</script><script src="nav.js?v=20261022n"></script></body></html>
+</script><script src="nav.js?v=20261022o"></script></body></html>
