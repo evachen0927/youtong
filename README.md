@@ -78,7 +78,7 @@ python3 -m http.server 8765   # 開 http://localhost:8765/index.html
 | 臺北市行人專用清潔箱（街道主檔 681 列，2026-09-30；景點商圈場域 130 列，2026-08-18） | https://data.taipei/dataset/detail?id=a835f3ba-7f50-4b0d-91a6-9df128632d1c ／ https://data.gov.tw/dataset/121355 | 政府資料開放授權條款-第1版 | 街道主檔＝垃圾桶；130 點只當「備用垃圾桶」，不計入桶數 |
 | YouBike2.0 臺北市即時資訊（站點快照 2026-10-19） | https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json | 政府資料開放授權條款-第1版 | 站點位置 |
 | 臺北市公共自行車2.0租借紀錄 2026-07 | https://data.taipei/dataset/detail?id=c5924c17-25db-4f1e-99c4-f8ada40f2445 | 政府資料開放授權條款-第1版 | 每站借＋還次數（地圖用全月；每小時預測排除 7/10、7/11 資料缺漏），只發布彙總檔 `youbike_activity_202607.csv` |
-| 臺北市公車站位（GetStop） | https://tcgbusfs.blob.core.windows.net/blobbus/GetStop.gz | 政府資料開放授權條款-第1版 | 站位位置、每站停靠路線數。研究也用 GetStop，但分組方式不同：研究用 5,375 個站位群組，我們用 3,460 個站位；GetStop 只有站位與路線，**無法推估人流**，所以只用在覆蓋率，不進預測 |
+| 臺北市公車站位（GetStop） | https://tcgbusfs.blob.core.windows.net/blobbus/GetStop.gz | 政府資料開放授權條款-第1版 | 站位位置、每站停靠路線數。研究也用 GetStop，但分組方式不同：研究用 5,375 個站位群組（https://github.com/bangyuwen/taipei-city-lab/blob/42c14f888725323cebe500341c906128ef0755ca/sites/taipei-waste-lab/docs/cross-analysis.md#L10 ），我們用 3,460 個站位；GetStop 只有站位與路線，**無法推估人流**，所以只用在覆蓋率，不進預測 |
 | 鄉鎮市區界（內政部，經 taiwan-atlas 2021.9.20 TopoJSON） | https://cdn.jsdelivr.net/npm/taiwan-atlas/towns-10t.json | 政府資料開放授權條款-第1版（原始資料） | 判定是否在臺北市、各區面積 |
 | 底圖 | © OpenStreetMap contributors | ODbL | 地圖 |
 | 道路路網（步行、行車） | OpenStreetMap，經 Geofabrik `taiwan-261018.osm.pbf`（2026-10-18 資料，單次下載），© OpenStreetMap contributors | ODbL | 步行：**全臺北市**（12 區聯集外擴約 300m），`build_walk_city.py` 預先計算為 `roads_walk.json`（91,537 節點、135,016 路段；度-2 節點併入邊長、座標 1e-5 整數差分；1.55 MB，gzip 後約 0.5 MB）；行車：示範區外擴 300m，`roads_drive.json`（約 225 KB，遵守單行道）；展示時不呼叫任何路徑 API |
@@ -108,7 +108,7 @@ TDX 公車 API 需申請金鑰（未使用）。
 
 街道清冊 681 列**全部顯示**：先前 5 m 內去重把 17 列併掉（地圖只剩 664 點），已改為每列保留；這 17 列都是地址不同的有效列（例如同一公車站左右側、停車場入口南／北側、動物園站 -1／-2），在地圖上與鄰列重疊，彈出視窗註明「此處重疊 N 列清冊」。無座標錯誤或超出範圍的列。開場數字與規劃頁所有指標只用這 681 列，不與 130 點相加。
 
-本 App 使用 2026-09-30 版街道清冊 681 列；官方 2026-10-21 版為 661 列（有效座標 659），demo 後更新。
+本 App 使用 2026-09-30 版街道清冊 681 列；官方 2026-10-21 版為 661 列（有效座標 659），demo 後更新。（來源：https://github.com/bangyuwen/taipei-city-lab/blob/42c14f888725323cebe500341c906128ef0755ca/sites/taipei-waste-lab/research/station-venue-recheck-2026-10-22/README.md#L12 ）
 
 已知資料缺漏：北投區街道清冊 0 列、南港區 4 列 →**資料缺漏，非實際覆蓋率**。
 
@@ -134,9 +134,9 @@ TDX 公車 API 需申請金鑰（未使用）。
 
 ## 新資料（僅引用，數字照原文）
 以下數字皆引用研究團隊（bangyuwen/taipei-city-lab commit 42c14f8，PRD v0.5），本工具未重算。
-- 捷運 2026-07 OD：73 站中 33 站 300 m 內無清冊桶。來源：https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab
-- 台北車站每桶位每日 63,188 人次。來源：https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab
-- 公車站位 62.7% 在 300 m 內無桶（研究為直線距離，與本 App 的步行距離不同）。來源：https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab
+- 捷運 2026-07 OD：73 站中 33 站 300 m 內無清冊桶。來源：https://github.com/bangyuwen/taipei-city-lab/blob/42c14f888725323cebe500341c906128ef0755ca/sites/taipei-waste-lab/docs/cross-analysis.md#L56
+- 台北車站每桶位每日 63,188 人次。來源：https://github.com/bangyuwen/taipei-city-lab/blob/42c14f888725323cebe500341c906128ef0755ca/sites/taipei-waste-lab/docs/cross-analysis-field-visits.md#L106 、https://github.com/bangyuwen/taipei-city-lab/blob/42c14f888725323cebe500341c906128ef0755ca/sites/taipei-waste-lab/docs/cross-analysis.md#L56
+- YouBike 站 300 m 範圍內的公車站位 2,741 個中，1,719 個（62.7%）300 m 內無桶（研究為直線距離，與本 App 的步行距離不同；研究註明此比例不是全臺北市公車站位的比例）。來源：https://github.com/bangyuwen/taipei-city-lab/blob/42c14f888725323cebe500341c906128ef0755ca/sites/taipei-waste-lab/docs/cross-analysis.md#L41
 
 ## 使用的開源與 AI 工具
 Leaflet 1.9.4（BSD-2）、OpenStreetMap、Python 3（shapely、pyproj）、Playwright（測試與錄影）、ffmpeg、AI 程式助理（協助撰寫程式與資料處理）。
