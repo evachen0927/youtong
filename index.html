@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022k"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022k"><title>設點規劃｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022k"><link rel="stylesheet" href="tokens.css?v=20261022k"><link rel="stylesheet" href="ui.css?v=20261022k">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022l"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022l"><title>設點規劃｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022l"><link rel="stylesheet" href="tokens.css?v=20261022l"><link rel="stylesheet" href="ui.css?v=20261022l">
 <style>.needmk::after{content:'';position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--need);animation:needPulse 1.8s ease-out infinite;pointer-events:none}
 @keyframes needPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.6);opacity:0}}
 @media (prefers-reduced-motion:reduce){.needmk::after{animation:none;opacity:0}}
@@ -81,12 +81,12 @@ section.plan{margin:0 0 14px;border:0;border-radius:0;padding:0 0 12px;backgroun
  <section id="hotSec">
  <h3 class="sec">查核優先序</h3>
  <p class="sub">排序＝建議先去現場查核的順序，不代表現場一定沒有桶。</p>
- <details class="how" id="how" style="margin:0 0 10px;font:400 13px/1.5 var(--font);color:var(--ink-2)"><summary style="cursor:pointer;font-weight:600;color:var(--ink)">怎麼算的？<small class="secn" style="font-weight:400">・人流不是垃圾量</small></summary>
+ <details class="how" id="how" style="margin:0 0 10px;font:400 13px/1.5 var(--font);color:var(--ink-2)"><summary style="cursor:pointer;font-weight:600;color:var(--ink)">怎麼算的？</summary>
  <div class="formula" id="formula" style="background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:6px 0"><b>查核優先序</b> ＝ 2026-07 借＋還次數 ×（步行到最近街道清潔箱的距離 − <span class="thr"></span> m），只列步行距離超過 <span class="thr"></span> m 的 YouBike 站。</div>
  <div id="sens"></div>
  <p id="binDef" style="margin:8px 0 0"></p>
  <p id="srcHow" style="margin:8px 0 0"></p>
- <p id="auditNote" style="margin:8px 0 0;color:var(--ink)"><b>本頁支援安排查核；清冊列數不是現場可用桶數，尚不能推薦新增箱位。</b></p>
+ <p id="auditNote" style="margin:8px 0 0;color:var(--ink)"><b>本頁支援安排查核；人流不是垃圾量，清冊列數不是現場可用桶數，尚不能推薦新增箱位。</b></p>
  <p id="mrtHow" style="margin:8px 0 0">捷運站圖層與三張全市卡片引用台北城市實驗室 taipei-waste-lab（commit 42c14f8，MIT）的交叉分析，數字照原文：每日人次＝2026-07（排除 7/10、7/11，29 日）整站進＋出站紀錄 ÷ 29；出口 300 m 內清冊桶位為研究團隊以直線距離計的不同座標數，與本頁步行距離不同。</p>
  <p id="md5How" style="margin:8px 0 0">⚠️ 資料完整性：來源說明捷運七月 OD 下載回應的 HTTP Content-MD5（VtCA+GFASJBW3VN7h+kO1A==）與保存內容不符，尚未釐清；SHA-256 只綁定保存的內容，不代表官方真實性或完整性，計算只描述這份保存內容。2026-10-22 第二次下載得到相同大小與 SHA-256，仍未解決 MD5 不符。（<a href="https://github.com/bangyuwen/taipei-city-lab/blob/42c14f8/sites/taipei-waste-lab/docs/cross-analysis.md" target="_blank" rel="noopener">來源</a>）</p></details>
  <div class="seg" id="thrSeg" role="group" aria-label="距離門檻"><button data-thr="100" class="on">100 m</button><button data-thr="200" class="">200 m</button><button data-thr="300" class="">300 m</button></div>
@@ -113,7 +113,7 @@ section.plan{margin:0 0 14px;border:0;border-radius:0;padding:0 0 12px;backgroun
   <h3>查核優先序</h3><ul><li>＝ 2026-07 借＋還次數（全月 activity_all）×（步行到最近街道清潔箱的距離 − 門檻），只列步行距離超過門檻的 YouBike 站。是建議先去現場查核的順序，不代表現場沒有桶。門檻可切 100／200／300 m，開場數字、排名與地圖範圍圈一起更新。</li></ul>
   <h3>方案</h3><ul><li><b>熱點到最近桶的步行距離</b>：從所選熱點（YouBike 站）沿步行路網（OpenStreetMap）走到該方案下最近的街道清潔箱的距離。A、B1、B2 不改變桶位，所以三者相同；只有 C 會移桶。</li><li><b>A 維持現況</b>：比較基準。</li><li><b>B1 原位改善指引</b>（研究定義）：位置與容量不變，只改善指示牌、地圖標示與清潔箱標示；指標與 A 相同，本工具不推估時間或垃圾量的改善。</li><li><b>B2 容量／頻率（模擬）</b>：有桶團隊加的模擬，不在研究 PRD 內；容量與清運頻率參數在 config.js。</li><li><b>C 同桶數挪一處</b>：總桶數不變，移出熱點 1km 內、周邊 200m 活動量最低、且不會讓原位置 600m 內有站點從「200m 內有桶」變成沒有的桶。</li></ul>
 </div></div>
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022k"></script><script src="common.js?v=20261022k"></script><script src="cloud.js?v=20261022k"></script><script src="scenario.js?v=20261022k"></script><script src="routing.js?v=20261022k"></script><script src="ui.js?v=20261022k"></script><script src="bin-icons.js?v=20261022k"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022l"></script><script src="common.js?v=20261022l"></script><script src="cloud.js?v=20261022l"></script><script src="scenario.js?v=20261022l"></script><script src="routing.js?v=20261022l"></script><script src="ui.js?v=20261022l"></script><script src="bin-icons.js?v=20261022l"></script>
 <script>
 let THR=CONFIG.hotspot.gapThresholdM;
 // 手機抽屜三段：min（只剩把手＋一行）／half（預設）／exp（上方留 96px 地圖）；點箭頭：half→min，min／exp→half；只有上滑才到 exp；拖地圖不自動收合
@@ -127,7 +127,7 @@ function initDrawer(){const P=document.querySelector('.panel');
   const chipPos=()=>{const c=lychips;if(isMobile()){c.style.top=c.style.left=c.style.maxWidth='';return}const ft=document.querySelector('.ftop').getBoundingClientRect(),m=document.getElementById('map').getBoundingClientRect();c.style.top=(ft.bottom+12)+'px';c.style.left=(m.left+12)+'px';c.style.maxWidth=(m.width-80)+'px'};
   chipPos();addEventListener('resize',chipPos);window.chipPos=chipPos;
   map.on('popupopen',()=>{if(isMobile()&&DRAW!=='half')drawer('half',1)})}
-function peekLine(){const v=document.getElementById('bigNum');peek.textContent=`${v?v.firstChild.textContent.trim():''} 站步行 ${THR}m 內無清冊垃圾桶・目前階段 ①`}
+function peekLine(){const v=document.getElementById('bigNum');peek.textContent=`${v?v.firstChild.textContent.trim():''} 站・YouBike 站走 ${THR} 公尺內找不到垃圾桶・目前階段 ①`}
 window.sheetFit=()=>{if(innerWidth>760)return;const pb=document.querySelector('.panel').getBoundingClientRect(),ft=document.querySelector('.ftop');map.fitBounds(CONFIG.demoArea.bounds,{paddingTopLeft:[16,(ft?ft.getBoundingClientRect().bottom:0)+16],paddingBottomRight:[16,innerHeight-pb.top+16]})}; // 手機收合／展開後依面板上緣重新 fit（和行人頁一樣）
 roleSwitch('index.html',document.querySelector('.ftop'));menu.onclick=()=>sheetOpen('menuSheet');
 const LY={yb:false,bus:false,need:true,mrt:false,venue:false}; // 備用垃圾桶預設關閉（行人頁不變）
@@ -138,7 +138,7 @@ const baseL=L.layerGroup().addTo(map),hotL=L.layerGroup().addTo(map),chgL=L.laye
 let D,ST,HS,cur=null,opt='A';const curH=()=>cur;
 const setThrText=()=>document.querySelectorAll('.thr').forEach(e=>e.textContent=THR);setThrText();
 hCaveat.textContent=CONFIG.headline.caveat;
-function renderInsight(){const it=CONFIG.headline.items,y={...it[2]},b={...it[3]};if(THR!==100&&D){const n=(A)=>A.filter(s=>SC.nearestDist(s,D.street)[0]>THR).length;y.value=n(D.yb).toLocaleString('zh-TW');b.value=n(D.bus).toLocaleString('zh-TW');y.label=y.label.replace('100m',THR+'m')}insight.innerHTML=`<div class="big" id="bigNum" style="font-variant-numeric:tabular-nums">${y.value}<small> / ${(y.note.match(/共\s*([\d,]+)/)||[,''])[1]} 站</small></div><p class="lead">個 YouBike 站，走 ${THR} 公尺內找不到垃圾桶</p><p class="den" id="binDen">${it[0].value} 個清冊垃圾桶</p>`;binDef.textContent=`清冊＝${it[0].label}`;srcHow.textContent=`${it[0].note}（${it[0].label.match(/\d{4}-\d{2}-\d{2}/)?.[0]||''}）× YouBike 站點、公車站位；步行路網距離。`}
+function renderInsight(){const it=CONFIG.headline.items,y={...it[2]},b={...it[3]};if(THR!==100&&D){const n=(A)=>A.filter(s=>SC.nearestDist(s,D.street)[0]>THR).length;y.value=n(D.yb).toLocaleString('zh-TW');b.value=n(D.bus).toLocaleString('zh-TW');y.label=y.label.replace('100m',THR+'m')}insight.innerHTML=`<div class="big" id="bigNum" style="font-variant-numeric:tabular-nums">${y.value}<small> 站</small></div><p class="lead">YouBike 站走 ${THR} 公尺內找不到垃圾桶（全市 ${(y.note.match(/共\s*([\d,]+)/)||[,''])[1]} 站）</p><p class="den" id="binDen">${it[0].value} 個清冊垃圾桶</p>`;binDef.textContent=`清冊＝${it[0].label}`;srcHow.textContent=`${it[0].note}（${it[0].label.match(/\d{4}-\d{2}-\d{2}/)?.[0]||''}）× YouBike 站點、公車站位；步行路網距離。`}
 (renderInsight(),peekLine());
 cards.innerHTML=CONFIG.headline.items.filter((_,k)=>k===1||k===3).map(i=>`<div class="stat"><b>${i.value}</b><span>${i.label}</span></div>`).join('');
 const fmt=n=>n.toLocaleString('zh-TW');
@@ -164,7 +164,7 @@ const mPos=s=>[s.exitLocs.reduce((a,e)=>a+e.la,0)/s.exitLocs.length,s.exitLocs.r
 function mrtLine(h){if(!MRT)return'';let b=null;for(const s of MRT.stations)for(const e of s.exitLocs){const d=hav(h.la,h.lo,e.la,e.lo);if(d<=500&&(!b||d<b.d))b={s,d}}
   return b?`<br><span id="mrtNear">附近捷運：${mName(b.s.name)} 每日 ${fmt(b.s.daily)} 人次</span><span class="tag">只顯示，不計入排序</span>`:''}
 // ---- 推動計畫（本團隊提案；月份為本團隊推估） ----
-const PLAN_V=['查核','試放','評估','擴點','常態']; // 進度條兩字標籤（完整階段文字不改）
+const PLAN_V=['查核','現勘','改善','擴查','試點']; // 進度條兩字標籤（完整階段文字不改）
 const PLAN=[['①','0–1 月','第 0–1 個月，排出查核順序','在公館–大安示範區排出優先查核的熱點，並開放民眾回報「這裡沒有桶」和「桶子滿了」。'],['②','1–3 月','第 1–3 個月，現勘第一批','研究規劃的 12 點，共 72 站次、約 18 純觀察小時。'],['③','3–6 月','第 3–6 個月，先改善現有的桶','原位改善（指示牌、地圖標示）或同桶數挪位試點。'],['④','6–12 月','第 6–12 個月，擴大到全市','全市共 216 站次、約 54 純觀察小時；現勘和回報資料夠了才評估新增箱位。'],['⑤','1–2 年','第 1–2 年，與 YouBike 結合','高借還站試點智慧垃圾桶，自動回報滿度，接上清潔隊的動態路線。']],PLAN_CUR=0;
 function planPick(i){pbar.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-pressed',k===i));const s=PLAN[i];pcur.innerHTML=`<b>${s[0]}</b> ${s[2]}${i===PLAN_CUR?'<span class="now">目前階段</span>':''}`;pbox.innerHTML=`<b>${s[0]} ${s[2]}${i===PLAN_CUR?'<span class="now">目前階段</span>':''}</b>${s[3]}`}
 pbar.innerHTML=PLAN.map((s,i)=>`<button type="button" data-st="${i}" class="${i===PLAN_CUR?'cur':''}" aria-label="${s[0]} ${s[2]}"><span class="lb">${s[0]}${PLAN_V[i]}<small>${s[1]}</small></span></button>`).join('');

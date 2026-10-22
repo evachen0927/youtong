@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022k"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022k"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022k"><link rel="stylesheet" href="tokens.css?v=20261022k"><link rel="stylesheet" href="ui.css?v=20261022k">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022l"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022l"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022l"><link rel="stylesheet" href="tokens.css?v=20261022l"><link rel="stylesheet" href="ui.css?v=20261022l">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
@@ -94,7 +94,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022k"></script><script src="common.js?v=20261022k"></script><script src="cloud.js?v=20261022k"></script><script src="ui.js?v=20261022k"></script><script src="bin-icons.js?v=20261022k"></script><script src="forecast.js?v=20261022k"></script><script src="routing.js?v=20261022k"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022l"></script><script src="common.js?v=20261022l"></script><script src="cloud.js?v=20261022l"></script><script src="ui.js?v=20261022l"></script><script src="bin-icons.js?v=20261022l"></script><script src="forecast.js?v=20261022l"></script><script src="routing.js?v=20261022l"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
@@ -214,6 +214,8 @@ let crewPos=null,crewAcc=999,crewMe=null;
 const crewGm=(la,lo)=>`https://www.google.com/maps/dir/?api=1&destination=${la},${lo}&travelmode=driving`;
 function crewSetPos(q,a){crewPos=q;if(a>0)crewAcc=a;if(!crewMe)crewMe=L.circleMarker(q,{radius:7,color:'#fff',weight:2.5,fillColor:'#2a7de1',fillOpacity:1,interactive:false}).addTo(map);else crewMe.setLatLng(q)}
 function crewSoftEnd(){if(!NAV)return;clearTimeout(NAV.idleT);if(NAV.wid!=null&&navigator.geolocation)navigator.geolocation.clearWatch(NAV.wid);NAV=null;navL.clearLayers()}
+function crewReopen(i){crewSoftEnd();const b=route[i]&&route[i].b;if(!b)return;document.body.classList.add('navon');
+  NAV={idx:i,bin:b,pts:null,fail:false,loading:false,dragAt:0,shownD:null,shownAt:0,lastPos:(crewPos||[b.la,b.lo]).slice(),near0:null,arrShown:false,mode:'nav',idleT:0,acc:crewAcc,startAt:Date.now()};navWatch();navArrOpen()}
 function crewNavGo(){const i=curIdx();if(i<0)return;const b=route[i].b,go=()=>{if(!crewPos){const pr=i?[route[i-1].b.la,route[i-1].b.lo]:depot;crewSetPos(pr,999)}NAVH.setCol(true);navStart(b,{idx:i})};
   if(crewPos||!navigator.geolocation)return go();let done=false;const fin=()=>{if(!done){done=true;go()}};setTimeout(fin,3000);
   try{navigator.geolocation.getCurrentPosition(p=>{crewSetPos([p.coords.latitude,p.coords.longitude],p.coords.accuracy);fin()},fin,{enableHighAccuracy:true,timeout:3000,maximumAge:5000})}catch(e){fin()}}
@@ -232,8 +234,8 @@ window.NAVH={osrm:'https://routing.openstreetmap.de/routed-car/route/v1/driving/
   onEnd:()=>{draw();requestAnimationFrame(()=>fitTop())},
   idleClick:t=>{if(state==='B'&&t.closest('#navPri,#navIcon')){crewNavGo();return true}return false},
   arrClick:(t,N)=>{const a=t.closest('[data-amt]');if(!a)return null; // 抵達：原本的收運量回報（record：同選項、同寫入）
-    const id=N.bin.id;crewSoftEnd();record(id,a.dataset.amt,+a.dataset.pct);const i=curIdx();
+    const id=N.bin.id,i0=N.idx;crewSoftEnd();record(id,a.dataset.amt,+a.dataset.pct);const ub=document.querySelector('.undo button');if(ub)ub.addEventListener('click',()=>crewReopen(i0));const i=curIdx(); // 復原：撤銷回報後回到這一站的抵達卡（含最後一站）
     if(i<0){navEnd&&document.body.classList.remove('navon');navMe.hidden=true;NAVH.setCol(false);draw();requestAnimationFrame(()=>fitTop());return true} // 最後一站：結束導航，回到路線總覽
     NAVH.setCol(true);navStart(route[i].b,{idx:i});return true}};
 {const s=document.createElement('style');s.textContent='.navw{display:block!important;width:100%}.ncw{display:flex;flex-wrap:wrap;align-items:baseline;min-width:0;flex:1}.ncw .nn{flex-basis:100%;font:400 13px/1.4 var(--font,system-ui);color:#7d8b8b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#card .narr .amts{margin-top:8px}';document.head.appendChild(s)}
-</script><script src="nav.js?v=20261022k"></script></body></html>
+</script><script src="nav.js?v=20261022l"></script></body></html>
