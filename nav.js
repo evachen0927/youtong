@@ -31,6 +31,7 @@ const navMe=document.createElement('button');navMe.id='navMe';navMe.type='button
 .narr h2{margin:0 40px 2px 0;font:600 17px/1.35 var(--font,system-ui);color:#2b3333}.narr .ns{margin:0 0 12px;font:400 13px var(--font,system-ui);color:#7d8b8b}
 .narr .nb{display:flex;flex-direction:column;gap:8px}.narr .nb button{height:48px;width:100%;border-radius:12px;font:600 15px var(--font,system-ui);cursor:pointer}
 .narr .nb .ok{background:var(--brand);color:#fff;border:0}.narr .nb .ol{background:#fff;color:#2b3333;border:1.5px solid #d6dadc}
+.nbar .ngs{display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:44px;height:44px;padding:0 14px;margin:0;font-size:14px;white-space:nowrap;flex:none}
 .nnext{display:block;margin:8px auto 0;min-height:44px;border:0;background:none;color:var(--brand);font:600 14px var(--font,system-ui);cursor:pointer}`;document.head.appendChild(s)}
 function navMePlace(){if(navMe.hidden)return;navMe.style.bottom=(isMobile()?innerHeight-navCardTop()+12:16)+'px'}
 navMe.onclick=()=>{if(!NAV)return;NAV.dragAt=0;navMe.hidden=true;navFollow()};
@@ -67,6 +68,7 @@ function navRender(){if(!NAV)return;const N=NAV,b=N.bin,ev=getEvents();list.clas
   const ask=N.mode==='nav'&&N.askShown?'<button class="ntx" id="navAsk">到了嗎？</button>':'';
   const bar=`<div class="nbar" id="navBar">${left}<span class="nr">${ask}<button class="ntx" id="navEnd">結束</button></span></div>`;
   const gm=N.fail?`<div class="acts" style="margin-top:4px"><a class="b pri" id="navGm" target="_blank" rel="noopener" href="${gmapWalk(b.la,b.lo)}">用 Google 地圖開啟</a></div>`:'';
+  if(collapsed&&N.fail){list.innerHTML=togHTML(true)+`<div class="nbar" id="navBar">${left}<span class="nr">${ask}<a class="b pri ngs" id="navGm" target="_blank" rel="noopener" href="${gmapWalk(b.la,b.lo)}">Google 地圖</a></span></div>`;navAfter();return} // 路線失敗＋收合：右側小主要按鈕（取代「結束」；「結束」在展開區）
   if(collapsed){list.innerHTML=togHTML(true)+bar+gm;navAfter();return}
   const st=binState(b.id,ev);
   list.innerHTML=togHTML(false)+bar+`<div class="nbin"><b>${b.addr}</b>${stateChip(fillOf(b.id,ev),st==='reported',!st)}</div>`+(N.fail?gm:`<a class="ngm" id="navGm" target="_blank" rel="noopener" href="${gmapWalk(b.la,b.lo)}">用 Google 地圖開啟</a>`);navAfter()}
