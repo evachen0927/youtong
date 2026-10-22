@@ -16,13 +16,16 @@ function navDraw(){navL.clearLayers();routeL.clearLayers();const b=[NAV.bin.la,N
   if(NAV.pts){L.polyline(NAV.pts,{color:'#fff',weight:9,opacity:1,interactive:false,className:'navcase'}).addTo(navL);L.polyline(NAV.pts,{color:navBrand(),weight:5,opacity:1,interactive:false,className:'navroute'}).addTo(navL)} // 5px 品牌綠＋2px 白邊
   else if(NAV.fail)L.polyline([pos,b],{color:navBrand(),weight:4,opacity:.9,dashArray:'6 8',interactive:false,className:'navroute dashed'}).addTo(navL)}
 const navCardTop=()=>list.getBoundingClientRect().top;
-function navFit(){const b=[NAV.bin.la,NAV.bin.lo],pts=[pos,b,...(NAV.pts||[])],mob=isMobile();
+function navFit(){if(NAV.fail&&typeof fitTarget==='function'){routeInfo={bin:NAV.bin.id,pts:[pos,[NAV.bin.la,NAV.bin.lo]],snapped:false};fitTarget();return} // 路線失敗：用一般 fit 規則（你的位置＋目標，padding 計入卡片高）
+  const b=[NAV.bin.la,NAV.bin.lo],pts=[pos,b,...(NAV.pts||[])],mob=isMobile();
   map.fitBounds(L.latLngBounds(pts),{paddingTopLeft:[mob?40:48,topUIBottom()+60],paddingBottomRight:[mob?40:list.getBoundingClientRect().width+64,mob?innerHeight-navCardTop()+24:44],maxZoom:18,animate:false})}
-function navFollow(){if(!NAV||Date.now()-NAV.dragAt<NAV_FOLLOW_MS)return;const c=map.latLngToContainerPoint(pos),cy=(topUIBottom()+(isMobile()?navCardTop():innerHeight))/2,cx=isMobile()?innerWidth/2:(innerWidth-list.getBoundingClientRect().width-16)/2;
+function navFollow(){if(!NAV||NAV.mode!=='nav'||Date.now()-NAV.dragAt<NAV_FOLLOW_MS)return; // 抵達後不跟隨（避免地圖往一側漂）
+ const c=map.latLngToContainerPoint(pos),cy=(topUIBottom()+(isMobile()?navCardTop():innerHeight))/2,cx=isMobile()?innerWidth/2:(innerWidth-list.getBoundingClientRect().width-16)/2;
   if(Math.abs(c.x-cx)>2||Math.abs(c.y-cy)>2)map.panBy([c.x-cx,c.y-cy],{animate:true,duration:.4})}
 // 「回到我」：手動拖曳地圖後出現；3 秒內不自動回到你的位置
 const navMe=document.createElement('button');navMe.id='navMe';navMe.type='button';navMe.textContent='回到我';navMe.hidden=true;navMe.setAttribute('aria-label','回到我的位置');document.body.appendChild(navMe);
-{const s=document.createElement('style');s.textContent=`#navMe{position:fixed;right:12px;z-index:1001;height:36px;min-width:44px;padding:0 14px;border:0;border-radius:18px;background:#fff;color:#2b3333;font:600 13px var(--font,system-ui);box-shadow:0 2px 8px #00000026;cursor:pointer}#navMe::after{content:"";position:absolute;inset:-4px}
+{const s=document.createElement('style');s.textContent=`body.navon .binmk.tgt .tlab{display:none} /* 導航中隱藏「最近・X m」 */
+#navMe{position:fixed;right:12px;z-index:1001;height:36px;min-width:44px;padding:0 14px;border:0;border-radius:18px;background:#fff;color:#2b3333;font:600 13px var(--font,system-ui);box-shadow:0 2px 8px #00000026;cursor:pointer}#navMe::after{content:"";position:absolute;inset:-4px}
 .nbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}.nbar .nd{font:600 15px/1.3 var(--font,system-ui);color:#2b3333;white-space:nowrap}.nbar .nt{font:400 13px var(--font,system-ui);color:#7d8b8b;white-space:nowrap}
 .nbar .nr{display:flex;gap:4px;flex:none}.ntx{min-width:44px;height:44px;padding:0 6px;border:0;background:none;color:#7d8b8b;font:400 13px var(--font,system-ui);cursor:pointer}
 .nbin{display:flex;align-items:center;gap:8px;margin:2px 0 6px;flex-wrap:wrap}.nbin b{font:600 15px var(--font,system-ui);color:#2b3333}
@@ -39,25 +42,28 @@ map.on('dragstart',()=>{if(!NAV)return;NAV.dragAt=Date.now();navMe.hidden=false;
 // ---- 開始／結束 ----
 function navStart(P){const b=P.f;sel=b.id;NAVNEXT=null;
   NAV={bin:b,pts:null,fail:false,loading:true,dragAt:0,shownD:null,shownAt:0,lastPos:pos.slice(),near0:null,arrShown:false,mode:'nav',idleT:0,acc:acc,startAt:Date.now()};
-  navDraw();navRender();navFit();navWatch();
+  document.body.classList.add('navon');navDraw();navRender();navFit();navWatch();
   const ac=new AbortController(),to=setTimeout(()=>ac.abort(),6000),me0=NAV;
   fetch(`${NAV_OSRM}${pos[1]},${pos[0]};${b.lo},${b.la}?overview=full&geometries=geojson`,{signal:ac.signal}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
     .then(j=>{const c=j&&j.routes&&j.routes[0]&&j.routes[0].geometry&&j.routes[0].geometry.coordinates;if(!c||c.length<2)throw new Error('no route');if(NAV!==me0)return;
       NAV.pts=[pos.slice(),...c.map(x=>[x[1],x[0]]),[b.la,b.lo]];NAV.loading=false;navDraw();navRender();navFit()})
     .catch(e=>{console.warn('[有桶] 步行路線失敗，改用直線',e&&e.message);if(NAV!==me0)return;NAV.fail=true;NAV.loading=false;navDraw();navRender();navFit()})
     .finally(()=>clearTimeout(to))}
-function navEnd(){if(!NAV)return;clearTimeout(NAV.idleT);if(NAV.wid!=null&&navigator.geolocation)navigator.geolocation.clearWatch(NAV.wid);NAV=null;navL.clearLayers();navMe.hidden=true;collapsed=true;render(true)}
+function navEnd(){if(!NAV)return;clearTimeout(NAV.idleT);if(NAV.wid!=null&&navigator.geolocation)navigator.geolocation.clearWatch(NAV.wid);NAV=null;document.body.classList.remove('navon');navL.clearLayers();navMe.hidden=true;collapsed=true;render(true)}
 // ---- 定位追蹤：每 10 m 或 5 秒更新距離／時間 ----
 function navWatch(){if(!navigator.geolocation)return;try{NAV.wid=navigator.geolocation.watchPosition(p=>navPos([p.coords.latitude,p.coords.longitude],p.coords.accuracy),()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:15000})}catch(e){}}
 function navPos(q,a){if(!NAV)return;pos=q;acc=a>0?a:acc;NAV.acc=acc;if(me)me.setLatLng(q);if(accC){accC.setLatLng(q);accC.setRadius(acc)}
-  if(NAV.fail)navDraw();if(NAV.mode==='nav'&&(hav(q[0],q[1],NAV.lastPos[0],NAV.lastPos[1])>=NAV_UPD_M||Date.now()-NAV.shownAt>=NAV_UPD_MS)){NAV.lastPos=q.slice();navRender()}
+  if(NAV.fail&&NAV.mode==='nav')navDraw();if(NAV.mode==='nav'&&(hav(q[0],q[1],NAV.lastPos[0],NAV.lastPos[1])>=NAV_UPD_M||Date.now()-NAV.shownAt>=NAV_UPD_MS)){NAV.lastPos=q.slice();navRender()}
   navArrive();navFollow()}
 setInterval(()=>{if(!NAV)return;navArrive();if(NAV.mode==='nav'&&Date.now()-NAV.shownAt>=NAV_UPD_MS)navRender()},1000);
 function navArrive(){if(!NAV||NAV.arrShown||!pos)return;const d=hav(pos[0],pos[1],NAV.bin.la,NAV.bin.lo),good=NAV.acc<=NAV_ACC_MAX;
   if(!good){NAV.near0=null;if(!NAV.askShown){NAV.askShown=true;navRender()}return}
   if(NAV.askShown){NAV.askShown=false;navRender()}
   if(d<=NAV_ARR_M){if(NAV.near0==null)NAV.near0=Date.now();if(Date.now()-NAV.near0>=NAV_ARR_MS)navArrOpen()}else NAV.near0=null}
-function navArrOpen(){if(!NAV||NAV.arrShown)return;NAV.arrShown=true;NAV.mode='arrive';collapsed=false;navRender();navIdle()}
+function navArrOpen(){if(!NAV||NAV.arrShown)return;NAV.arrShown=true;NAV.mode='arrive';collapsed=false;navL.clearLayers();navMe.hidden=true;navRender();navCenterBin();navIdle()}
+// 抵達：拿掉路線，地圖以目標桶為中心（頁首下緣到卡片上緣之間），挑能同時看到你的位置的最大縮放
+function navCenterBin(){const b=[NAV.bin.la,NAV.bin.lo],top=topUIBottom()+12,bot=isMobile()?navCardTop()-12:innerHeight-12,left=12,right=isMobile()?innerWidth-12:innerWidth-list.getBoundingClientRect().width-28,M=28;
+  for(let z=18;z>=14;z--){map.setView(b,z,{animate:false});const c=map.latLngToContainerPoint(b);map.panBy([c.x-(left+right)/2,c.y-(top+bot)/2],{animate:false});const q=map.latLngToContainerPoint(pos);if(q.x>=left+M&&q.x<=right-M&&q.y>=top+M&&q.y<=bot-M)break}}
 function navIdle(){clearTimeout(NAV.idleT);if(NAV.mode!=='arrive')return;const n=NAV;NAV.idleT=setTimeout(()=>{if(NAV!==n||NAV.mode!=='arrive')return;NAV.mode='arrived';collapsed=true;navRender()},NAV_IDLE_MS)}
 // ---- 畫面 ----
 function navRender(){if(!NAV)return;const N=NAV,b=N.bin,ev=getEvents();list.classList.toggle('col',collapsed);
@@ -83,7 +89,7 @@ function navClick(e){const t=e.target;
   if(t.closest('#navX')){navEnd();return true}
   if(t.closest('#navEnd')){navEnd();return true}
   if(t.closest('#navAsk')){navArrOpen();return true}
-  if(t.closest('#arrOk')){navEnd();return true} // 丟好了：不改狀態、不寫入
+  if(t.closest('#arrOk')){NAV.mode='sent';list.querySelectorAll('.nb button').forEach(x=>x.disabled=true);if(window.Cloud&&Cloud.note)Cloud.note('謝謝！',1200);setTimeout(navEnd,1200);return true} // 丟好了：只說謝謝！，不寫入、不顯示「已更新」、不觸發同步
   if(t.closest('#arrFull')){const id=NAV.bin.id,r=addEvent({bin:id,kind:'full',level:100,by:'行人'});setAsked(id,'full');myRep={bin:id,kind:'full',id:r.id};saveRep();NAV.mode='sent';list.querySelectorAll('.nb button').forEach(x=>x.disabled=true);navThanks(()=>{navEnd();NAVNEXT=id;render(false)});return true} // events
   if(t.closest('#arrNone')){addNeed(pos[0],pos[1]);NAV.mode='sent';list.querySelectorAll('.nb button').forEach(x=>x.disabled=true);navThanks(()=>navEnd());return true} // needs（直接送出，不問原因）
   return t.closest('#navGm')?false:true}
