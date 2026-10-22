@@ -88,7 +88,7 @@ function fitTo(map,pts,maxZoom){map.fitBounds(pts,{paddingTopLeft:[40,40],paddin
 // ===== 重設成原始狀態：只清這台裝置（本站寫入的 localStorage／sessionStorage），不會清雲端 =====
 // 明確列表（config.storageKeys＋清潔隊頁 UI 狀態），另外清掉所有「有桶_」「debug松_」開頭的鍵（含舊版）
 const APP_KEYS=[...Object.values((window.CONFIG&&CONFIG.storageKeys)||{}),'有桶_crew_ui_v2','有桶_fc_ui'];
-const APP_PREFIXES=['有桶_','debug松_'];
+const APP_PREFIXES=['有桶_','有桶beta_','debug松_'];
 function resetAppState(){for(const S of [localStorage,sessionStorage]){const ks=[];for(let i=0;i<S.length;i++)ks.push(S.key(i));
   for(const k of ks)if(APP_KEYS.includes(k)||APP_PREFIXES.some(p=>k.startsWith(p)))S.removeItem(k)}}
 const resetToDefault=()=>{resetAppState();location.replace(location.pathname)}; // 回到不帶參數的預設網址
