@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022j"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022j"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022j"><link rel="stylesheet" href="tokens.css?v=20261022j"><link rel="stylesheet" href="ui.css?v=20261022j">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20261022k"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20261022k"><title>清潔隊｜今日清運｜有桶</title><link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="common.css?v=20261022k"><link rel="stylesheet" href="tokens.css?v=20261022k"><link rel="stylesheet" href="ui.css?v=20261022k">
 <style>
 /* ===== 有桶・清潔隊（mobile-first 390x844；一張卡片兩種狀態：A 規劃（預測）→ B 執行）===== */
 html,body{height:100%;overflow:hidden;background:var(--map-bg)}
@@ -94,7 +94,7 @@ html,body{height:100%;overflow:hidden;background:var(--map-bg)}
   <h3>排序</h3><ul><li>選站：清運門檻二選一——「快滿了以上」（預設）或「只清滿溢」。站序分兩層：第 1 層「必清」＝下一次例行清運或收班前預計會滿（收班後則為隔天上班前）；第 2 層＝其餘達門檻的桶。層內從出發點起在行車路網距離上走最近鄰（不是最佳解）。站號＝實際拜訪順序。</li><li>這是給領班的參考排序，不排班、不派工，全部是模擬。</li><li>行車路網：OpenStreetMap（network_type=drive，遵守單行道），2026-10-18 預先計算，展示時不呼叫路徑 API；© OpenStreetMap contributors，ODbL。垃圾桶以最近的車道節點接駁。</li></ul>
 </div></div>
 
-<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022j"></script><script src="common.js?v=20261022j"></script><script src="cloud.js?v=20261022j"></script><script src="ui.js?v=20261022j"></script><script src="bin-icons.js?v=20261022j"></script><script src="forecast.js?v=20261022j"></script><script src="routing.js?v=20261022j"></script>
+<script src="vendor/leaflet/leaflet.js"></script><script src="config.js?v=20261022k"></script><script src="common.js?v=20261022k"></script><script src="cloud.js?v=20261022k"></script><script src="ui.js?v=20261022k"></script><script src="bin-icons.js?v=20261022k"></script><script src="forecast.js?v=20261022k"></script><script src="routing.js?v=20261022k"></script>
 <script>
 roleSwitch('crew.html');
 // 清運門檻：兩段切換「快滿了以上」(70)／「只清滿溢」(100)；舊存檔的數字門檻對應到最近的選項，壞值→預設
@@ -141,7 +141,8 @@ function draw(){binL.clearLayers();rtL.clearLayers();const ev=getEvents(),done=d
   sum.innerHTML=`<span><b>${route.length}</b>站</span><span><b>${(km/1000).toFixed(1)} km</b>${DR?'行車路網':'直線×1.4'}</span><span><b>${E.filter(e=>e.fill>=100).length}</b>預計會滿</span>`;
   if(route.length){const wp=route.slice(0,9).map(e=>e.b.la+','+e.b.lo),dest=wp.pop();gmap.href=`https://www.google.com/maps/dir/?api=1&origin=${depot.join(',')}&destination=${dest}&waypoints=${encodeURIComponent(wp.join('|'))}&travelmode=driving`;gmap.hidden=false}else gmap.hidden=true;
   allClear.disabled=!(state==='B'&&ci>=0);renderCard(ev,done,ci);renderLists()}
-function renderCard(ev,done,ci){card.dataset.state=state;const k=day(),t=FC.fmt(T()),st=FC.state();
+function renderCard(ev,done,ci){card.dataset.state=state;if(window.NAV&&typeof navRender==='function'){navRender();return} // App 內導航中：卡片＝導航列
+const k=day(),t=FC.fmt(T()),st=FC.state();
   if(state==='A'){const nM=route.filter(e=>e.must).length,nR=route.length-nM;
     const li=(e,i)=>`<li><span class="n${e.must?' must':''}" style="background:${rampColor(e.fill)};color:${e.fill>=100?'#fff':'#2b2b2b'}">${i+1}</span><span class="t"><b>${e.b.addr}</b><span>預計滿 ${e.fill>=100?'已滿':isFinite(e.fullAt)?FC.fmt(e.fullAt):'—'}${e.must?' <span class="flag must">必清</span>':''}${e.rep?` <span class="repby">行人回報・${repAgo(e.b.id)}</span>`:''}${st.cal[e.b.id]?' <span class="flag cal">已校正</span>':''}</span></span><span class="p">${stateChip(e.fill,e.rep)}</span></li>`;
     if(!route.length){ // 空狀態：標題＝狀況，副標＝桶數；「快滿了以上」也沒有時，若剛例行清運過就說明
@@ -153,8 +154,8 @@ function renderCard(ev,done,ci){card.dataset.state=state;const k=day(),t=FC.fmt(
      ${route.length?`<button class="b pri cpri" id="startBtn" style="display:flex;width:100%;margin:8px 0 10px">開始清運，從第 1 站</button><ol class="top3" id="mustList">${route.map((e,i)=>e.must?li(e,i):'').join('')}</ol>${nR?`<div class="subh">順路</div><ol class="top3" id="wayList">${route.map((e,i)=>e.must?'':li(e,i)).join('')}</ol>`:''}`:(th.value>=100?`<p class="small" style="margin:10px 0 0;color:var(--mute)">目前沒有滿溢的桶</p><button class="tlink" id="toNear">改看快滿了以上</button>`:`<p class="small" style="margin:10px 0;color:var(--mute)">這個時間沒有快滿了以上的桶，可換時間。</p>`)}`;return}
   if(ci<0){cardBody.innerHTML=`<div class="k"><button class="back" id="backBtn" aria-label="回到路線">‹</button><span class="lbl">今日路線完成</span></div><div class="done cpri"><p>${route.length} 站都已回報收運量。</p><button class="b pri" id="replanBtn">回到路線</button></div>`;return}
   const e=route[ci],b=e.b,prev=ci?[route[ci-1].b.la,route[ci-1].b.lo]:depot,d=dd(prev,[b.la,b.lo]),v=Math.round(FC.fillAt(b,k,T(),st));
-  cardBody.innerHTML=`<div class="k"><button class="back" id="backBtn" aria-label="回到路線">‹</button><span class="lbl">下一站</span><span class="no">${ci+1} / ${route.length}</span>${e.must?'<span class="flag must">必清</span>':''}<a class="nav" target="_blank" rel="noopener" aria-label="導航到這一站" href="https://www.google.com/maps/dir/?api=1&destination=${b.la},${b.lo}&travelmode=driving"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 11L21 3l-8 18-2-8z" fill="currentColor"/></svg></a></div>
-   <a class="b pri cpri cOnly" id="navPri" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${b.la},${b.lo}&travelmode=driving">導航到第 ${ci+1} 站</a>
+  cardBody.innerHTML=`<div class="k"><button class="back" id="backBtn" aria-label="回到路線">‹</button><span class="lbl">下一站</span><span class="no">${ci+1} / ${route.length}</span>${e.must?'<span class="flag must">必清</span>':''}<button type="button" class="nav" id="navIcon" aria-label="導航到這一站"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 11L21 3l-8 18-2-8z" fill="currentColor"/></svg></button></div>
+   <button type="button" class="b pri cpri cOnly" id="navPri">導航到第 ${ci+1} 站</button>
    <div class="addr">${b.addr}</div>
    <div class="meta"><span><b>${fmtM(d)}</b>・車程約 ${Math.max(1,Math.round(d/1000/20*60))} 分</span><span><span class="fb"><i style="width:${Math.max(6,Math.min(100,v))}%;background:${rampColor(v,v>100)}"></i></span>${e.rep?stateChip(v,true)+` <span class="repby">行人回報・${repAgo(b.id)}</span>`:`預測 <b>${rampState(v).t}</b>`}<span class="sim" title="模擬值"></span></span>${st.cal[b.id]?'<span class="flag cal">已校正 ×'+st.cal[b.id].k+'</span>':''}</div>
    <div class="small" id="orderNote">依 ${t} 預測・必清優先，層內行車路網排序</div>
@@ -206,4 +207,33 @@ Promise.all([loadJSON('bins.geojson'),loadJSON('footfall_hourly.json'),RT.load('
   plan();
   if(!deep&&ui.state==='B'&&ui.gen&&ui.route&&ui.route.length){const m=new Map(E.map(e=>[e.b.id,e]));route=ui.route.map(id=>m.get(id)).filter(Boolean);gen=ui.gen;state='B'}else state='A';
   saveUI();draw();requestAnimationFrame(()=>fitTop())}).catch(e=>toast('資料載入失敗：'+e.message));
-</script></body></html>
+
+// ===== App 內行車導航（beta）：沿用行人頁 nav.js，只換參數 =====
+// 路線：OSRM car（routing.openstreetmap.de/routed-car，driving profile）；Google 地圖只當次要小按鈕；抵達＝原本的收運量回報（同選項、同寫入）
+let crewPos=null,crewAcc=999,crewMe=null;
+const crewGm=(la,lo)=>`https://www.google.com/maps/dir/?api=1&destination=${la},${lo}&travelmode=driving`;
+function crewSetPos(q,a){crewPos=q;if(a>0)crewAcc=a;if(!crewMe)crewMe=L.circleMarker(q,{radius:7,color:'#fff',weight:2.5,fillColor:'#2a7de1',fillOpacity:1,interactive:false}).addTo(map);else crewMe.setLatLng(q)}
+function crewSoftEnd(){if(!NAV)return;clearTimeout(NAV.idleT);if(NAV.wid!=null&&navigator.geolocation)navigator.geolocation.clearWatch(NAV.wid);NAV=null;navL.clearLayers()}
+function crewNavGo(){const i=curIdx();if(i<0)return;const b=route[i].b,go=()=>{if(!crewPos){const pr=i?[route[i-1].b.la,route[i-1].b.lo]:depot;crewSetPos(pr,999)}NAVH.setCol(true);navStart(b,{idx:i})};
+  if(crewPos||!navigator.geolocation)return go();let done=false;const fin=()=>{if(!done){done=true;go()}};setTimeout(fin,3000);
+  try{navigator.geolocation.getCurrentPosition(p=>{crewSetPos([p.coords.latitude,p.coords.longitude],p.coords.accuracy);fin()},fin,{enableHighAccuracy:true,timeout:3000,maximumAge:5000})}catch(e){fin()}}
+window.NAVH={osrm:'https://routing.openstreetmap.de/routed-car/route/v1/driving/',speed:333,label:'行車', // 20 km/h（同卡片車程估算）
+  gmap:crewGm,box:()=>card,togSel:'#grab',
+  getCol:()=>card.classList.contains('collapsed'),setCol:v=>{card.classList.toggle('collapsed',v);togSet(document.getElementById('grab'),v)},
+  getPos:()=>crewPos,getAcc:()=>crewAcc,setPos:crewSetPos,
+  paint:(html,col)=>{cardBody.innerHTML=`<div class="cpri navw">${html}</div>`},
+  left:(N,rem)=>{const n=`第 ${N.idx+1} 站／共 ${route.length} 站`,d=N.mode==='arrived'?'已抵達':N.fail?`直線距離 ${navFmt(rem)}`:`${navFmt(rem)}・約 ${navMin(rem)} 分鐘`;
+    return `<span class="ncw"><span class="nd">${n}</span><span class="nt">・${d}</span><span class="nn">${N.bin.addr}</span></span>`},
+  nbin:N=>`<div class="nbin">${route[N.idx]&&route[N.idx].must?'<span class="flag must">必清</span>':''}</div>`,
+  arrHTML:N=>`<div class="narr" id="navArr"><button class="nx" id="navX" aria-label="關閉，不回報">✕</button><h2>抵達第 ${N.idx+1} 站</h2><p class="ns">${N.bin.addr}</p>
+    <div class="q">這桶實際多滿？點一下即完成此站（並校正預測）</div><div class="amts">${AMT.map(a=>`<button class="amt" data-amt="${a[0]}" data-pct="${a[2]}" aria-label="收運量：${a[1]}">${binIconSVG(a[2],a[2]>100?'overflow':null).html}${a[1]}</button>`).join('')}</div></div>`,
+  fitFail:()=>false,clearOther:()=>{},
+  after:()=>{const u=document.querySelector('.undo');if(u)u.style.bottom=(cardH()+22)+'px'},
+  onEnd:()=>{draw();requestAnimationFrame(()=>fitTop())},
+  idleClick:t=>{if(state==='B'&&t.closest('#navPri,#navIcon')){crewNavGo();return true}return false},
+  arrClick:(t,N)=>{const a=t.closest('[data-amt]');if(!a)return null; // 抵達：原本的收運量回報（record：同選項、同寫入）
+    const id=N.bin.id;crewSoftEnd();record(id,a.dataset.amt,+a.dataset.pct);const i=curIdx();
+    if(i<0){navEnd&&document.body.classList.remove('navon');navMe.hidden=true;NAVH.setCol(false);draw();requestAnimationFrame(()=>fitTop());return true} // 最後一站：結束導航，回到路線總覽
+    NAVH.setCol(true);navStart(route[i].b,{idx:i});return true}};
+{const s=document.createElement('style');s.textContent='.navw{display:block!important;width:100%}.ncw{display:flex;flex-wrap:wrap;align-items:baseline;min-width:0;flex:1}.ncw .nn{flex-basis:100%;font:400 13px/1.4 var(--font,system-ui);color:#7d8b8b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#card .narr .amts{margin-top:8px}';document.head.appendChild(s)}
+</script><script src="nav.js?v=20261022k"></script></body></html>
