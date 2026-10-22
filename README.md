@@ -173,3 +173,12 @@ Leaflet 1.9.4（BSD-2）、OpenStreetMap、Python 3（shapely、pyproj）、Play
 - 路線：OSRM foot（https://routing.openstreetmap.de/routed-foot ，免費、無金鑰；6 秒逾時）。失敗 → 虛線直線、「直線距離 X 公尺」、「用 Google 地圖開啟」升為主要按鈕。距離／時間每移動 10 m 或每 5 秒更新（每分鐘 75 公尺）。導航中跟隨你的位置；手動拖曳後出現「回到我」，3 秒內不自動回到你的位置。
 - 抵達：距離 ≤30 m 連續 3 秒（每次導航一次）；定位精度 >30 m 不自動，改顯示「到了嗎？」。抵達卡：「丟好了」（不寫入）、「桶子滿了」（既有滿了流程，events）、「這裡沒有桶」（既有需求回報，needs，直接送出不問原因）；送出後提示「謝謝！已更新」1.2 秒並結束導航；滿了之後顯示「找下一個最近的桶」（不自動導航）。✕、往下滑或收合＝不回報、結束導航、不再跳出；20 秒沒操作自動收合為「已抵達・結束」。
 - 不需要改資料庫規則（只用既有 events／needs 欄位）。程式在 `nav.js`。
+
+## beta：設點規劃頁 捷運站／研究現勘（只在 beta）
+- 本頁支援安排查核；人流不是垃圾量，清冊列數不是現場可用桶數，尚不能推薦新增箱位。詳情頁改為「若現勘確認缺桶，可考慮：X」，「仍需現勘…」與內文同字級。查核優先序公式與清冊（2026-09-30，681 列）不變。
+- 資料來源（數字照原文，不重算）：台北城市實驗室 [taipei-waste-lab](https://github.com/bangyuwen/taipei-city-lab/tree/42c14f8/sites/taipei-waste-lab)（commit 42c14f8，**MIT License**，© 2026 Taipei City Lab contributors）。
+  - `mrt_stations.json`：`dist/data/cross-analysis.json` 的 `transport.stations`（73 站）；每日人次＝(entries＋exits)÷29，與來源 UI（`dist/cross-analysis.js`）同式，已核對原文的 315,942／53,170／53,779／108,553 等數字一致；出口 300 m 內清冊桶位＝`binCounts.300`（研究團隊直線距離、不同座標數）。原始資料：捷運 OD [data.taipei 63f31c7e](https://data.taipei/dataset/detail?id=63f31c7e-7fc3-418b-bd82-b95158755b4d)、捷運出入口 [data.taipei cfa4778c](https://data.taipei/dataset/detail?id=cfa4778c-62c1-497b-b704-756231de348b)。圖上站點位置＝出口座標平均（只為畫點）。
+  - 三張全市卡片：`docs/cross-analysis.md`（73 站中 33 站零桶位；公車 2,741 個站位中 1,719 個＝62.7%，分母是 YouBike 站 300 m 範圍，不是全市公車站）與 `docs/cross-analysis-field-visits.md`（台北車站 63,188）。
+  - `survey_candidates.json`：`research/field-priority-2026-10-20/priority.json` 的 36 個候選（W1 首批 12、W2 12、W3 12），待查問題＝`next_check` 原文。對應規則：YouBike 站編號（熱點 `id`／錨點 `sno`）＝候選 `station_id`。
+  - 來源說明捷運七月 OD 的 HTTP Content-MD5 與保存內容不符（尚未釐清），已在「怎麼算的」揭露。
+- 「捷運站」圖層（預設關閉，大小＝每日人次）、熱點詳情的「附近捷運」（500 m 內有出口才顯示，只顯示、不計入排序）都標註：人流不是垃圾量；研究團隊直線距離，與本頁步行距離不同。
