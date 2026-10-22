@@ -14,6 +14,7 @@ with sync_playwright() as p:
     c.add_init_script("window.FB_TEST={config:{}}")  # 本機路徑測試：不連雲端（雲端另有 test_cloud.py／即時驗收）
     pg=c.new_page();errs=[];pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
     pg.goto(B+'index.html');pg.wait_for_selector('#hot .card',timeout=20000)
+    assert pg.locator('.vmk').count()==0;pg.evaluate("document.querySelector('[data-ly=venue]').click(),0");pg.wait_for_timeout(300)  # 設點規劃頁：備用垃圾桶預設關閉，點 chip 開啟
     assert pg.inner_text('#needCard').replace('\n',' ')=='民眾回報需求 尚無回報' and pg.evaluate("getComputedStyle(document.querySelector('.vmk i')).backgroundColor")=='rgb(31, 143, 163)'  # 場域線索＝--venue 青色
     print(name,'設點規劃 熱點數',pg.locator('#hot .card').count(),'| #1',pg.locator('#hot .card').first.inner_text().replace('\n',' '))
     pg.screenshot(path=f'shot_planner_{name}.png')
